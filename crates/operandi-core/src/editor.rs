@@ -220,8 +220,6 @@ pub struct Editor {
     /// Cut/Copy's app-wide clipboard (clipboard.rs); not scene data and
     /// not undone.
     pub clipboard: Option<Box<crate::Clipboard>>,
-    /// The Slice tools' options from their last session.
-    pub slice_preset: crate::SliceParameters,
     /// Memory free for the app now, in bytes; Subdivide refuses a result
     /// that needs more (`Editor::subdivide_estimate`). The app sets it;
     /// without it (scripts, tests) nothing is checked.

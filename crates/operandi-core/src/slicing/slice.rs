@@ -2318,6 +2318,12 @@ pub(crate) fn start(tool: Tool, scene: &Scene, preset: &SliceParameters) -> Slic
     p
 }
 
+/// The Slice tools' options from their last session.
+pub enum SlicePreset {}
+impl crate::PresetKey for SlicePreset {
+    type Value = SliceParameters;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

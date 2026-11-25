@@ -261,7 +261,8 @@ impl Editor {
                 *self.presets.get_mut::<crate::bend::BendPreset>() = Some(l.params.bend);
             }
             if l.tool.is_slice() {
-                self.slice_preset = l.params.slice.options_only();
+                *self.presets.get_mut::<crate::slice::SlicePreset>() =
+                    l.params.slice.options_only();
             }
             if l.tool.is_duplicate() {
                 *self.duplicate_preset = l.params.duplicate.options_only();

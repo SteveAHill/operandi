@@ -102,7 +102,6 @@ impl Editor {
     fn forget_tool_memory(&mut self) {
         let fresh = Editor::default();
         self.presets = fresh.presets;
-        self.slice_preset = fresh.slice_preset;
         self.freeze_preset = fresh.freeze_preset;
         self.duplicate_preset = fresh.duplicate_preset;
     }

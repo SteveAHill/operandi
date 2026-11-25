@@ -60,7 +60,10 @@ fn editor(mesh: Mesh, selected: &[u32], slice_selected: bool) -> Editor {
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = mesh.into();
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
-    e.slice_preset.loop_slice.slice_selected = slice_selected;
+    e.presets
+        .get_mut::<operandi_core::slice::SlicePreset>()
+        .loop_slice
+        .slice_selected = slice_selected;
     e.scene.selection.faces = selected.to_vec();
     e.dispatch(Command::Activate(Tool::LoopSlice)).unwrap();
     e
@@ -241,7 +244,10 @@ fn edge_editor(mesh: Mesh, edges: &[(u32, u32)], slice_selected: bool) -> Editor
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = mesh.into();
     e.dispatch(Command::Mode(Mode::Edge)).unwrap();
-    e.slice_preset.loop_slice.slice_selected = slice_selected;
+    e.presets
+        .get_mut::<operandi_core::slice::SlicePreset>()
+        .loop_slice
+        .slice_selected = slice_selected;
     e.scene.selection.edges = edges.to_vec();
     e.dispatch(Command::Activate(Tool::LoopSlice)).unwrap();
     e

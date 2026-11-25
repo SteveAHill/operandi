@@ -491,7 +491,11 @@ impl Editor {
         };
         let params = if t.is_slice() {
             Parameters {
-                slice: crate::slice::start(t, &self.scene, &self.slice_preset),
+                slice: crate::slice::start(
+                    t,
+                    &self.scene,
+                    self.presets.get::<crate::slice::SlicePreset>(),
+                ),
                 ..params
             }
         } else {
