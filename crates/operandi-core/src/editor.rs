@@ -144,9 +144,6 @@ pub struct Editor {
     /// Last Linear and Radial settings, offered on reactivation (FAL-M-03).
     pub linear_falloff_preset: crate::LinearFalloff,
     pub radial_falloff_preset: crate::RadialFalloff,
-    /// BN-47: Bend's values from its last use (Angle, Spine, axis, Both
-    /// Sides, Deform Space); `None` until it has been dropped once.
-    pub bend_preset: Option<crate::BendOptions>,
     /// CS-01 (click_start.rs): honour the tools' Auto-Activate flags, so a
     /// tool flagged off only arms when picked. The app turns it on; off,
     /// every tool starts at once as before (scripts, staged one-shots).
@@ -234,8 +231,6 @@ pub struct Editor {
     pub freeze_preset: crate::freeze::FreezeOptions,
     /// The Duplicate tools' settings from their last session.
     pub duplicate_preset: Box<crate::DuplicateParameters>,
-    /// Relax Mesh's last-used options (UIC-95).
-    pub relax_mesh_preset: crate::RelaxMeshOptions,
     /// The UV map clipboard: a whole map copied from the map list (UVE-1
     /// section 1).
     pub uv_map_clipboard: Option<crate::uv_maps::UvMapClipboard>,

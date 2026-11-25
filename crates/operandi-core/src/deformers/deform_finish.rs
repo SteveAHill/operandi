@@ -1055,7 +1055,9 @@ impl crate::Editor {
                 "Relax Mesh works on points, edges or polygons; pick a component mode first".into(),
             );
         }
-        self.relax_mesh_preset = options;
+        *self
+            .presets
+            .get_mut::<crate::deform_finish::RelaxMeshPreset>() = options;
         let points = relax_points(&self.scene)?;
         let item = self.scene.active().ok_or("Select a mesh for Relax Mesh")?;
         let id = item.id;
@@ -1071,4 +1073,10 @@ impl crate::Editor {
         self.record("Relax Mesh".into(), before);
         Ok(())
     }
+}
+
+/// Relax Mesh's last-used options (UIC-95).
+pub enum RelaxMeshPreset {}
+impl crate::PresetKey for RelaxMeshPreset {
+    type Value = RelaxMeshOptions;
 }

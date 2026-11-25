@@ -71,7 +71,11 @@ impl Operandi {
             self.status = "Close the open dialog before Relax Mesh".into();
             return;
         }
-        let rows = RelaxMeshDialog::rows(&self.editor.relax_mesh_preset);
+        let rows = RelaxMeshDialog::rows(
+            self.editor
+                .presets
+                .get::<operandi_core::deform_finish::RelaxMeshPreset>(),
+        );
         self.relax_mesh = Some(RelaxMeshDialog {
             form: self.form_dialog("Relax Mesh", rows),
         });
@@ -83,7 +87,13 @@ impl Operandi {
             self.open_relax_mesh();
             return;
         }
-        match parse_relax_mesh(self.editor.relax_mesh_preset, rest) {
+        match parse_relax_mesh(
+            *self
+                .editor
+                .presets
+                .get::<operandi_core::deform_finish::RelaxMeshPreset>(),
+            rest,
+        ) {
             Ok(options) => self.run_relax_mesh(options),
             Err(e) => self.status = e,
         }

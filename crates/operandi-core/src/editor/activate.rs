@@ -192,7 +192,7 @@ impl Editor {
             // BN-47: later uses start from the last use's values. The
             // centre still comes from the action centre (BN-02; BH-Q13,
             // provisional), so the ring and the pivot agree.
-            let bend = match self.bend_preset {
+            let bend = match *self.presets.get::<crate::bend::BendPreset>() {
                 Some(last) => crate::BendOptions {
                     base: fitted.base,
                     ..last

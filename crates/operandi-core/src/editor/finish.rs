@@ -258,7 +258,7 @@ impl Editor {
                 *self.presets.get_mut::<crate::VertexMergePreset>() = Some(l.params.shift);
             }
             if l.tool == Tool::Bend {
-                self.bend_preset = Some(l.params.bend);
+                *self.presets.get_mut::<crate::bend::BendPreset>() = Some(l.params.bend);
             }
             if l.tool.is_slice() {
                 self.slice_preset = l.params.slice.options_only();

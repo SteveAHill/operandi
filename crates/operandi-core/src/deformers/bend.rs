@@ -255,6 +255,13 @@ pub fn bend_geometry(
     Ok(out)
 }
 
+/// BN-47: Bend's values from its last use (Angle, Spine, axis, Both
+/// Sides, Deform Space); `None` until it has been dropped once.
+pub enum BendPreset {}
+impl crate::PresetKey for BendPreset {
+    type Value = Option<BendOptions>;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

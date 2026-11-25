@@ -94,7 +94,7 @@ fn cs05_the_flag_table() {
 fn cs22_armed_changes_nothing_and_drop_is_a_no_op() {
     let mut e = editor();
     let before = points(&e);
-    e.bend_preset = Some(BendOptions {
+    *e.presets.get_mut::<operandi_core::bend::BendPreset>() = Some(BendOptions {
         angle: 45.,
         ..Default::default()
     });

@@ -102,10 +102,8 @@ impl Editor {
     fn forget_tool_memory(&mut self) {
         let fresh = Editor::default();
         self.presets = fresh.presets;
-        self.bend_preset = fresh.bend_preset;
         self.slice_preset = fresh.slice_preset;
         self.freeze_preset = fresh.freeze_preset;
         self.duplicate_preset = fresh.duplicate_preset;
-        self.relax_mesh_preset = fresh.relax_mesh_preset;
     }
 }
