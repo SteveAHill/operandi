@@ -474,7 +474,10 @@ impl Editor {
             params
         };
         let params = if t.is_duplicate() {
-            let mut duplicate = self.duplicate_preset.options_only();
+            let mut duplicate = self
+                .presets
+                .get::<crate::duplicate::DuplicatePreset>()
+                .options_only();
             // A copier comes only from the open preset row (DX-20/30), so a
             // plain button never inherits the last row's.
             duplicate.copier = self

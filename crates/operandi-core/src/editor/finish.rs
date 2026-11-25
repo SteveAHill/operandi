@@ -265,7 +265,8 @@ impl Editor {
                     l.params.slice.options_only();
             }
             if l.tool.is_duplicate() {
-                *self.duplicate_preset = l.params.duplicate.options_only();
+                **self.presets.get_mut::<crate::duplicate::DuplicatePreset>() =
+                    l.params.duplicate.options_only();
             }
             if l.tool == Tool::Extrude {
                 *self.presets.get_mut::<crate::ExtrudePreset>() = l.params.clone();

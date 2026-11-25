@@ -580,7 +580,9 @@ impl crate::Editor {
         // A path button sets its curve kind and switches (CX-01) before its
         // tool starts from the kept values.
         if let Some(path) = row.actor.path {
-            let d = &mut staged.duplicate_preset;
+            let d = staged
+                .presets
+                .get_mut::<crate::duplicate::DuplicatePreset>();
             match tool {
                 Tool::CurveExtrude => path.apply(&mut d.curve_extrude),
                 Tool::CurveClone => path.apply(&mut d.curve_clone),

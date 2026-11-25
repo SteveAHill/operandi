@@ -102,7 +102,10 @@ fn more_items_than_spots_leave_the_rest_and_fewer_use_the_first() {
     });
     assert_eq!(e.scene.items.len(), 2);
     assert!(at(&e, before[1]).abs_diff_eq(DVec3::new(1., 0., 0.), 1e-9));
-    let p = e.duplicate_preset.array;
+    let p = e
+        .presets
+        .get::<operandi_core::duplicate::DuplicatePreset>()
+        .array;
     assert_eq!(p.count, [5, 1, 1], "the placer's count isn't changed");
 }
 

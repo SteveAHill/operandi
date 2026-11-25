@@ -1207,6 +1207,12 @@ pub(crate) fn item_placement(
     ))
 }
 
+/// The Duplicate tools' settings from their last session.
+pub enum DuplicatePreset {}
+impl crate::PresetKey for DuplicatePreset {
+    type Value = Box<DuplicateParameters>;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

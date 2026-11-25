@@ -227,8 +227,6 @@ pub struct Editor {
     /// Freeze's last-used options (FRZ-03): what a script's `poly.freeze`
     /// starts from (the app's dialog keeps its own copy too).
     pub freeze_preset: crate::freeze::FreezeOptions,
-    /// The Duplicate tools' settings from their last session.
-    pub duplicate_preset: Box<crate::DuplicateParameters>,
     /// The UV map clipboard: a whole map copied from the map list (UVE-1
     /// section 1).
     pub uv_map_clipboard: Option<crate::uv_maps::UvMapClipboard>,

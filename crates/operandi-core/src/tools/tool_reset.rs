@@ -103,6 +103,5 @@ impl Editor {
         let fresh = Editor::default();
         self.presets = fresh.presets;
         self.freeze_preset = fresh.freeze_preset;
-        self.duplicate_preset = fresh.duplicate_preset;
     }
 }
