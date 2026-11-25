@@ -250,16 +250,9 @@ pub struct Editor {
     pub uv_seam_map: String,
     /// The UV Symmetry layer (UVT-70): mirrors UV edits in a UV view.
     pub uv_symmetry: crate::uv_symmetry::UvSymmetry,
-    /// Automatic Retopology's, Voxel Remesh's and the octree Remesh's
-    /// last-used options (remesh.rs).
-    pub retopo_preset: crate::remesh::RetopoOptions,
-    pub voxel_remesh_preset: crate::remesh::VoxelOptions,
-    pub octree_remesh_preset: crate::remesh::OctreeOptions,
     /// A remesh the app worked out on a worker thread, used by the next
     /// remesh command when it matches (`remesh::RemeshPrepared`).
     pub remesh_prepared: Option<Box<crate::remesh::RemeshPrepared>>,
-    /// Boolean's last-used options (BOOL-23).
-    pub boolean_preset: crate::BooleanOptions,
     /// What the last successful Boolean wants on the status line.
     pub boolean_note: Option<String>,
     /// Mesh Stack results (mesh_stack.rs): a cache shared by clones, never part
@@ -272,9 +265,6 @@ pub struct Editor {
     pub base_edit: Option<u64>,
     /// The selected row of the Mesh Operations list.
     pub meshop_row: Option<crate::mesh_stack_editor::OpRow>,
-    /// Solid Drill's and Axis Drill's last-used options (DRILL-08).
-    pub solid_drill_preset: crate::DrillOptions,
-    pub axis_drill_preset: crate::DrillOptions,
     /// What the last successful drill wants on the status line.
     pub drill_note: Option<String>,
     /// What the last headless command that writes a file (a bake) wants on

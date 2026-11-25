@@ -198,7 +198,10 @@ impl Operandi {
         }
         let rows = match kind {
             RemeshKind::Remesh => {
-                let o = &self.editor.octree_remesh_preset;
+                let o = self
+                    .editor
+                    .presets
+                    .get::<operandi_core::remesh::OctreeRemeshPreset>();
                 let last = self.remesh_last_voxel;
                 let mode = match voxel.unwrap_or(last) {
                     true => 0,
@@ -209,9 +212,19 @@ impl Operandi {
                             .unwrap_or(1)
                     }
                 };
-                remesh_rows(&self.editor.voxel_remesh_preset, o, mode)
+                remesh_rows(
+                    self.editor
+                        .presets
+                        .get::<operandi_core::remesh::VoxelRemeshPreset>(),
+                    o,
+                    mode,
+                )
             }
-            RemeshKind::Retopo => retopo_rows(&self.editor.retopo_preset),
+            RemeshKind::Retopo => retopo_rows(
+                self.editor
+                    .presets
+                    .get::<operandi_core::remesh::RetopoPreset>(),
+            ),
         };
         self.remesh = Some(RemeshDialog {
             kind,
@@ -276,14 +289,25 @@ impl Operandi {
     fn remember_remesh(&mut self, op: &RemeshOp) {
         match op {
             RemeshOp::Voxel(o) => {
-                self.editor.voxel_remesh_preset = o.clone();
+                *self
+                    .editor
+                    .presets
+                    .get_mut::<operandi_core::remesh::VoxelRemeshPreset>() = o.clone();
                 self.remesh_last_voxel = true;
             }
             RemeshOp::Octree(o) => {
-                self.editor.octree_remesh_preset = o.clone();
+                *self
+                    .editor
+                    .presets
+                    .get_mut::<operandi_core::remesh::OctreeRemeshPreset>() = o.clone();
                 self.remesh_last_voxel = false;
             }
-            RemeshOp::Retopo(o) => self.editor.retopo_preset = o.clone(),
+            RemeshOp::Retopo(o) => {
+                *self
+                    .editor
+                    .presets
+                    .get_mut::<operandi_core::remesh::RetopoPreset>() = o.clone()
+            }
         }
     }
 
@@ -467,14 +491,31 @@ mod tests {
         let typed = (*a.editor.scene.active().unwrap().mesh).clone();
         assert!(typed.faces.len() > 100);
         // Left-out arguments keep the last values.
-        assert_eq!(a.editor.voxel_remesh_preset.density, 0.3);
+        assert_eq!(
+            a.editor
+                .presets
+                .get::<operandi_core::remesh::VoxelRemeshPreset>()
+                .density,
+            0.3
+        );
 
         // The dialog's OK at the same values.
         let mut b = app();
-        b.editor.voxel_remesh_preset.density = 0.3;
+        b.editor
+            .presets
+            .get_mut::<operandi_core::remesh::VoxelRemeshPreset>()
+            .density = 0.3;
         b.open_remesh(RemeshKind::Remesh, Some(true));
         let op = b.remesh.take().unwrap().op();
-        assert_eq!(op, RemeshOp::Voxel(b.editor.voxel_remesh_preset.clone()));
+        assert_eq!(
+            op,
+            RemeshOp::Voxel(
+                b.editor
+                    .presets
+                    .get::<operandi_core::remesh::VoxelRemeshPreset>()
+                    .clone()
+            )
+        );
         b.start_remesh(op);
         finish(&mut b);
         assert_eq!(*b.editor.scene.active().unwrap().mesh, typed);

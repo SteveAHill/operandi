@@ -99,8 +99,16 @@ impl DrillDialog {
 impl Operandi {
     fn drill_preset(&self, kind: DrillKind) -> DrillOptions {
         match kind {
-            DrillKind::Solid => self.editor.solid_drill_preset.clone(),
-            DrillKind::Axis => self.editor.axis_drill_preset.clone(),
+            DrillKind::Solid => self
+                .editor
+                .presets
+                .get::<operandi_core::drill::SolidDrillPreset>()
+                .clone(),
+            DrillKind::Axis => self
+                .editor
+                .presets
+                .get::<operandi_core::drill::AxisDrillPreset>()
+                .clone(),
         }
     }
 
@@ -256,8 +264,18 @@ impl Operandi {
                 }
                 // UIC-95: remembered for next time, whatever the outcome.
                 match kind {
-                    DrillKind::Solid => self.editor.solid_drill_preset = o.clone(),
-                    DrillKind::Axis => self.editor.axis_drill_preset = o.clone(),
+                    DrillKind::Solid => {
+                        *self
+                            .editor
+                            .presets
+                            .get_mut::<operandi_core::drill::SolidDrillPreset>() = o.clone()
+                    }
+                    DrillKind::Axis => {
+                        *self
+                            .editor
+                            .presets
+                            .get_mut::<operandi_core::drill::AxisDrillPreset>() = o.clone()
+                    }
                 }
                 self.run_drill(kind, o);
             }

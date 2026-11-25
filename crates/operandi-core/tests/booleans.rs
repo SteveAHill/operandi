@@ -103,7 +103,10 @@ fn reference_operations_match_the_spec() {
         assert_eq!(e.scene.items[1], driver_before, "{op:?} driver changed");
         assert_eq!(e.scene.items.len(), 2);
         assert!(e.scene.selection.faces.is_empty(), "BOOL-14");
-        assert_eq!(e.boolean_preset.op, op);
+        assert_eq!(
+            e.presets.get::<operandi_core::boolean::BooleanPreset>().op,
+            op
+        );
     }
 }
 

@@ -879,9 +879,15 @@ impl crate::Editor {
         let item = self.remesh_target(label)?;
         op.validate()?;
         match &op {
-            RemeshOp::Retopo(o) => self.retopo_preset = o.clone(),
-            RemeshOp::Voxel(o) => self.voxel_remesh_preset = o.clone(),
-            RemeshOp::Octree(o) => self.octree_remesh_preset = o.clone(),
+            RemeshOp::Retopo(o) => {
+                *self.presets.get_mut::<crate::remesh::RetopoPreset>() = o.clone()
+            }
+            RemeshOp::Voxel(o) => {
+                *self.presets.get_mut::<crate::remesh::VoxelRemeshPreset>() = o.clone()
+            }
+            RemeshOp::Octree(o) => {
+                *self.presets.get_mut::<crate::remesh::OctreeRemeshPreset>() = o.clone()
+            }
         }
         let prepared = self
             .remesh_prepared
@@ -949,6 +955,21 @@ impl crate::Editor {
         self.record(label.into(), before);
         Ok(())
     }
+}
+
+/// Automatic Retopology's, Voxel Remesh's and the octree Remesh's
+/// last-used options (remesh.rs).
+pub enum RetopoPreset {}
+impl crate::PresetKey for RetopoPreset {
+    type Value = RetopoOptions;
+}
+pub enum VoxelRemeshPreset {}
+impl crate::PresetKey for VoxelRemeshPreset {
+    type Value = VoxelOptions;
+}
+pub enum OctreeRemeshPreset {}
+impl crate::PresetKey for OctreeRemeshPreset {
+    type Value = OctreeOptions;
 }
 
 #[cfg(test)]

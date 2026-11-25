@@ -1119,7 +1119,7 @@ impl Editor {
     /// nothing is left selected (BOOL-14).
     pub(crate) fn boolean(&mut self, o: BooleanOptions) -> Result<()> {
         let (item, mesh, message) = self.boolean_result(&o)?;
-        self.boolean_preset = o.clone();
+        *self.presets.get_mut::<crate::boolean::BooleanPreset>() = o.clone();
         self.publish_polygon_edit(item, mesh, &format!("Boolean {}", o.op.label()), Vec::new())?;
         self.boolean_note = Some(message);
         Ok(())
@@ -1266,6 +1266,12 @@ pub(crate) fn boolean_gathered(g: &Gathered, op: BooleanOp, what: &str) -> Resul
 /// the shared code reads the same.
 struct BooleanOpOnly {
     op: BooleanOp,
+}
+
+/// Boolean's last-used options (BOOL-23).
+pub enum BooleanPreset {}
+impl crate::PresetKey for BooleanPreset {
+    type Value = BooleanOptions;
 }
 
 #[cfg(test)]

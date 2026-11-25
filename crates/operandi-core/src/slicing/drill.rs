@@ -1517,8 +1517,10 @@ impl Editor {
     pub(crate) fn drill(&mut self, kind: DrillKind, o: DrillOptions) -> Result<()> {
         let (item, mesh, label, message) = self.drill_result(kind, &o)?;
         match kind {
-            DrillKind::Solid => self.solid_drill_preset = o.clone(),
-            DrillKind::Axis => self.axis_drill_preset = o.clone(),
+            DrillKind::Solid => {
+                *self.presets.get_mut::<crate::drill::SolidDrillPreset>() = o.clone()
+            }
+            DrillKind::Axis => *self.presets.get_mut::<crate::drill::AxisDrillPreset>() = o.clone(),
         }
         let before = self.scene.clone();
         if o.op == DrillOp::Stencil {
@@ -1733,6 +1735,17 @@ fn own_counts(g: &Gathered) -> (usize, usize) {
         .map(|d| (d.faces[0], d.point_offset as usize))
         .min()
         .unwrap_or((g.combined.faces.len(), g.combined.vertices.len()))
+}
+
+/// Solid Drill's last-used options (DRILL-08).
+pub enum SolidDrillPreset {}
+impl crate::PresetKey for SolidDrillPreset {
+    type Value = DrillOptions;
+}
+/// Axis Drill's last-used options (DRILL-08).
+pub enum AxisDrillPreset {}
+impl crate::PresetKey for AxisDrillPreset {
+    type Value = DrillOptions;
 }
 
 #[cfg(test)]

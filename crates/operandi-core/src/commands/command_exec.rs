@@ -684,11 +684,11 @@ pub fn built_in(e: &mut Editor, name: &str, a: &Map<String, Value>) -> Result<Op
         }
         "mesh.retopo" => Command::Remesh(crate::RemeshOp::Retopo(crate::remesh::args::retopo(
             a,
-            &e.retopo_preset,
+            e.presets.get::<crate::remesh::RetopoPreset>(),
         )?)),
         "sculpt.remesh" => Command::Remesh(crate::RemeshOp::Voxel(crate::remesh::args::voxel(
             a,
-            &e.voxel_remesh_preset,
+            e.presets.get::<crate::remesh::VoxelRemeshPreset>(),
         )?)),
         "operandi.bake.curvature" | "operandi.bake.thickness" => {
             let map = if name.ends_with("curvature") {
@@ -706,7 +706,7 @@ pub fn built_in(e: &mut Editor, name: &str, a: &Map<String, Value>) -> Result<Op
         }
         "operandi.remesh" => Command::Remesh(crate::RemeshOp::Octree(crate::remesh::args::octree(
             a,
-            &e.octree_remesh_preset,
+            e.presets.get::<crate::remesh::OctreeRemeshPreset>(),
         )?)),
         "poly.boolean" => {
             let word = |k: &str| -> Result<Option<String>> {

@@ -164,12 +164,6 @@ fn every_field_is_sorted(e: Editor) {
         uv_texel: _,
         uv_seam_map: _,
         uv_symmetry: _,
-        retopo_preset: _,
-        voxel_remesh_preset: _,
-        octree_remesh_preset: _,
-        boolean_preset: _,
-        solid_drill_preset: _,
-        axis_drill_preset: _,
         // Shared: app-wide clipboards and caches matched by content.
         clipboard: _,
         uv_map_clipboard: _,

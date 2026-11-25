@@ -84,7 +84,11 @@ impl Operandi {
             self.status = "Close the open dialog before Boolean".into();
             return;
         }
-        let o = self.editor.boolean_preset.clone();
+        let o = self
+            .editor
+            .presets
+            .get::<operandi_core::boolean::BooleanPreset>()
+            .clone();
         let scene = &self.editor.scene;
         let active = scene.selection.item;
         // Mesh items and groups other than the active mesh.
@@ -199,7 +203,10 @@ impl Operandi {
                     return;
                 }
                 // UIC-95: remembered for next time, whatever the outcome.
-                self.editor.boolean_preset = o.clone();
+                *self
+                    .editor
+                    .presets
+                    .get_mut::<operandi_core::boolean::BooleanPreset>() = o.clone();
                 self.run_boolean(o);
             }
             _ => self.boolean = Some(dialog),

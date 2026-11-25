@@ -421,7 +421,10 @@ fn undo_and_redo_are_one_step_with_the_tool_label() {
     assert_eq!(e.scene.items, before.items);
     e.dispatch(Command::Redo).unwrap();
     assert_eq!(*mesh(&e, id), after);
-    assert_eq!(e.solid_drill_preset.op, DrillOp::Tunnel);
+    assert_eq!(
+        e.presets.get::<operandi_core::drill::SolidDrillPreset>().op,
+        DrillOp::Tunnel
+    );
 }
 
 #[test]
