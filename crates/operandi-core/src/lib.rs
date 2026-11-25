@@ -761,10 +761,13 @@ pub use topology_pen::{PenEdit, PenMode, TopologyPenOptions};
 pub mod haul;
 #[path = "transforms/pivot_service.rs"]
 pub mod pivot_service;
+#[path = "tools/preset_store.rs"]
+mod preset_store;
 #[path = "tools/tool_preset.rs"]
 pub mod tool_preset;
 #[path = "tools/tool_reset.rs"]
 mod tool_reset;
+pub use preset_store::{PresetKey, ToolPresets};
 pub use tool_preset::{PresetRow, PresetSession};
 #[path = "scene_items/scene_index.rs"]
 pub mod scene_index;

@@ -138,6 +138,7 @@ fn every_field_is_sorted(e: Editor) {
         auto_activate_flags: _,
         free_memory: _,
         // Shared: last-used tool options (UIC-95).
+        presets: _,
         pen_options: _,
         solid_sketch_options: _,
         topology_pen_memory: _,

@@ -101,6 +101,7 @@ impl Editor {
     /// tool values, and stay.
     fn forget_tool_memory(&mut self) {
         let fresh = Editor::default();
+        self.presets = fresh.presets;
         self.smooth_shift_preset = fresh.smooth_shift_preset;
         self.chamfer_preset = fresh.chamfer_preset;
         self.edge_bevel_preset = fresh.edge_bevel_preset;

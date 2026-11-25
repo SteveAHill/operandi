@@ -65,6 +65,8 @@ impl PartialEq for FreeMemory {
 pub struct Editor {
     /// Undo and redo steps, their marks and limits (undo_history.rs).
     pub history: crate::History,
+    /// The tools' last-used values, one per tool (preset_store.rs).
+    pub presets: crate::ToolPresets,
     /// Meshes a tool or command has just run on as one of several active
     /// meshes (multi_tools.rs): their components were written by that
     /// tool for the new geometry, so they survive the topology check in
