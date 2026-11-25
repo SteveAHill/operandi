@@ -610,3 +610,9 @@ fn unequal(
         },
     })
 }
+
+/// Bridge's last-used values (preset_store.rs).
+pub enum BridgePreset {}
+impl crate::PresetKey for BridgePreset {
+    type Value = BridgeParameters;
+}

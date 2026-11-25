@@ -259,7 +259,6 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         surface_states,
         surface_state,
         bridge,
-        bridge_preset,
         spike,
         spike_strength,
         ellipsoid,

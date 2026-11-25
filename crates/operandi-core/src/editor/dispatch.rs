@@ -884,7 +884,7 @@ impl Editor {
                 let mut p = live.params.clone();
                 p.chamfer = parameters;
                 self.preview(p, false)?;
-                self.chamfer_preset = parameters;
+                *self.presets.get_mut::<crate::ChamferPreset>() = parameters;
             }
             Command::ChamferOnce(parameters) => {
                 if self.live.is_some() {

@@ -852,3 +852,9 @@ pub fn chamfer_geometry(source: &Mesh, selected: &[u32], p: ChamferParameters) -
         .map_err(|e| format!("Chamfer Edit produced an invalid mesh ({e}); nothing changed"))?;
     Ok(out)
 }
+
+/// Chamfer's last-used values (preset_store.rs).
+pub enum ChamferPreset {}
+impl crate::PresetKey for ChamferPreset {
+    type Value = ChamferParameters;
+}

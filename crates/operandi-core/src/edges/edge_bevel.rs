@@ -475,3 +475,15 @@ fn add_support_edges(
         mesh: cut.mesh,
     })
 }
+
+/// EdgeBevelTool's last-used values (preset_store.rs).
+pub enum EdgeBevelToolPreset {}
+impl crate::PresetKey for EdgeBevelToolPreset {
+    type Value = EdgeBevelPreset;
+}
+
+/// EdgeChamferTool's last-used values (preset_store.rs).
+pub enum EdgeChamferToolPreset {}
+impl crate::PresetKey for EdgeChamferToolPreset {
+    type Value = EdgeBevelPreset;
+}

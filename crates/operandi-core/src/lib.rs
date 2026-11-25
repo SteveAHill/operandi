@@ -349,7 +349,8 @@ pub mod edge_bevel;
 mod edge_bevel_junctions;
 pub use edge_bevel::{
     CornerPattern, EdgeBevelMode, EdgeBevelOptions, EdgeBevelPreset, EdgeBevelResult,
-    EdgeBevelSettings, EdgeBevelShape, EdgeEnd, edge_bevel_geometry, edge_bevel_with,
+    EdgeBevelSettings, EdgeBevelShape, EdgeBevelToolPreset, EdgeChamferToolPreset, EdgeEnd,
+    edge_bevel_geometry, edge_bevel_with,
 };
 #[path = "edges/edge_commands.rs"]
 pub mod edge_commands;
@@ -640,12 +641,12 @@ pub mod polygon_make;
 pub mod vertex_commands;
 pub use polygon_make::*;
 pub use vertex_commands::{
-    MakeType, MergeOptions, ReorderMode, VERTEX_BEVEL_MAX_ROUND_LEVEL, VertexCommand, WeldDrop,
-    add_points, make_polygon_from_points, make_polygon_typed, sync_index_order,
-    vertex_bevel_geometry, vertex_bevel_round, vertex_command_geometry, vertex_extrude_geometry,
-    vertex_extrude_with, vertex_join_symmetric_geometry, vertex_merge_geometry, vertex_merge_with,
-    vertex_slide_direction, vertex_slide_geometry, vertex_tear_geometry, weld_drag_geometry,
-    weld_points,
+    MakeType, MergeOptions, ReorderMode, VERTEX_BEVEL_MAX_ROUND_LEVEL, VertexCommand,
+    VertexMergePreset, WeldDrop, add_points, make_polygon_from_points, make_polygon_typed,
+    sync_index_order, vertex_bevel_geometry, vertex_bevel_round, vertex_command_geometry,
+    vertex_extrude_geometry, vertex_extrude_with, vertex_join_symmetric_geometry,
+    vertex_merge_geometry, vertex_merge_with, vertex_slide_direction, vertex_slide_geometry,
+    vertex_tear_geometry, weld_drag_geometry, weld_points,
 };
 #[path = "tools/numeric.rs"]
 pub mod numeric;

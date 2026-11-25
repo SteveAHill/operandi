@@ -144,12 +144,6 @@ pub struct Editor {
     /// Last Linear and Radial settings, offered on reactivation (FAL-M-03).
     pub linear_falloff_preset: crate::LinearFalloff,
     pub radial_falloff_preset: crate::RadialFalloff,
-    pub chamfer_preset: crate::ChamferParameters,
-    pub edge_bevel_preset: crate::EdgeBevelPreset,
-    pub edge_chamfer_preset: crate::EdgeBevelPreset,
-    /// Merge Tool's last Distance; `None` is the recorded default 0.001
-    /// (VTO-T04).
-    pub vertex_merge_preset: Option<f64>,
     /// BN-47: Bend's values from its last use (Angle, Spine, axis, Both
     /// Sides, Deform Space); `None` until it has been dropped once.
     pub bend_preset: Option<crate::BendOptions>,
@@ -177,7 +171,6 @@ pub struct Editor {
     pub surface_state: std::collections::BTreeMap<String, String>,
 
     pub bridge: Option<crate::NumericBridge>,
-    pub bridge_preset: crate::BridgeParameters,
     pub spike: Option<crate::NumericSpike>,
     pub spike_strength: f64,
     /// MP-T11 Polygon Reduction session; `None` when the tool is off.

@@ -233,7 +233,7 @@ impl Editor {
                 self.retain_surface(l.tool, l.params.smooth_shift);
             }
             if l.tool == Tool::Chamfer {
-                self.chamfer_preset = l.params.chamfer;
+                *self.presets.get_mut::<crate::ChamferPreset>() = l.params.chamfer;
             }
             if matches!(l.tool, Tool::EdgeBevel | Tool::EdgeChamfer) {
                 let preset = crate::EdgeBevelPreset {
@@ -242,9 +242,9 @@ impl Editor {
                     options: l.params.edge_bevel.clone(),
                 };
                 if l.tool == Tool::EdgeBevel {
-                    self.edge_bevel_preset = preset;
+                    *self.presets.get_mut::<crate::EdgeBevelToolPreset>() = preset;
                 } else {
-                    self.edge_chamfer_preset = preset;
+                    *self.presets.get_mut::<crate::EdgeChamferToolPreset>() = preset;
                 }
             }
             if l.tool == Tool::PolyHaul {
@@ -255,7 +255,7 @@ impl Editor {
                     Some(l.params.sketch_precision);
             }
             if l.tool == Tool::VertexMerge {
-                self.vertex_merge_preset = Some(l.params.shift);
+                *self.presets.get_mut::<crate::VertexMergePreset>() = Some(l.params.shift);
             }
             if l.tool == Tool::Bend {
                 self.bend_preset = Some(l.params.bend);

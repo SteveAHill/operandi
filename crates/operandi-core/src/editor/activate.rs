@@ -323,7 +323,7 @@ impl Editor {
         if t == Tool::Chamfer {
             let probe = crate::ChamferParameters {
                 offset: 1e-6,
-                ..self.chamfer_preset
+                ..*self.presets.get::<crate::ChamferPreset>()
             };
             let selected = &self.scene.selection.faces;
             if let Err(error) = crate::chamfer_geometry(&item.mesh, selected, probe) {
@@ -412,7 +412,7 @@ impl Editor {
         };
         let params = if t == Tool::Chamfer {
             Parameters {
-                chamfer: self.chamfer_preset,
+                chamfer: *self.presets.get::<crate::ChamferPreset>(),
                 ..params
             }
         } else {
@@ -420,9 +420,9 @@ impl Editor {
         };
         let params = if matches!(t, Tool::EdgeBevel | Tool::EdgeChamfer) {
             let preset = if t == Tool::EdgeBevel {
-                &self.edge_bevel_preset
+                self.presets.get::<crate::EdgeBevelToolPreset>()
             } else {
-                &self.edge_chamfer_preset
+                self.presets.get::<crate::EdgeChamferToolPreset>()
             };
             Parameters {
                 chamfer: crate::ChamferParameters {
@@ -448,7 +448,10 @@ impl Editor {
         // (VTO-T04).
         let params = if t == Tool::VertexMerge {
             Parameters {
-                shift: self.vertex_merge_preset.unwrap_or(MERGE_TOOL_DISTANCE),
+                shift: self
+                    .presets
+                    .get::<crate::VertexMergePreset>()
+                    .unwrap_or(MERGE_TOOL_DISTANCE),
                 ..params
             }
         } else {

@@ -34,7 +34,10 @@ impl Editor {
             .filter(|i| i.visible)
             .ok_or("Select a visible mesh for Bridge")?
             .id;
-        self.bridge = Some(NumericBridge::armed(target, self.bridge_preset));
+        self.bridge = Some(NumericBridge::armed(
+            target,
+            *self.presets.get::<crate::BridgePreset>(),
+        ));
         Ok(())
     }
     pub(crate) fn configure_bridge(&mut self, p: BridgeParameters) -> Result<()> {
@@ -44,7 +47,7 @@ impl Editor {
         let session = self.bridge.as_mut().ok_or("Arm Bridge first")?;
         let changed = session.requested != p;
         session.requested = p;
-        self.bridge_preset = p;
+        *self.presets.get_mut::<crate::BridgePreset>() = p;
         // UIC-78: while the last Apply's result is live, a new value
         // reshapes that bridge, still one undo step.
         if changed && self.bridge_result_live() {

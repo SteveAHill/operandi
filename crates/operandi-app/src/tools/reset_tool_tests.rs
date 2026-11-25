@@ -126,7 +126,10 @@ fn remembered_last_use_values_are_not_the_reset_target() {
     let factory = fresh_start(edges, Tool::EdgeBevel);
     let mut a = edges();
     // An earlier use remembered 3 segments.
-    a.editor.edge_bevel_preset.segments = 3;
+    a.editor
+        .presets
+        .get_mut::<operandi_core::EdgeBevelToolPreset>()
+        .segments = 3;
     a.activate(Tool::EdgeBevel);
     assert_eq!(params(&a).chamfer.segments, 3);
     a.run(Command::ResetToolAttributes);

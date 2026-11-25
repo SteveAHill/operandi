@@ -1687,13 +1687,13 @@ fn bridge_run(e: &mut Editor, params: Option<&Value>) -> Result<()> {
             _ => unreachable!("keys are checked"),
         }
     }
-    let remembered = e.bridge_preset;
+    let remembered = *e.presets.get::<operandi_core::BridgePreset>();
     let mark = e.history_mark();
     e.dispatch(Command::ArmBridge)?;
     e.dispatch(Command::ConfigureBridge(p))?;
     e.dispatch(Command::Apply)?;
     e.dispatch(Command::Drop)?;
-    e.bridge_preset = remembered;
+    *e.presets.get_mut::<operandi_core::BridgePreset>() = remembered;
     // Nothing or one polygon selected applies nothing, silently in the
     // panel (BR18/BR19); the bridge says so.
     // By mark (Astra P9-008): a full history keeps the length the same.

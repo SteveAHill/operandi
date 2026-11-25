@@ -102,12 +102,7 @@ impl Editor {
     fn forget_tool_memory(&mut self) {
         let fresh = Editor::default();
         self.presets = fresh.presets;
-        self.chamfer_preset = fresh.chamfer_preset;
-        self.edge_bevel_preset = fresh.edge_bevel_preset;
-        self.edge_chamfer_preset = fresh.edge_chamfer_preset;
-        self.vertex_merge_preset = fresh.vertex_merge_preset;
         self.bend_preset = fresh.bend_preset;
-        self.bridge_preset = fresh.bridge_preset;
         self.slice_preset = fresh.slice_preset;
         self.freeze_preset = fresh.freeze_preset;
         self.duplicate_preset = fresh.duplicate_preset;

@@ -2498,6 +2498,13 @@ impl crate::Editor {
     }
 }
 
+/// Merge Tool's last Distance; `None` is the recorded default 0.001
+/// (VTO-T04).
+pub enum VertexMergePreset {}
+impl crate::PresetKey for VertexMergePreset {
+    type Value = Option<f64>;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
