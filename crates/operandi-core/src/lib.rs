@@ -682,6 +682,9 @@ pub mod primitive_shapes;
 pub mod shape_falloff;
 #[path = "transforms/transform_repeat.rs"]
 pub mod transform_repeat;
+#[path = "commands/undo_history.rs"]
+mod undo_history;
+pub use undo_history::History;
 #[path = "commands/undo_memory.rs"]
 mod undo_memory;
 pub use primitive::*;

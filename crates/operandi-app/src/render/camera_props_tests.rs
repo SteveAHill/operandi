@@ -170,9 +170,9 @@ fn sync_to_view_moves_the_camera_to_the_view_in_one_step() {
     a.camera.yaw = 0.7;
     a.camera.pitch = -0.3;
     a.camera.distance = 6.0;
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.sync_camera_to_view(id);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     let frame = operandi_core::camera_light::item_frame(&a.editor.scene, id).unwrap();
     let (eye, _, _, forward) = a.camera.basis();
     assert!((frame.position - eye).length() < 1e-9);
@@ -207,9 +207,9 @@ fn background_image_shows_in_camera_view_and_composites_renders() {
     let id = new_camera(&mut a);
     a.run(Command::SetRenderCamera(id));
     let path = write_png("camera-bg", 8, 4);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.camera_background_chosen(id, path.clone());
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert!(camera(&a, id).background.image.is_some());
     let r = Rect::from_min_size(Pos2::ZERO, vec2(800., 600.));
     // Only a view looking through the camera draws it, under Backdrops.

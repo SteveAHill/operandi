@@ -64,13 +64,13 @@ fn jd3_one_undo_step_and_refusals() {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = cube().into();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Dicer(DicerOptions {
         planes: 2,
         ..Default::default()
     }))
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(pieces(&e.scene.active().unwrap().mesh) >= 2);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh, cube());

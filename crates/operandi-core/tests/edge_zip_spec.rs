@@ -115,11 +115,11 @@ fn ez_e_two_edges_one_quad_apart_chain_into_one_group_per_row() {
 fn refused(m: Mesh, mode: Mode, edges: &[(u32, u32)]) {
     let mut e = editor(m.clone(), mode);
     e.scene.selection.edges = edges.to_vec();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let err = e.dispatch(Command::EdgeZip).unwrap_err();
     assert!(err.starts_with(NEEDS_QUADS), "{err}");
     assert_eq!(active(&e), &m);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]

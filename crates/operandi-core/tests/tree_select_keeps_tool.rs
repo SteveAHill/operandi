@@ -20,7 +20,7 @@ fn fixture(mode: Mode) -> (Editor, u64, u64) {
     }
     e.dispatch(Command::Mode(mode)).unwrap();
     e.dispatch(Command::SelectItem(Some(ids[0]))).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     (e, ids[0], ids[1])
 }
 fn item(e: &Editor, id: u64) -> &Item {
@@ -51,7 +51,7 @@ fn move_retargets_to_the_clicked_item() {
     assert_eq!(e.live.as_ref().unwrap().params.delta, DVec3::ZERO);
     assert!((center(&e) - DVec3::new(10., 0., 0.)).length() < 1e-9);
     // A's move is recorded as its own step.
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     assert_eq!(item(&e, a).transform.translation, DVec3::Y);
 
     // The next drag moves B only; A stays where its drag left it.
@@ -59,7 +59,7 @@ fn move_retargets_to_the_clicked_item() {
     assert_eq!(item(&e, a).transform.translation, DVec3::Y);
     assert_eq!(item(&e, b).transform.translation, DVec3::new(10., 0., 1.));
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), 2);
+    assert_eq!(e.history.undo.len(), 2);
 
     // Undo takes B's move back, then A's.
     e.dispatch(Command::Undo).unwrap();
@@ -100,7 +100,7 @@ fn rotate_and_scale_retarget_with_fresh_values() {
         assert_eq!(p.rotation_delta, DVec3::ZERO, "{t:?}");
         assert_eq!(p.scale_delta, DVec3::ONE, "{t:?}");
         assert!((center(&e) - DVec3::new(10., 0., 0.)).length() < 1e-9);
-        assert_eq!(e.undo.len(), 1, "{t:?}");
+        assert_eq!(e.history.undo.len(), 1, "{t:?}");
         assert_eq!(item(&e, a).transform, moved_a, "{t:?}");
     }
 }
@@ -114,7 +114,7 @@ fn component_mode_move_follows_the_clicked_mesh() {
     assert_eq!(tool(&e), Some(Tool::Move));
     assert_eq!(e.scene.selection.mode, Mode::Polygon);
     assert_eq!(e.scene.selection.item, Some(b));
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     let before = item(&e, b).mesh.vertices.clone();
     preview(&mut e, |p| p.delta = DVec3::Z);
     let after = &item(&e, b).mesh.vertices;
@@ -134,7 +134,7 @@ fn deselecting_drops_the_tool_without_error() {
     e.dispatch(Command::SelectItem(None)).unwrap();
     assert_eq!(tool(&e), None);
     assert_eq!(e.scene.selection.item, None);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     assert_eq!(item(&e, a).transform.translation, DVec3::Y);
 }
 
@@ -146,7 +146,7 @@ fn options_carry_over() {
     e.dispatch(Command::SelectItem(Some(b))).unwrap();
     assert!(e.live.as_ref().unwrap().params.negative_scale);
     // An untouched tool records nothing on the way.
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 
 #[test]
@@ -159,7 +159,7 @@ fn a_drop_failure_refuses_and_changes_nothing() {
     assert!(e.dispatch(Command::SelectItem(Some(b))).is_err());
     assert_eq!(e.scene, before.scene);
     assert!(e.live == before.live);
-    assert_eq!(e.undo.len(), before.undo.len());
+    assert_eq!(e.history.undo.len(), before.history.undo.len());
 }
 
 #[test]

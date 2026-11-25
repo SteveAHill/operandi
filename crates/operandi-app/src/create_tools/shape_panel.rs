@@ -765,13 +765,13 @@ mod tests {
         enter(&mut a, "txt_size", "2 m");
         let preview = a.editor.shape.as_ref().unwrap().preview.clone().unwrap();
         assert!(!preview.faces.is_empty());
-        let undo = a.editor.undo.len();
+        let undo = a.editor.history.undo.len();
         a.run(Command::Drop);
         assert!(a.editor.shape.is_none());
         assert_eq!(counts(&a), (preview.vertices.len(), preview.faces.len()));
         a.run(Command::Undo);
         assert_eq!(counts(&a), (0, 0));
-        assert!(a.editor.undo.len() <= undo + 1);
+        assert!(a.editor.history.undo.len() <= undo + 1);
         // The next Text starts from the last settings.
         a.execute("Text");
         let ShapeParameters::Text(t) = &a.editor.shape.as_ref().unwrap().requested else {

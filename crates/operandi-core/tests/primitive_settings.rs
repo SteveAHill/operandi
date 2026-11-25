@@ -76,10 +76,10 @@ fn reset_restores_starting_values_for_this_and_later_uses() {
         // Reset before drawing changes settings but creates no geometry.
         e.dispatch(Command::Activate(tool)).unwrap();
         let scene = e.scene.clone();
-        let history = e.undo.len();
+        let history = e.history.undo.len();
         e.dispatch(Command::ResetPrimitive).unwrap();
         assert_eq!(e.scene, scene, "{tool:?}: no geometry from Reset");
-        assert_eq!(e.undo.len(), history);
+        assert_eq!(e.history.undo.len(), history);
         assert!(live(&e).segments == start.segments, "{tool:?}");
         assert!(live(&e).radial == start.radial, "{tool:?}");
         e.dispatch(Command::Drop).unwrap();

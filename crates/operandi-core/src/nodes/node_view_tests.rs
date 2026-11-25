@@ -61,7 +61,7 @@ fn connect(e: &mut Editor, group: NodeId, from: &str, to: Target) -> crate::Resu
     )
 }
 fn last_label(e: &Editor) -> String {
-    e.undo.last().unwrap().label.clone()
+    e.history.undo.last().unwrap().label.clone()
 }
 
 #[test]
@@ -295,7 +295,7 @@ fn ne_t7_tree_and_node_edits_share_one_history() {
 fn ne_07_16_hide_show_and_move_are_steps_and_drags_fold() {
     let (mut e, group) = editor();
     let noise = add(&mut e, group, "noise3d", "color3");
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     for (i, continuing) in [false, true, true].into_iter().enumerate() {
         nodes(
             &mut e,
@@ -307,7 +307,7 @@ fn ne_07_16_hide_show_and_move_are_steps_and_drags_fold() {
         )
         .unwrap();
     }
-    assert_eq!(e.undo.len(), steps + 1, "one drag, one step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one drag, one step");
     assert_eq!(
         e.scene.shader_tree.group_nodes(group).unwrap().places[&noise],
         [2., 0.]
@@ -369,10 +369,10 @@ fn set_value_checks_the_type_and_folds_drags() {
             },
         )
     };
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     set(&mut e, "2", false).unwrap();
     set(&mut e, "0.5,1,1", true).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let g = e.scene.shader_tree.group_nodes(group).unwrap();
     assert_eq!(
         g.node(&noise).unwrap().input("amplitude").unwrap().value,

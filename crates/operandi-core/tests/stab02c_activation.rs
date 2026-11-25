@@ -89,7 +89,10 @@ fn act_c02_numeric_drop_then_target_refusal_preserves_original_owner() {
         let mut dropped = e.clone();
         dropped.dispatch(Command::Drop).unwrap();
         assert!(dropped.spike.is_none() && dropped.ellipsoid.is_none());
-        assert_eq!(dropped.undo.len(), e.undo.len() + usize::from(ellipsoid));
+        assert_eq!(
+            dropped.history.undo.len(),
+            e.history.undo.len() + usize::from(ellipsoid)
+        );
         if ellipsoid {
             assert_ne!(dropped.scene, e.scene);
         }

@@ -74,13 +74,17 @@ fn dragging_a_size_square_edits_the_op_live_in_one_undo_step() {
         .meshop_handle_hit(q, r)
         .expect("the X square is under the pointer");
     assert_eq!(grab.handle, OpHandle::Size(0));
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     for step in 1..=4 {
         a.drag_meshop_handle(&grab, q, q + vec2(10. * step as f32, 0.), r);
     }
     let size = op_values(&a)["sizeX"].as_f64().unwrap();
     assert!(size > 0.5, "wider: {size}");
-    assert_eq!(a.editor.undo.len(), history + 1, "one step for the drag");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        history + 1,
+        "one step for the drag"
+    );
     a.run(Command::Undo);
     assert_eq!(op_values(&a)["sizeX"].as_f64().unwrap(), 0.5);
 }
@@ -168,14 +172,18 @@ fn dragging_an_ops_size_box_resizes_its_falloff_in_one_undo_step() {
         start: op_values(&a),
         gesture: crate::colour_field::next_gesture(),
     };
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     for step in 1..=3 {
         a.drag_meshop_handle(&grab, q, q + vec2(15. * step as f32, 0.), rr);
     }
     let size = &op_values(&a)["falloff"]["first"]["Radial"]["size"];
     assert!(size[0].as_f64().unwrap() > 1., "X grew: {size}");
     assert_eq!(size[1].as_f64(), Some(1.), "only X: {size}");
-    assert_eq!(a.editor.undo.len(), history + 1, "one step for the drag");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        history + 1,
+        "one step for the drag"
+    );
     a.run(Command::Undo);
     let size = &op_values(&a)["falloff"]["first"]["Radial"]["size"];
     assert_eq!(size[0].as_f64(), Some(1.));
@@ -197,7 +205,7 @@ fn a_move_arrow_moves_the_op_along_its_axis_only() {
     let tip = handle_at(&a, OpHandle::Move(0));
     let grab = a.meshop_handle_hit(tip, r).expect("the X arrow");
     assert_eq!(grab.handle, OpHandle::Move(0));
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     for step in 1..=3 {
         a.drag_meshop_handle(&grab, tip, tip + vec2(15. * step as f32, -20.), r);
     }
@@ -205,7 +213,11 @@ fn a_move_arrow_moves_the_op_along_its_axis_only() {
     assert!(v["cenX"].as_f64().unwrap().abs() > 1e-6, "moved along X");
     assert_eq!(v["cenY"].as_f64().unwrap(), 0.);
     assert_eq!(v["cenZ"].as_f64().unwrap(), 0.);
-    assert_eq!(a.editor.undo.len(), history + 1, "one step for the drag");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        history + 1,
+        "one step for the drag"
+    );
 }
 
 #[test]
@@ -241,12 +253,16 @@ fn dragging_a_lattice_point_moves_it_in_one_undo_step() {
     let at = handle_at(&a, OpHandle::Lattice(26));
     let grab = a.meshop_handle_hit(at, rr).expect("the corner point");
     assert_eq!(grab.handle, OpHandle::Lattice(26));
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     for step in 1..=3 {
         a.drag_meshop_handle(&grab, at, at + vec2(0., -20. * step as f32), rr);
     }
     let offsets = &op_values(&a)["offsets"];
     assert_eq!(offsets.as_array().unwrap().len(), 27);
     assert!(offsets[26][1].as_f64().unwrap() > 0., "moved up: {offsets}");
-    assert_eq!(a.editor.undo.len(), history + 1, "one step for the drag");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        history + 1,
+        "one step for the drag"
+    );
 }

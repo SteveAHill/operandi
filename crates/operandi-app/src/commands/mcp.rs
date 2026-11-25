@@ -483,9 +483,9 @@ impl Operandi {
         let record = protocol::called_tool(&message)
             .filter(|t| !protocol::NON_EDITING_TOOLS.contains(t))
             .map(|tool| self.bridge_record(tool, &message["params"]["arguments"]));
-        let serial = self.editor.history_serial;
+        let serial = self.editor.history.history_serial;
         if let Some(r) = &record {
-            self.editor.pending_records.0.push(r.clone());
+            self.editor.history.pending_records.0.push(r.clone());
         }
         let mut bridge = operandi_mcp::Bridge {
             editor: std::mem::take(&mut self.editor),
@@ -1263,7 +1263,7 @@ mod tests {
         call(&mut a, "tool_run", json!({"tool": "prim.cube"})).unwrap();
         // The app's own editor changed, with one undo step and a dirty title.
         assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 6);
-        assert_eq!(a.editor.undo.len(), 1);
+        assert_eq!(a.editor.history.undo.len(), 1);
         assert!(a.dirty());
         // The person's Undo takes the agent's step back, and the agent sees it.
         a.run(Command::Undo);
@@ -1333,7 +1333,7 @@ mod tests {
         assert_eq!(info["active"]["faces"], disk, "{info}");
         assert_eq!(a.path.as_deref(), Some(path.as_path()));
         assert!(!a.dirty());
-        assert!(a.editor.undo.is_empty());
+        assert!(a.editor.history.undo.is_empty());
         assert!(!a.has_modal());
         // With unsaved changes it refuses and keeps them.
         call(&mut a, "primitive_add", json!({"shape": "cube"})).unwrap();
@@ -1768,7 +1768,7 @@ mod tests {
             json!({"op": op, "values": {"sources": [second]}}),
         )
         .unwrap();
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         call(&mut a, "undo", json!({"count": steps})).unwrap();
         if a.editor.scene != saved {
             let ours = format!("{:#?}", a.editor.scene);
@@ -1870,13 +1870,16 @@ mod tests {
         let obj = dir.join("card.obj");
         std::fs::write(&obj, QUAD_OBJ).unwrap();
         let items_before = a.editor.scene.items.len();
-        let undo_before = a.editor.undo.len();
+        let undo_before = a.editor.history.undo.len();
         let r = call(&mut a, "scene_import", json!({"path": obj})).unwrap();
         let added = r["imported"].as_array().unwrap();
         assert_eq!(added.len(), 1, "{r}");
         assert_eq!(a.editor.scene.items.len(), items_before + 1);
-        assert_eq!(a.editor.undo.len(), undo_before + 1);
-        assert_eq!(a.editor.undo.last().unwrap().label, "Import card.obj");
+        assert_eq!(a.editor.history.undo.len(), undo_before + 1);
+        assert_eq!(
+            a.editor.history.undo.last().unwrap().label,
+            "Import card.obj"
+        );
         let id = added[0]["id"].as_u64().unwrap();
         let card = a.editor.scene.item(id).unwrap();
         assert_eq!(card.mesh.faces.len(), 1);
@@ -1937,7 +1940,7 @@ mod tests {
         assert_eq!(a.display.settings.active.style, view_display::Style::Gooch);
         assert_eq!(a.camera.view, View::Top);
         // Not a scene edit.
-        assert!(a.editor.undo.is_empty() && !a.dirty());
+        assert!(a.editor.history.undo.is_empty() && !a.dirty());
         // A bad argument changes nothing.
         let e = call(
             &mut a,
@@ -2010,7 +2013,7 @@ mod tests {
         a.show_preferences = true;
         call(&mut a, "panel_show", json!({"panel": "shader_tree"})).unwrap();
         a.show_preferences = false;
-        assert!(a.editor.undo.is_empty() && !a.dirty() && !a.has_modal());
+        assert!(a.editor.history.undo.is_empty() && !a.dirty() && !a.has_modal());
     }
 
     #[test]

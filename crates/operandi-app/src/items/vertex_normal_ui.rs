@@ -604,7 +604,7 @@ mod tests {
         assert!(m.attributes.corner_normals.is_empty());
         a.execute("Spin Polygon Vertex Indices offset:1");
         a.execute("Rename Normal Maps name:Custom");
-        let undo = a.editor.undo.len();
+        let undo = a.editor.history.undo.len();
         assert!(undo >= 4, "each a step ({undo})");
     }
 

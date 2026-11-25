@@ -41,7 +41,7 @@ fn sorted(edges: &[(u32, u32)]) -> Vec<(u32, u32)> {
 fn double_click_selects_the_loop_and_replaces_the_selection() {
     let (mut e, item) = grid4();
     e.scene.selection.edges = vec![(0, 5)];
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::SelectEdgeLoop {
         item,
         a: 7,
@@ -55,7 +55,7 @@ fn double_click_selects_the_loop_and_replaces_the_selection() {
         sorted(&e.scene.selection.edges),
         vec![(5, 6), (6, 7), (7, 8), (8, 9)]
     );
-    assert_eq!(e.undo.len(), history + 1, "one Select Loop step");
+    assert_eq!(e.history.undo.len(), history + 1, "one Select Loop step");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.selection.edges, vec![(0, 5)]);
     e.dispatch(Command::Redo).unwrap();
@@ -134,7 +134,7 @@ fn loop_from_several_edges_joins_each_seeds_loop() {
     e.scene.select_edge_loop(item, (6, 7), false).unwrap();
     let row = e.scene.selection.edges.clone();
     e.scene.selection.edges.push((6, 11));
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::Selection(SelectionOperation::Loop))
         .unwrap();
     let edges = &e.scene.selection.edges;
@@ -144,7 +144,7 @@ fn loop_from_several_edges_joins_each_seeds_loop() {
         sorted(&edges[4..]),
         vec![(1, 6), (6, 11), (11, 16), (16, 21)]
     );
-    assert_eq!(e.undo.len(), history + 1);
+    assert_eq!(e.history.undo.len(), history + 1);
 
     // Two seeds on parallel rows give both rows; a seed on a loop already
     // walked adds nothing twice.

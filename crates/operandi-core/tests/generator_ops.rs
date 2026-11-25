@@ -519,7 +519,7 @@ fn editor(mesh: Mesh, mode: Mode) -> Editor {
 #[test]
 fn sc_the_scatter_tool_makes_its_copies_in_one_undo_step() {
     let mut e = editor(cube(0.1), Mode::Polygon);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::ScatterClone)).unwrap();
     let mut p = e.live.as_ref().unwrap().params.clone();
     assert_eq!(p.duplicate.scatter.generator.count, 8);
@@ -534,7 +534,7 @@ fn sc_the_scatter_tool_makes_its_copies_in_one_undo_step() {
     for c in centres(m) {
         assert!(c.abs().max_element() <= 1. + 1e-9, "{c}");
     }
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.vertices.len(), 8);
 }

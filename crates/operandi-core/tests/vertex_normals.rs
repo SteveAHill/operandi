@@ -17,7 +17,7 @@ fn editor(mesh: Mesh) -> Editor {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = mesh.into();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -181,7 +181,7 @@ fn recalculate_keeps_hard_edges_through_save_and_reopen() {
     assert_eq!(shown_before, shown_after);
     // Harden is one undo step; Recalculate right after changes nothing,
     // so it records none.
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }
 
 #[test]

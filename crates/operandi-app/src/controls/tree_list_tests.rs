@@ -114,13 +114,13 @@ fn click_ctrl_click_and_shift_click_select_rows() {
 fn dragging_down_the_eye_column_hides_every_row_passed_in_one_step() {
     // UIC-138.
     let (mut a, ctx, ids) = four_items();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let p0 = eye(&a, ids[0]).center();
     let p1 = eye(&a, ids[2]).center();
     drag(&mut a, &ctx, p0, p1);
     let visible: Vec<bool> = a.editor.scene.items.iter().map(|i| i.visible).collect();
     assert_eq!(visible, [false, false, false, true]);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     a.run(Command::Undo);
     assert!(a.editor.scene.items.iter().all(|i| i.visible));
 }
@@ -303,13 +303,13 @@ fn tree_order(a: &Operandi) -> Vec<u64> {
 fn dragging_a_row_between_rows_reorders_it_without_parenting() {
     // UIC-143: the top band of a row inserts before it, at its level.
     let (mut a, ctx, ids) = four_items();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let (from, to) = (row_at(&a, ids[3], 0.5), row_at(&a, ids[1], 0.1));
     drag(&mut a, &ctx, from, to);
     assert_eq!(tree_order(&a), [ids[0], ids[3], ids[1], ids[2]]);
     assert!(a.editor.scene.items.iter().all(|i| i.parent.is_none()));
-    assert_eq!(a.editor.undo.len(), steps + 1, "one drop, one step");
-    assert_eq!(a.editor.undo.last().unwrap().label, "Reorder");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "one drop, one step");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Reorder");
     // The bottom band inserts after.
     let (from, to) = (row_at(&a, ids[0], 0.5), row_at(&a, ids[2], 0.9));
     drag(&mut a, &ctx, from, to);
@@ -325,7 +325,7 @@ fn dropping_on_the_middle_of_a_row_parents_and_into_an_open_parent_goes_first() 
     drag(&mut a, &ctx, from, to);
     let parent = |a: &Operandi, id: u64| a.editor.scene.item(id).unwrap().parent;
     assert_eq!(parent(&a, ids[2]), Some(ids[0]));
-    assert_eq!(a.editor.undo.last().unwrap().label, "Parent");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Parent");
     // Row 0 is open with child 2 under it: its bottom band puts 3 first.
     let (from, to) = (row_at(&a, ids[3], 0.5), row_at(&a, ids[0], 0.9));
     drag(&mut a, &ctx, from, to);
@@ -355,11 +355,11 @@ fn dropping_a_parent_into_its_own_child_does_nothing() {
     });
     draw(&mut a, &ctx, SIZE, vec![]);
     let scene = a.editor.scene.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     for t in [0.1, 0.5, 0.9] {
         let (from, to) = (row_at(&a, ids[0], 0.5), row_at(&a, ids[1], t));
         drag(&mut a, &ctx, from, to);
     }
     assert_eq!(a.editor.scene, scene);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
 }

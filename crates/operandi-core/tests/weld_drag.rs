@@ -140,8 +140,8 @@ fn each_drag_is_one_undo_step_and_keeps_the_selection() {
         drop: WeldDrop::Point(6),
     })
     .unwrap();
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Weld");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Weld");
     // The merged-away point leaves the selection; the others are remapped.
     assert_eq!(e.scene.selection.vertices, vec![0, 14]);
     let merged = e.scene.clone();
@@ -150,7 +150,7 @@ fn each_drag_is_one_undo_step_and_keeps_the_selection() {
         drop: WeldDrop::Position(DVec3::new(-0.5, 0., 0.)),
     })
     .unwrap();
-    assert_eq!(e.undo.len(), 2);
+    assert_eq!(e.history.undo.len(), 2);
     assert_eq!(
         e.scene.selection.vertices,
         vec![0, 14],
@@ -187,7 +187,7 @@ fn a_refused_drag_changes_nothing() {
         .is_err()
     );
     assert_eq!(e.scene, before);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 
 #[test]

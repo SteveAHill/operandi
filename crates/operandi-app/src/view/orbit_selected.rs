@@ -74,7 +74,7 @@ impl Operandi {
     /// The point Orbit Selected turns about: the selection's centre.
     pub(super) fn orbit_pivot(&mut self) -> Option<DVec3> {
         let scene = &self.editor.scene;
-        let serial = self.editor.history_serial;
+        let serial = self.editor.history.history_serial;
         if let Some(memo) = &self.orbit_pivot_memo
             && memo.serial == serial
             && memo.selection == scene.selection

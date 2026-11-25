@@ -14,7 +14,7 @@ fn column() -> Editor {
             .unwrap()
             .into();
     e.scene.selection.mode = Mode::Vertex;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn points(e: &Editor) -> Vec<DVec3> {
@@ -200,7 +200,7 @@ fn flare_pushes_the_top_fully_and_the_foot_not_at_all() {
     e.dispatch(Command::Drop).unwrap();
     assert_eq!(e.spatial_falloff, None);
     assert_eq!(e.action_context, user);
-    assert_eq!(e.undo.last().unwrap().label, "Flare");
+    assert_eq!(e.history.undo.last().unwrap().label, "Flare");
 }
 
 /// A closed cube centred at (3, 0, 0) in Polygon mode, nothing selected.
@@ -212,7 +212,7 @@ fn cube_at_three() -> Editor {
             .unwrap()
             .into();
     e.scene.selection.mode = Mode::Polygon;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 /// Every polygon's normal points away from `centre`.
@@ -245,8 +245,8 @@ fn flip_it_origin_mirrors_to_the_other_side_facing_out() {
         assert!((b - DVec3::new(-a.x, a.y, a.z)).length() < 1e-9);
     }
     assert!(faces_out(&e, DVec3::new(-3., 0., 0.)));
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo[0].label, "Flip It Origin");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo[0].label, "Flip It Origin");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(points(&e), before);
     assert!(faces_out(&e, DVec3::new(3., 0., 0.)));
@@ -273,7 +273,7 @@ fn flip_it_mirrors_through_the_selection_centre_and_ignores_symmetry() {
         assert!((b - DVec3::new(a.x, -a.y, a.z)).length() < 1e-9);
     }
     assert!(faces_out(&e, DVec3::new(3., 0., 0.)));
-    assert_eq!(e.undo.last().unwrap().label, "Flip It");
+    assert_eq!(e.history.undo.last().unwrap().label, "Flip It");
 }
 
 /// Only the selected polygons flip: with two separate cubes in one mesh,
@@ -354,5 +354,5 @@ fn flip_it_refusals_change_nothing() {
         })
         .is_err()
     );
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }

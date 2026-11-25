@@ -146,9 +146,9 @@ fn rf05_document_redo_below_anchor_precedes_pr01_local_guard() {
     }))
     .unwrap();
     assert!(!e.i2_can_redo());
-    assert_eq!(e.redo.len(), 1);
+    assert_eq!(e.history.redo.len(), 1);
     e.dispatch(Command::Redo).unwrap();
-    assert!(e.redo.is_empty());
+    assert!(e.history.redo.is_empty());
     assert_eq!(e.i2.selected.as_ref().unwrap().cursor, 0);
     refused_redo(&mut e);
 }
@@ -178,7 +178,7 @@ fn rf03_established_numeric_switches_finish_once_and_cancel_new_owner_only() {
             e.dispatch(cmd).unwrap();
             assert_eq!(e.scene, accepted);
             assert_eq!(e.identities.current, accepted_ids);
-            assert_eq!(e.undo.len(), 1);
+            assert_eq!(e.history.undo.len(), 1);
             assert!(e.i2.selected.is_none());
             assert!(e.live.is_none());
             e.dispatch(Command::Cancel).unwrap();

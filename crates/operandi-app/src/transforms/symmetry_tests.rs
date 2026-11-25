@@ -94,7 +94,7 @@ fn add_loop_click_then_slide_is_one_step() {
     let pa = a.camera.project(mesh.vertices[ea as usize], r).unwrap().0;
     let pb = a.camera.project(mesh.vertices[eb as usize], r).unwrap().0;
     a.edge_click = Some(edge_panel::EdgeClick::AddLoop);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     let (taken, slide) = a.edge_click_at(pa.lerp(pb, 0.5), r, false);
     assert!(taken);
     let Some(input::GestureKind::EdgeInsert {
@@ -106,10 +106,10 @@ fn add_loop_click_then_slide_is_one_step() {
     else {
         panic!("no slide gesture: {}", a.status);
     };
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     let faces = a.editor.scene.active().unwrap().mesh.faces.len();
     a.edge_insert_slide(tool, x, y, ends, ends[0].0.lerp(ends[1].0, 0.25));
-    assert_eq!(a.editor.undo.len(), undo + 1, "still one step");
+    assert_eq!(a.editor.history.undo.len(), undo + 1, "still one step");
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), faces);
     assert!(a.status.contains("25%"), "{}", a.status);
 }

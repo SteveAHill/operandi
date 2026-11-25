@@ -270,7 +270,7 @@ mod event_tests {
         );
         assert_eq!(a.editor.scene, expected, "{}", a.status);
         assert!(a.navigation.is_none() && a.i2_gesture_ticket.is_none());
-        assert_eq!(a.editor.undo.len(), 0);
+        assert_eq!(a.editor.history.undo.len(), 0);
         let menus = a.menu_model(&ctx);
         let undo = menus
             .iter()
@@ -305,7 +305,7 @@ mod event_tests {
         );
         assert_eq!(a.editor.scene, expected);
         assert!(a.editor.live.is_none());
-        assert_eq!(a.editor.undo.len(), 1);
+        assert_eq!(a.editor.history.undo.len(), 1);
     }
 }
 
@@ -421,8 +421,8 @@ mod review_tests {
                 "legacy owner {kind}"
             );
             assert!(a.editor.i2.selected.is_none());
-            assert_eq!(a.editor.undo.len(), legacy.undo.len());
-            assert_eq!(a.editor.redo.len(), legacy.redo.len());
+            assert_eq!(a.editor.history.undo.len(), legacy.history.undo.len());
+            assert_eq!(a.editor.history.redo.len(), legacy.history.redo.len());
             // Clones intentionally share the nonrewindable allocation bank.
             // Consecutive legacy previews may allocate different runtime IDs;
             // exact capture nonmutation was asserted before either preview.
@@ -572,7 +572,7 @@ mod review_tests {
         p.extent = DVec3::Z * 0.25;
         move_captured(&mut a.editor, t.unwrap(), p).unwrap();
         assert_eq!(a.editor.i2.selected.as_ref().unwrap().cursor, 2);
-        assert_eq!(a.editor.undo.len(), 0);
+        assert_eq!(a.editor.history.undo.len(), 0);
         // Ordinary numeric confirmation still uses its existing semantic path.
         a.fields.insert("extent2".into(), "0.5 m".into());
         assert!(a.confirm_fields());
@@ -650,7 +650,7 @@ mod review_tests {
         assert!(a.editor.live.is_none());
         assert_eq!(a.editor.scene, base);
         assert!(a.fields.is_empty());
-        assert!(a.editor.undo.is_empty());
+        assert!(a.editor.history.undo.is_empty());
     }
 
     fn outcome_test_navigation() -> input::Navigation {
@@ -669,7 +669,7 @@ mod review_tests {
             let (_, ticket) = capture(&mut a.editor, 2, true).unwrap();
             a.run(Command::Cancel);
             a.run(Command::Drop);
-            assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+            assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
             a.navigation = Some(outcome_test_navigation());
             a.i2_gesture_ticket = ticket;
             a.fields.insert("delta0".into(), "0.125 m".into());

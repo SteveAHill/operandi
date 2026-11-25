@@ -30,7 +30,7 @@ fn grid_edge() -> Editor {
     e.dispatch(Command::Mode(Mode::Edge)).unwrap();
     // The top border's middle edge.
     e.scene.selection.edges = vec![(13, 14)];
-    e.undo.clear();
+    e.history.undo.clear();
     e.auto_activate_flags = true;
     e
 }

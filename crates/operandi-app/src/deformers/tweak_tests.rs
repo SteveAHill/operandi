@@ -191,7 +191,7 @@ fn edges_and_polygons_move_all_their_points_by_the_same_offset() {
         let (mut a, ctx) = grid_app(View::Front);
         a.activate(Tool::Tweak);
         let before: Vec<DVec3> = a.editor.scene.active().unwrap().mesh.vertices.clone();
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         let from = screen(&a, press);
         drag(&mut a, &ctx, from, from + vec2(-60., 30.));
         let m = metres_per_pixel(&a);
@@ -205,7 +205,7 @@ fn edges_and_polygons_move_all_their_points_by_the_same_offset() {
             };
             assert!((*now - expected).length() < 1e-6, "{press:?} point {i}");
         }
-        assert_eq!(a.editor.undo.len(), steps, "{press:?}");
+        assert_eq!(a.editor.history.undo.len(), steps, "{press:?}");
         assert!(a.editor.tweaks.can_undo(), "{press:?}");
     }
 }
@@ -215,14 +215,14 @@ fn each_drag_is_its_own_undo_step_and_undo_keeps_the_tool() {
     let (mut a, ctx) = grid_app(View::Front);
     a.activate(Tool::Tweak);
     let start = a.editor.scene.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let p1 = screen(&a, DVec3::new(-1., -1., 0.));
     drag(&mut a, &ctx, p1, p1 + vec2(50., 0.));
     let first = a.editor.scene.clone();
     let p2 = screen(&a, DVec3::new(2., 2., 0.));
     drag(&mut a, &ctx, p2, p2 + vec2(0., 50.));
     // Each drag is a tweak of the Tweak session (Jason, 2026-11-04).
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     assert_eq!(a.editor.tweaks.undo_steps(), 2);
     a.run(Command::Undo);
     assert!(a.editor.scene == first, "{}", a.status);
@@ -235,7 +235,7 @@ fn each_drag_is_its_own_undo_step_and_undo_keeps_the_tool() {
     drag(&mut a, &ctx, p2, p2 + vec2(0., 50.));
     assert_eq!(a.editor.tweaks.undo_steps(), 2);
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
 }
 
 #[test]
@@ -243,7 +243,7 @@ fn empty_space_and_clicks_without_moving_change_nothing() {
     let (mut a, ctx) = grid_app(View::Front);
     a.activate(Tool::Tweak);
     let before = a.editor.scene.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     // TWK-23: a press off the mesh does nothing (no camera move either).
     let camera = (a.camera.target, a.camera.distance);
     let off = screen(&a, DVec3::new(3.5, 3.5, 0.));
@@ -254,7 +254,7 @@ fn empty_space_and_clicks_without_moving_change_nothing() {
     let on = screen(&a, DVec3::new(0., 0., 0.));
     drag(&mut a, &ctx, on, on);
     assert!(a.editor.scene == before);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Tweak);
 }
 
@@ -366,7 +366,7 @@ fn symmetry_moves_the_mirror_counterpart_too() {
         a.run(Command::Symmetry(operandi_core::Symmetry::x()));
         a.activate(Tool::Tweak);
         let before = a.editor.scene.active().unwrap().mesh.vertices.clone();
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         let from = screen(&a, press);
         drag(&mut a, &ctx, from, from + vec2(60., -30.));
         let m = metres_per_pixel(&a);
@@ -389,7 +389,7 @@ fn symmetry_moves_the_mirror_counterpart_too() {
                 a.status
             );
         }
-        assert_eq!(a.editor.undo.len(), steps, "{press:?}");
+        assert_eq!(a.editor.history.undo.len(), steps, "{press:?}");
         assert!(a.editor.tweaks.can_undo(), "{press:?}: one undo step");
     }
 }
@@ -925,7 +925,7 @@ fn symmetry_toggled_with_move_open_applies_live() {
     a.activate(Tool::Move);
     let centre = |a: &Operandi| a.editor.live.as_ref().unwrap().action_frame.unwrap().center;
     assert!(centre(&a).x.abs() < 1e-9, "both sides: on the plane");
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute("toggle symmetry");
     assert_eq!(
         a.editor.symmetry,
@@ -976,7 +976,7 @@ fn symmetry_toggled_with_move_open_applies_live() {
         "one tweak per drag, none per toggle"
     );
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
 }
 
 /// An open Cone preview is made twice, or once again, as Symmetry changes.

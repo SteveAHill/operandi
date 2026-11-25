@@ -110,9 +110,9 @@ fn ik15_apply_needs_root_then_end_in_setup() {
     ok(&mut e, "operandi.anim.setup on:true");
     let err = command_line::run_line(&mut e, &line).unwrap().unwrap_err();
     assert_eq!(err, ik_commands::ROOT_THEN_END);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, &format!("operandi.ik.applyChain joints:{a},{b}"));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
 }
 
 #[test]

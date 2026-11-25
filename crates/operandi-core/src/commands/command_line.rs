@@ -1346,7 +1346,7 @@ fn named_mesh_refusal_preserves_redo_and_valid_creation_uses_one_identity() {
     e.dispatch(crate::Command::NewMesh).unwrap();
     e.dispatch(crate::Command::NewMesh).unwrap();
     e.dispatch(crate::Command::Undo).unwrap();
-    assert!(!e.redo.is_empty());
+    assert!(!e.history.redo.is_empty());
     let before = e.clone();
     let next_identity = e.identities.next_id().unwrap();
     let args = serde_json::Map::from_iter([("name".into(), serde_json::json!("  "))]);
@@ -1371,16 +1371,16 @@ fn named_mesh_refusal_preserves_redo_and_valid_creation_uses_one_identity() {
 
     e.scene.next_id = u64::MAX - 2;
     let count = e.scene.items.len();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     run_line(&mut e, "mesh.new name:{  Last Mesh  }")
         .unwrap()
         .unwrap();
     let item = e.scene.active().unwrap();
     assert_eq!(item.id, u64::MAX - 2);
     assert_eq!(item.name, "Last Mesh");
-    assert_eq!(e.undo.len(), undo + 1);
-    assert_eq!(e.undo.last().unwrap().label, "New Mesh");
-    assert!(e.redo.is_empty());
+    assert_eq!(e.history.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "New Mesh");
+    assert!(e.history.redo.is_empty());
     assert!(run_line(&mut e, "mesh.new name:Over").unwrap().is_err());
     assert_eq!(e.scene.items.len(), count + 1);
     e.dispatch(crate::Command::Undo).unwrap();

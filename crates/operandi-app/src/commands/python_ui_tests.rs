@@ -109,7 +109,7 @@ fn a_script_runs_typed_lines_as_one_undo_step() {
     let mut a = box_app();
     a.run(Command::Mode(Mode::Item));
     let id = a.editor.scene.active().unwrap().id;
-    let before = a.editor.undo.len();
+    let before = a.editor.history.undo.len();
     let out = run_script(
         &mut a,
         &ctx,
@@ -120,7 +120,11 @@ fn a_script_runs_typed_lines_as_one_undo_step() {
     assert!(out.ok, "{:?}", out.error);
     assert_eq!(out.output, "False\n");
     assert_eq!(a.editor.scene.item(id).unwrap().transform.translation.y, 3.);
-    assert_eq!(a.editor.undo.len(), before + 1, "one step (UIC-227)");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        before + 1,
+        "one step (UIC-227)"
+    );
     a.execute("app.undo");
     assert_eq!(a.editor.scene.item(id).unwrap().transform.translation.y, 0.);
 }

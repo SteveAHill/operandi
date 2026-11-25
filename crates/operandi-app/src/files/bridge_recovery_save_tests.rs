@@ -166,13 +166,13 @@ impl Frozen {
     fn assert_unchanged(&self, a: &Operandi, what: &str) {
         assert_eq!(a.editor.scene, self.editor.scene, "{what}: scene");
         assert_eq!(
-            labels(&a.editor.undo),
-            labels(&self.editor.undo),
+            labels(&a.editor.history.undo),
+            labels(&self.editor.history.undo),
             "{what}: undo"
         );
         assert_eq!(
-            labels(&a.editor.redo),
-            labels(&self.editor.redo),
+            labels(&a.editor.history.redo),
+            labels(&self.editor.history.redo),
             "{what}: redo"
         );
         assert_eq!(
@@ -242,9 +242,9 @@ impl Frozen {
 fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
     let mut out = Vec::new();
     macro_rules! compare {
-        ($($field:ident),*) => {$(
-            if a.$field != b.$field {
-                out.push(stringify!($field));
+        ($($($field:ident).+),*) => {$(
+            if a.$($field).+ != b.$($field).+ {
+                out.push(stringify!($($field).+));
             }
         )*};
     }
@@ -270,8 +270,8 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         scene,
         action_context,
         live,
-        undo,
-        redo,
+        history.undo,
+        history.redo,
         revision,
         next_item_id,
         selection_start,
@@ -332,9 +332,20 @@ fn invalid_draft_blocks_apply_then_escape_and_correction_apply_once() {
         a.run(Command::Apply);
         assert_eq!(a.editor.scene, expected, "{field}: integration comparison");
         assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 8);
-        assert_eq!(a.editor.undo.len(), armed.editor.undo.len() + 1);
-        assert!(a.editor.undo.last().unwrap().label.contains("Bridge"));
-        assert!(a.editor.redo.is_empty());
+        assert_eq!(
+            a.editor.history.undo.len(),
+            armed.editor.history.undo.len() + 1
+        );
+        assert!(
+            a.editor
+                .history
+                .undo
+                .last()
+                .unwrap()
+                .label
+                .contains("Bridge")
+        );
+        assert!(a.editor.history.redo.is_empty());
         assert_eq!(a.editor.bridge.as_ref().unwrap().requested, s1_parameters());
         assert!(a.field_errors.is_empty());
     }
@@ -353,7 +364,7 @@ fn invalid_draft_save_keeps_destination_bytes_history_and_redo() {
         arm(&mut a, &ctx);
         a.run(Command::Apply);
         assert_eq!(a.editor.scene, expected, "{field}: integration comparison");
-        let applied_undo = labels(&a.editor.undo);
+        let applied_undo = labels(&a.editor.history.undo);
 
         let path = private_destination(&a);
         assert!(a.save(path.clone()), "{field}: {}", a.status);
@@ -368,15 +379,23 @@ fn invalid_draft_save_keeps_destination_bytes_history_and_redo() {
         assert_eq!(a.editor.scene, source, "{field}: {}", a.status);
         assert_eq!(a.editor.scene.selection.faces, vec![0, 1]);
         assert_eq!(a.editor.scene.selection.mode, Mode::Polygon);
-        assert!(a.editor.redo.last().unwrap().label.contains("Bridge"));
-        assert_eq!(labels(&a.editor.undo).len() + 1, applied_undo.len());
+        assert!(
+            a.editor
+                .history
+                .redo
+                .last()
+                .unwrap()
+                .label
+                .contains("Bridge")
+        );
+        assert_eq!(labels(&a.editor.history.undo).len() + 1, applied_undo.len());
         assert!(a.dirty());
 
         arm(&mut a, &ctx);
         assert_eq!(a.editor.scene, source, "{field}: re-arming edited");
         a.fields.insert(field.into(), bad.into());
         let before = Frozen::of(&a);
-        let redo = labels(&a.editor.redo);
+        let redo = labels(&a.editor.history.redo);
         a.menu_action(&ctx, app_menu::line_action("scene.save"));
         assert_eq!(
             std::fs::read(&path).unwrap(),
@@ -384,7 +403,7 @@ fn invalid_draft_save_keeps_destination_bytes_history_and_redo() {
             "{field}: destination bytes changed"
         );
         before.assert_unchanged(&a, field);
-        assert_eq!(labels(&a.editor.redo), redo, "{field}: redo lost");
+        assert_eq!(labels(&a.editor.history.redo), redo, "{field}: redo lost");
         assert!(a.editor.bridge.is_some(), "{field}: hidden Drop");
         assert_eq!(a.fields[field], bad);
         assert!(a.field_errors.contains_key(field));
@@ -440,7 +459,7 @@ fn invalid_twist_blocks_menu_undo_and_selection_refusals_recover() {
     a.menu_action(&ctx, app_menu::line_action("app.undo"));
     assert_eq!(a.editor.scene, source, "{}", a.status);
     assert_eq!(a.editor.scene.selection.faces, vec![0, 1]);
-    assert_eq!(labels(&a.editor.redo).len(), 1);
+    assert_eq!(labels(&a.editor.history.redo).len(), 1);
     a.menu_action(&ctx, app_menu::line_action("app.redo"));
     assert_eq!(a.editor.scene, expected, "{}", a.status);
     a.menu_action(&ctx, app_menu::line_action("app.undo"));
@@ -449,7 +468,7 @@ fn invalid_twist_blocks_menu_undo_and_selection_refusals_recover() {
     assert_eq!(a.editor.bridge.as_ref().unwrap().requested, s1_parameters());
     a.run(Command::Apply);
     assert_eq!(a.editor.scene, expected, "Apply after Undo");
-    assert!(a.editor.redo.is_empty());
+    assert!(a.editor.history.redo.is_empty());
 
     // Empty and one-face ordered selections (set with the fixture's direct
     // selection convention before arming): Apply does nothing, with no
@@ -468,8 +487,8 @@ fn invalid_twist_blocks_menu_undo_and_selection_refusals_recover() {
             }
             assert_eq!(b.editor.scene, source, "{faces:?} {route}: scene");
             assert_eq!(
-                labels(&b.editor.undo),
-                labels(&armed.editor.undo),
+                labels(&b.editor.history.undo),
+                labels(&armed.editor.history.undo),
                 "{faces:?} {route}: undo"
             );
             assert_eq!(b.editor.bridge, armed.editor.bridge, "{faces:?} {route}");
@@ -482,6 +501,9 @@ fn invalid_twist_blocks_menu_undo_and_selection_refusals_recover() {
         arm(&mut b, &ctx);
         b.run(Command::Apply);
         assert_eq!(b.editor.scene, editor_expected(&eligible), "{faces:?}");
-        assert_eq!(b.editor.undo.len(), armed.editor.undo.len() + 1);
+        assert_eq!(
+            b.editor.history.undo.len(),
+            armed.editor.history.undo.len() + 1
+        );
     }
 }

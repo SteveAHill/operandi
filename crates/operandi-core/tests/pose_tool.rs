@@ -20,7 +20,7 @@ fn ik51_ik52_drag_the_head_down_feet_pinned_knees_bend() {
     let knee_before = world(&e, ids["kneeL"]);
     let head = world(&e, ids["head"]);
     let to = head - DVec3::new(0., 0.3, 0.);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(
         &mut e,
         &format!(
@@ -31,7 +31,7 @@ fn ik51_ik52_drag_the_head_down_feet_pinned_knees_bend() {
             ids["footR"]
         ),
     );
-    assert_eq!(e.undo.len(), steps + 1, "one step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one step");
     assert!(
         world(&e, ids["head"]).distance(to) < 0.02,
         "{}",

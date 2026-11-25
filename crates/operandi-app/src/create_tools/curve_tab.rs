@@ -138,12 +138,12 @@ mod tests {
         let mut a = Operandi::empty();
         a.run(Command::NewMesh);
         let before = a.editor.scene.clone();
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         a.execute("curves.setColor override:true color:\"0 1 0\"");
         assert_eq!(a.curve_color, Some([0, 255, 0]));
         assert_eq!(a.curve_override(), Some(Color32::from_rgb(0, 255, 0)));
         assert_eq!(a.editor.scene, before, "the scene doesn't change");
-        assert_eq!(a.editor.undo.len(), steps, "no undo step");
+        assert_eq!(a.editor.history.undo.len(), steps, "no undo step");
         a.execute("curves.setColor override:false");
         assert_eq!(a.curve_color, None);
         a.execute("curves.setColor");

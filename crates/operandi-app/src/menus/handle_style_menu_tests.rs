@@ -123,7 +123,7 @@ fn invisible_hides_handles_but_hauling_still_moves() {
     a.camera.view = View::Front;
     a.run(Command::Mode(Mode::Polygon));
     a.editor.scene.selection.faces = vec![4];
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     draw(&mut a, &ctx, size, vec![]);
     a.execute(LINES[0]);
     a.activate(Tool::Move);

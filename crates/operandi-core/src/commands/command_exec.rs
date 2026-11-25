@@ -216,17 +216,17 @@ pub fn markdown() -> String {
 /// index, so it still works when Max Undo Level trimmed the history while
 /// they were recorded (Astra P4-003).
 pub fn fold_steps(e: &mut Editor, mark: u64, label: &str) {
-    let from = e.undo.len() - e.steps_since(mark);
-    if e.undo.len() <= from + 1 {
-        if e.undo.len() == from + 1
-            && let Some(last) = e.undo.last_mut().map(std::sync::Arc::make_mut)
+    let from = e.history.undo.len() - e.steps_since(mark);
+    if e.history.undo.len() <= from + 1 {
+        if e.history.undo.len() == from + 1
+            && let Some(last) = e.history.undo.last_mut().map(std::sync::Arc::make_mut)
         {
             last.label = label.into();
         }
         return;
     }
     use std::sync::Arc;
-    let mut steps = e.undo.split_off(from);
+    let mut steps = e.history.undo.split_off(from);
     let last = Arc::unwrap_or_clone(steps.pop().expect("more than one step"));
     let mut steps = steps.into_iter();
     let mut first = Arc::unwrap_or_clone(steps.next().expect("more than one step"));
@@ -237,7 +237,7 @@ pub fn fold_steps(e: &mut Editor, mark: u64, label: &str) {
     first.after = last.after;
     first.identity_after = last.identity_after;
     first.label = label.into();
-    e.undo.push(Arc::new(first));
+    e.history.undo.push(Arc::new(first));
 }
 
 /// The current command name for `given`, with the arguments a renamed

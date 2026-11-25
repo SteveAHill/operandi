@@ -279,7 +279,7 @@ impl Editor {
         let tweak_task_before = self.tweak_session();
         let tweak_command = self.tweak_before(&cmd);
         let is_tweak = self.is_tweak(&cmd);
-        let serial_before = self.history_serial;
+        let serial_before = self.history.history_serial;
         let initial_scene = self.scene.clone();
         let mut staged = self.clone();
         staged.synchronize_identities()?;
@@ -395,7 +395,12 @@ impl Editor {
             if staged.live.is_none() {
                 staged.multi_fresh.clear();
             }
-            for c in staged.undo.iter_mut().chain(&mut staged.redo) {
+            for c in staged
+                .history
+                .undo
+                .iter_mut()
+                .chain(&mut staged.history.redo)
+            {
                 if c.identity_after.is_none() {
                     let c = std::sync::Arc::make_mut(c);
                     if c.identity_before

@@ -550,12 +550,12 @@ fn items_list_right_click_sets_the_render_camera() {
     };
     let (disabled, at) = entry(&mut a, second);
     assert!(!disabled);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     draw(&mut a, &ctx, SIZE, vec![Event::PointerMoved(at)]);
     draw(&mut a, &ctx, SIZE, click(at, PointerButton::Primary));
     draw(&mut a, &ctx, SIZE, vec![]);
     assert_eq!(a.editor.scene.render_camera(), Some(second), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     draw(&mut a, &ctx, SIZE, vec![key(Key::Escape)]);
     let (disabled, _) = entry(&mut a, second);
     assert!(disabled, "greyed on the render camera's row");

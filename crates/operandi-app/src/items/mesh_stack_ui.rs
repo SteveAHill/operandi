@@ -1182,11 +1182,11 @@ impl Operandi {
                 _ => crate::colour_field::next_gesture(),
             };
             self.mesh_stack_gesture = dragging.then_some(gesture);
-            let previous = self.editor.undo_fold.replace(gesture);
+            let previous = self.editor.history.undo_fold.replace(gesture);
             for c in blend_commands {
                 self.run(c);
             }
-            self.editor.undo_fold = previous;
+            self.editor.history.undo_fold = previous;
         }
         if let Some(edit) = index_edit {
             self.run(Command::MeshOpIndex { op: r, edit });
@@ -1225,12 +1225,12 @@ impl Operandi {
             _ => crate::colour_field::next_gesture(),
         };
         self.mesh_stack_gesture = dragging.then_some(gesture);
-        let previous = self.editor.undo_fold.replace(gesture);
+        let previous = self.editor.history.undo_fold.replace(gesture);
         self.run(Command::MeshOpSet {
             op: r,
             values: changes,
         });
-        self.editor.undo_fold = previous;
+        self.editor.history.undo_fold = previous;
     }
 }
 

@@ -49,7 +49,7 @@ impl Rig {
             Mode::Edge => a.editor.scene.selection.edges = vec![(5, 6)],
             _ => a.editor.scene.selection.vertices = vec![5],
         }
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         let mut rig = Self { a, ctx, size };
         rig.frame(vec![]);
         rig

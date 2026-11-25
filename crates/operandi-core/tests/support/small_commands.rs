@@ -120,13 +120,13 @@ pub fn selected_positions(e: &Editor) -> Vec<DVec3> {
 /// Undo then redo returns the result; save and reopen keeps it.
 pub fn undo_redo_reopen(e: &mut Editor, before: &Mesh, label: &str) {
     let after = active(e).clone();
-    assert_eq!(e.undo.last().unwrap().label, label);
-    let steps = e.undo.len();
+    assert_eq!(e.history.undo.last().unwrap().label, label);
+    let steps = e.history.undo.len();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(active(e), before, "undo restores the mesh");
     e.dispatch(Command::Redo).unwrap();
     assert_eq!(active(e), &after, "redo repeats it");
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     let path = std::env::temp_dir().join(format!(
         "{}-{}.opscene",
         label.replace(' ', "-"),

@@ -85,13 +85,13 @@ fn polygons_add_the_connected_piece_in_one_undo_step() {
     let first = on(&a, DVec3::new(-2.5, 0., -0.5));
     click(&mut a, &ctx, first, Modifiers::NONE);
     assert_eq!(a.editor.scene.selection.faces, vec![0], "{}", a.status);
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let gap = empty(&a);
     double_click(&mut a, &ctx, gap, Modifiers::SHIFT);
     let faces = &a.editor.scene.selection.faces;
     assert_eq!(sorted(faces), vec![0, 1, 2, 3], "piece A only");
     assert_eq!(a.status, "Expand Selection: 4 selected Polygons");
-    assert_eq!(a.editor.undo.len(), history + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), history + 1, "one undo step");
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.selection.faces, vec![0]);
     a.run(Command::Redo);
@@ -100,7 +100,7 @@ fn polygons_add_the_connected_piece_in_one_undo_step() {
     // A third press is an ordinary Shift+click on nothing.
     click(&mut a, &ctx, gap, Modifiers::SHIFT);
     assert_eq!(a.editor.scene.selection.faces.len(), 4);
-    assert_eq!(a.editor.undo.len(), history + 1);
+    assert_eq!(a.editor.history.undo.len(), history + 1);
 }
 
 #[test]
@@ -109,13 +109,13 @@ fn vertices_add_every_connected_point_of_each_selected_piece() {
     let ctx = Context::default();
     ready(&mut a, &ctx, Mode::Vertex);
     a.editor.scene.selection.vertices = vec![4];
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let gap = empty(&a);
     double_click(&mut a, &ctx, gap, Modifiers::SHIFT);
     let s = &a.editor.scene.selection;
     assert_eq!(sorted(&s.vertices), (0..9).collect::<Vec<u32>>());
     assert_eq!(a.status, "Expand Selection: 9 selected Vertices");
-    assert_eq!(a.editor.undo.len(), history + 1);
+    assert_eq!(a.editor.history.undo.len(), history + 1);
 
     // With a point on each piece, both pieces grow.
     a.editor.scene.selection.vertices = vec![0, 17];
@@ -131,7 +131,7 @@ fn edges_add_the_full_loop_through_each_selected_edge() {
     ready(&mut a, &ctx, Mode::Edge);
     // Piece A's middle row and piece B's middle column.
     a.editor.scene.selection.edges = vec![(3, 4), (10, 13)];
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let gap = empty(&a);
     double_click(&mut a, &ctx, gap, Modifiers::SHIFT);
     let edges = &a.editor.scene.selection.edges;
@@ -147,7 +147,7 @@ fn edges_add_the_full_loop_through_each_selected_edge() {
         a.status
     );
     assert_eq!(a.status, "Expand Selection: 4 selected Edges");
-    assert_eq!(a.editor.undo.len(), history + 1);
+    assert_eq!(a.editor.history.undo.len(), history + 1);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.selection.edges, vec![(3, 4), (10, 13)]);
 
@@ -156,7 +156,7 @@ fn edges_add_the_full_loop_through_each_selected_edge() {
     pause(&mut a, &ctx);
     double_click(&mut a, &ctx, gap, Modifiers::SHIFT);
     assert_eq!(a.editor.scene.selection.edges.len(), 4);
-    assert_eq!(a.editor.undo.len(), history + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), history + 1, "{}", a.status);
 }
 
 #[test]
@@ -165,12 +165,12 @@ fn nothing_selected_or_item_mode_does_nothing() {
     let ctx = Context::default();
     ready(&mut a, &ctx, Mode::Polygon);
     a.run(Command::ClearSelection);
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let gap = empty(&a);
     double_click(&mut a, &ctx, gap, Modifiers::SHIFT);
     assert!(a.editor.scene.selection.faces.is_empty());
     assert_eq!(a.status, "Expand Selection: select components first");
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
 
     a.editor.scene.selection.mode = Mode::Item;
     let before = a.editor.scene.selection.clone();

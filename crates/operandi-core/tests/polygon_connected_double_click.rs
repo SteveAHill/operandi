@@ -41,7 +41,7 @@ fn two_pieces() -> (Editor, u64) {
 fn double_click_selects_the_piece_and_replaces_the_selection() {
     let (mut e, item) = two_pieces();
     e.scene.selection.faces = vec![3];
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::SelectConnectedPolygons {
         item,
         face: 1,
@@ -49,7 +49,11 @@ fn double_click_selects_the_piece_and_replaces_the_selection() {
     })
     .unwrap();
     assert_eq!(e.scene.selection.faces, vec![1, 0], "clicked polygon first");
-    assert_eq!(e.undo.len(), history + 1, "one Select Connected step");
+    assert_eq!(
+        e.history.undo.len(),
+        history + 1,
+        "one Select Connected step"
+    );
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.selection.faces, vec![3]);
     e.dispatch(Command::Redo).unwrap();
@@ -89,7 +93,7 @@ fn invalid_polygons_and_other_modes_are_refused_without_changes() {
     let (mut e, item) = two_pieces();
     e.scene.selection.faces = vec![3];
     let before = e.scene.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     assert!(
         e.dispatch(Command::SelectConnectedPolygons {
             item,
@@ -117,7 +121,7 @@ fn invalid_polygons_and_other_modes_are_refused_without_changes() {
     );
     e.scene.selection.mode = Mode::Polygon;
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
 }
 
 #[test]

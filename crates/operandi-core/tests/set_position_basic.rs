@@ -38,19 +38,19 @@ fn parked_extrude_redo_is_preserved_on_noop_and_refusal_and_branched_on_edit() {
     let before = e.scene.clone();
     let identity = e.identities.current.clone();
     let parked = e.i2.selected.clone();
-    let undo = e.undo.clone();
-    let redo = e.redo.clone();
+    let undo = e.history.undo.clone();
+    let redo = e.history.redo.clone();
     apply(&mut e, 1.).unwrap();
     assert_eq!(e.scene, before);
     assert_eq!(e.identities.current, identity);
     assert_eq!(e.i2.selected, parked);
-    assert!(e.undo == undo && e.redo == redo && e.i2_can_redo());
+    assert!(e.history.undo == undo && e.history.redo == redo && e.i2_can_redo());
     let before_refusal = e.clone();
     assert!(apply(&mut e, f64::NAN).is_err());
     assert!(e == before_refusal);
     assert_eq!(e.scene, before);
     assert_eq!(e.i2.selected, parked);
-    assert!(e.undo == undo && e.redo == redo && e.i2_can_redo());
+    assert!(e.history.undo == undo && e.history.redo == redo && e.i2_can_redo());
     let target = e.set_position_target().unwrap();
     let mut expected = before.clone();
     for v in [4_usize, 5, 6, 7] {

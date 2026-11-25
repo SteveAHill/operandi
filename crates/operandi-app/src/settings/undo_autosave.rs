@@ -404,7 +404,7 @@ impl super::Operandi {
     /// One frame of undo settings and the auto-save timer, including the
     /// countdown shown over the 3D view.
     pub(super) fn autosave_frame(&mut self, ctx: &Context) {
-        self.editor.history = self.undo_autosave.history();
+        self.editor.history.settings = self.undo_autosave.history();
         if self
             .autosave
             .job
@@ -926,11 +926,11 @@ mod tests {
         let ctx = Context::default();
         a.undo_autosave.max_undo_level = 2;
         draw(&mut a, &ctx, vec2(1440., 900.), vec![]);
-        assert_eq!(a.editor.history.max_undo_level, 2);
+        assert_eq!(a.editor.history.settings.max_undo_level, 2);
         for _ in 0..4 {
             a.run(crate::Command::NewMesh);
         }
-        assert_eq!(a.editor.undo.len(), 2);
+        assert_eq!(a.editor.history.undo.len(), 2);
     }
 
     /// A quad grid with a UV map, `side` × `side` polygons.

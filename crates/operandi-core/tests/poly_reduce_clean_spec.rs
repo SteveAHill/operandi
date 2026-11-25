@@ -21,7 +21,7 @@ fn editor(m: Mesh, selected: Vec<u32>) -> Editor {
     e.scene.active_mut().unwrap().mesh = m.into();
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
     e.scene.selection.faces = selected;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 

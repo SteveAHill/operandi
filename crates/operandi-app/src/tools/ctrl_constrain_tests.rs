@@ -49,7 +49,7 @@ impl Rig {
         a.camera.view = View::Front;
         a.run(Command::Mode(Mode::Polygon));
         a.editor.scene.selection.faces = vec![4];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         let mut rig = Self {
             a,
             ctx,
@@ -249,7 +249,7 @@ fn hm08_alt_combinations_navigate_and_never_edit() {
         rig.drag(corner, vec2(60., -40.), modifiers);
         assert_eq!(rig.params(), base, "{modifiers:?}");
         assert_eq!(rig.a.editor.scene, scene, "{modifiers:?}");
-        assert!(rig.a.editor.undo.is_empty(), "{modifiers:?}");
+        assert!(rig.a.editor.history.undo.is_empty(), "{modifiers:?}");
     }
 }
 
@@ -574,10 +574,10 @@ fn rpt_t04_dropping_the_tool_forgets_the_amount() {
     rig.frame(vec![]);
     rig.activate(Tool::Rotate);
     let scene = rig.a.editor.scene.clone();
-    let steps = rig.a.editor.undo.len();
+    let steps = rig.a.editor.history.undo.len();
     rig.middle_click();
     assert_eq!(rig.a.editor.scene, scene, "{}", rig.a.status);
-    assert_eq!(rig.a.editor.undo.len(), steps, "no undo step");
+    assert_eq!(rig.a.editor.history.undo.len(), steps, "no undo step");
 }
 
 #[test]
@@ -650,7 +650,7 @@ fn hm06_ctrl_shift_with_no_whole_polygon_is_refused() {
     let mut rig = Rig::new();
     rig.a.run(Command::Mode(Mode::Vertex));
     rig.a.editor.scene.selection.vertices = vec![5];
-    rig.a.editor.undo.clear();
+    rig.a.editor.history.undo.clear();
     rig.frame(vec![]);
     rig.activate(Tool::Move);
     let faces = rig.a.editor.scene.active().unwrap().mesh.faces.len();

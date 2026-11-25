@@ -368,7 +368,12 @@ mod tests {
             "{}; live={:?}; undo={:?}",
             a.status,
             a.editor.live.as_ref().map(|l| l.tool),
-            a.editor.undo.iter().map(|c| &c.label).collect::<Vec<_>>()
+            a.editor
+                .history
+                .undo
+                .iter()
+                .map(|c| &c.label)
+                .collect::<Vec<_>>()
         );
         a.menu_action(&ctx, line_action("app.undo"));
         assert_eq!(a.editor.scene, base);
@@ -597,7 +602,7 @@ mod tests {
         // The confirmed Move is dropped as its own step, then Edge mode.
         assert!(a.editor.live.is_none());
         assert_eq!(a.editor.scene.selection.mode, Mode::Edge);
-        assert_eq!(a.editor.undo.len(), before.undo.len() + 1);
+        assert_eq!(a.editor.history.undo.len(), before.history.undo.len() + 1);
     }
     #[test]
     fn mode_availability_native_readiness_checks_and_remapping() {
@@ -650,7 +655,7 @@ mod tests {
                     .into();
             a.editor.synchronize_identities().unwrap();
             a.run(Command::Mode(Mode::Polygon));
-            a.editor.undo.clear();
+            a.editor.history.undo.clear();
             a
         };
         let a = app();
@@ -688,7 +693,7 @@ mod tests {
                     mid[i]
                 );
             }
-            assert_eq!(a.editor.undo.len(), 1, "{label}: one undo step");
+            assert_eq!(a.editor.history.undo.len(), 1, "{label}: one undo step");
         }
         // Item mode: greyed with Center's reason, and running it changes nothing.
         let mut a = app();
@@ -715,7 +720,7 @@ mod tests {
         a.editor.scene.active_mut().unwrap().transform.scale = DVec3::new(2., 1., 1.);
         a.editor.synchronize_identities().unwrap();
         a.run(Command::Mode(Mode::Item));
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         let menu = a
             .menu_model(&ctx)
             .into_iter()
@@ -759,11 +764,11 @@ mod tests {
         };
         let before = x(&a);
         a.menu_action(&ctx, line_action("transform.freeze scale"));
-        assert_eq!(a.editor.undo.last().unwrap().label, "Freeze Scale");
+        assert_eq!(a.editor.history.undo.last().unwrap().label, "Freeze Scale");
         assert_eq!(a.editor.scene.active().unwrap().transform.scale, DVec3::ONE);
         assert!((x(&a) - before).abs() < 1e-12, "nothing moves");
         a.menu_action(&ctx, line_action("transform.reset all"));
         // Already identity after the freeze: no step.
-        assert_eq!(a.editor.undo.len(), 1);
+        assert_eq!(a.editor.history.undo.len(), 1);
     }
 }

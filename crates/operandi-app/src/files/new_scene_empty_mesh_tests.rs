@@ -30,8 +30,8 @@ fn assert_baseline(app: &Operandi) {
     assert!(!app.dirty());
     assert!(app.path.is_none());
     assert!(app.editor.live.is_none());
-    assert!(app.editor.undo.is_empty());
-    assert!(app.editor.redo.is_empty());
+    assert!(app.editor.history.undo.is_empty());
+    assert!(app.editor.history.redo.is_empty());
 }
 
 fn assert_title(app: &mut Operandi, ctx: &Context, document: &str, dirty: bool) {

@@ -72,7 +72,7 @@ fn box_z_drag_undo_keeps_the_box_and_drop_makes_one_step() {
     // Jason's example: drag out a box, pull the Z handle, Undo.
     let mut e = editor();
     let empty = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Box)).unwrap();
     draw(&mut e, 0.);
     let drawn = e.scene.clone();
@@ -96,12 +96,12 @@ fn box_z_drag_undo_keeps_the_box_and_drop_makes_one_step() {
     // Redo puts it back.
     redo(&mut e);
     assert_eq!(e.scene, pulled);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 
     // Drop: the whole box is one step, and one Undo removes all of it.
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Cube");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Cube");
     undo(&mut e);
     assert_eq!(e.scene, empty);
     assert_eq!(live_tool(&e), None);
@@ -117,7 +117,7 @@ fn drawn_primitive_undo_takes_back_the_draw_then_closes() {
         draw(&mut e, -6.);
         e.dispatch(Command::Drop).unwrap();
         let one = e.scene.clone();
-        let steps = e.undo.len();
+        let steps = e.history.undo.len();
 
         e.dispatch(Command::Activate(tool)).unwrap();
         draw(&mut e, 3.);
@@ -133,7 +133,7 @@ fn drawn_primitive_undo_takes_back_the_draw_then_closes() {
         assert_eq!(c.effect, closed(tool.label()));
         assert!(c.foreground_closed);
         assert_eq!(e.scene, one);
-        assert_eq!(e.undo.len(), steps);
+        assert_eq!(e.history.undo.len(), steps);
 
         // Redo opens the tool, then brings the draw back.
         redo(&mut e);
@@ -141,7 +141,7 @@ fn drawn_primitive_undo_takes_back_the_draw_then_closes() {
         redo(&mut e);
         assert_eq!(e.scene, preview);
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.undo.len(), steps + 1);
+        assert_eq!(e.history.undo.len(), steps + 1);
     }
 }
 
@@ -201,13 +201,13 @@ fn drag_move(e: &mut Editor, delta: DVec3) {
 fn move_drags_undo_one_at_a_time_then_close_move() {
     let mut e = top_face_cube();
     let original = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     drag_move(&mut e, DVec3::Y * 0.012);
     let first = e.scene.clone();
     drag_move(&mut e, DVec3::Y * 0.5);
     let second = e.scene.clone();
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 
     // Each Undo takes back one drag; Move stays at zero (MU-MID-03).
     undo(&mut e);
@@ -234,7 +234,7 @@ fn move_drags_undo_one_at_a_time_then_close_move() {
 
     // Drop: both drags are one Move step.
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     undo(&mut e);
     assert_eq!(e.scene, original);
 }
@@ -509,7 +509,7 @@ fn bevel_drags_undo_one_at_a_time_and_drop_is_one_step() {
     // Jason, 2026-11-04: the same rule for every tool, Bevel included.
     let mut e = top_face_cube();
     let original = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     let start = e.scene.clone();
     let base = e.live.as_ref().unwrap().params.clone();
@@ -546,7 +546,7 @@ fn bevel_drags_undo_one_at_a_time_and_drop_is_one_step() {
 
     // Drop: one Bevel step, undone in one go.
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     undo(&mut e);
     assert_eq!(e.scene, original);
     assert_eq!(live_tool(&e), None);

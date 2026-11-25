@@ -39,7 +39,7 @@ fn strip_from(from: f64) -> Editor {
     }
     .into();
     e.scene.selection.mode = Mode::Polygon;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn points(e: &Editor) -> Vec<DVec3> {

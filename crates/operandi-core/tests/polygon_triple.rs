@@ -56,7 +56,7 @@ fn editor(mesh: Mesh, selected: &[u32]) -> Editor {
     e.scene.selection.mode = Mode::Polygon;
     e.scene.selection.faces = selected.to_vec();
     e.scene.validate().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -224,14 +224,16 @@ fn tri_005e_existing_triangle_kept_and_all_triangle_selection_is_neutral() {
     assert_eq!(selection[0], 1, "triangle stays selected in order");
     assert_eq!(selection.len(), 3);
     assert_exact_triangulation(&source, 0, &out, &selection[1..]);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 
     // Triangles only: exact no-op with no history, redo or scene change.
     let mut neutral = editor(source.clone(), &[1]);
     let before = neutral.clone();
     triple(&mut neutral);
     assert_eq!(neutral.scene, before.scene);
-    assert!(neutral.undo == before.undo && neutral.redo == before.redo);
+    assert!(
+        neutral.history.undo == before.history.undo && neutral.history.redo == before.history.redo
+    );
     // A redo branch also survives the neutral case.
     let mut with_redo = editor(source, &[0]);
     triple(&mut with_redo);
@@ -240,8 +242,11 @@ fn tri_005e_existing_triangle_kept_and_all_triangle_selection_is_neutral() {
     let before = with_redo.clone();
     triple(&mut with_redo);
     assert_eq!(with_redo.scene, before.scene);
-    assert_eq!(with_redo.redo.len(), 1);
-    assert!(with_redo.undo == before.undo && with_redo.redo == before.redo);
+    assert_eq!(with_redo.history.redo.len(), 1);
+    assert!(
+        with_redo.history.undo == before.history.undo
+            && with_redo.history.redo == before.history.redo
+    );
 }
 
 /// Arrowhead quad whose only valid diagonal is 1-3 (vertex 1 is reflex).

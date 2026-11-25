@@ -326,9 +326,9 @@ fn lxp_01_03_a_modo_material_loads_in_one_undo_step() {
         .add(operandi_core::shader_tree::NewLayer::Group, None)
         .unwrap();
     let before = a.editor.scene.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     assert!(a.browser_load_into_group(&entry, group), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), undo + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), undo + 1, "one undo step");
     let tree = &a.editor.scene.shader_tree;
     // The constant and the material arrive; the plug-in layer doesn't.
     let kids: Vec<_> = tree.children(Some(group)).collect();

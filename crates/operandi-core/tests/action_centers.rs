@@ -83,9 +83,9 @@ fn vac_t08_13_geometry_and_independent_axes() {
             let changed = e.scene.clone();
             e.dispatch(Command::Preview(p)).unwrap();
             assert_eq!(e.scene, changed);
-            let n = e.undo.len();
+            let n = e.history.undo.len();
             e.dispatch(Command::Drop).unwrap();
-            assert_eq!(e.undo.len(), n + 1);
+            assert_eq!(e.history.undo.len(), n + 1);
             e.dispatch(Command::Undo).unwrap();
             assert_eq!(e.scene, before);
             e.dispatch(Command::Redo).unwrap();
@@ -293,7 +293,7 @@ fn acs_availability_matches_dispatch_without_mutating_stage_or_history() {
                     e.live.as_ref().unwrap().params,
                     before.live.as_ref().unwrap().params
                 );
-                assert_eq!(e.undo.len(), before.undo.len());
+                assert_eq!(e.history.undo.len(), before.history.undo.len());
                 if tool != Tool::Move {
                     assert_eq!(e.scene, before.scene);
                 }

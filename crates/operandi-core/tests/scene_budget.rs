@@ -128,15 +128,19 @@ fn undo_keeps_the_newest_steps_that_fit_its_memory_budget() {
     for _ in 0..6 {
         e.dispatch(Command::NewMesh).unwrap();
     }
-    assert_eq!(e.undo.len(), 6);
+    assert_eq!(e.history.undo.len(), 6);
     // Each step keeps two copies of about 55 items.
     let step = 2 * 55 * std::mem::size_of::<operandi_core::Item>();
     e.trim_undo_memory_to(3 * step);
-    assert!((2..=3).contains(&e.undo.len()), "{}", e.undo.len());
-    assert_eq!(e.undo.last().unwrap().after.items.len(), 56);
+    assert!(
+        (2..=3).contains(&e.history.undo.len()),
+        "{}",
+        e.history.undo.len()
+    );
+    assert_eq!(e.history.undo.last().unwrap().after.items.len(), 56);
     // The newest step always stays.
     e.trim_undo_memory_to(0);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.items.len(), 55);
     const { assert!(operandi_core::UNDO_MEMORY_BUDGET >= 1 << 30) };

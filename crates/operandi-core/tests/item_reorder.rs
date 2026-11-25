@@ -54,7 +54,7 @@ fn mv(e: &mut Editor, items: &[u64], parent: Option<u64>, before: Option<u64>) -
 #[test]
 fn a_between_drop_reorders_siblings_without_parenting_and_undoes_in_one_step() {
     let (mut e, [a, b, c, d]) = four();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     // D before B, at the top level.
     mv(&mut e, &[d], None, Some(b)).unwrap();
     assert_eq!(order(&e), [a, d, b, c]);
@@ -62,8 +62,8 @@ fn a_between_drop_reorders_siblings_without_parenting_and_undoes_in_one_step() {
         e.scene.items.iter().all(|i| i.parent.is_none()),
         "nobody parented"
     );
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Reorder");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Reorder");
     // A to the end.
     mv(&mut e, &[a], None, None).unwrap();
     assert_eq!(order(&e), [d, b, c, a]);
@@ -78,29 +78,29 @@ fn a_between_drop_reorders_siblings_without_parenting_and_undoes_in_one_step() {
 #[test]
 fn dropping_where_it_already_is_changes_nothing_and_adds_no_undo_step() {
     let (mut e, [a, b, c, _]) = four();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     mv(&mut e, &[b], None, Some(c)).unwrap();
     mv(&mut e, &[b], None, Some(b)).unwrap();
     assert_eq!(order(&e)[..3], [a, b, c]);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]
 fn a_between_drop_under_another_parent_reparents_keeping_the_world_position() {
     let (mut e, [a, b, c, d]) = four();
     mv(&mut e, &[b, c], Some(a), None).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Parent");
+    assert_eq!(e.history.undo.last().unwrap().label, "Parent");
     assert_eq!(order(&e), [a, b, c, d]);
     let before = world(&e, d);
     // D in between B and C, under A: reparented, same world place.
     mv(&mut e, &[d], Some(a), Some(c)).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Parent");
+    assert_eq!(e.history.undo.last().unwrap().label, "Parent");
     assert_eq!(parent(&e, d), Some(a));
     assert_eq!(order(&e), [a, b, d, c]);
     assert!((world(&e, d) - before).length() < 1e-9);
     // C out to the top level, first.
     mv(&mut e, &[c], None, Some(a)).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Unparent");
+    assert_eq!(e.history.undo.last().unwrap().label, "Unparent");
     assert_eq!(order(&e), [c, a, b, d]);
     assert!((world(&e, c) - DVec3::new(2., 0., 0.)).length() < 1e-9);
 }
@@ -108,7 +108,7 @@ fn a_between_drop_under_another_parent_reparents_keeping_the_world_position() {
 #[test]
 fn a_multi_selection_keeps_its_list_order_whatever_the_selection_order() {
     let (mut e, [a, b, c, d]) = four();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     // Picked D first, then A: they land as A, D (list order).
     mv(&mut e, &[d, a], None, Some(c)).unwrap();
     assert_eq!(order(&e), [b, a, d, c]);
@@ -117,7 +117,7 @@ fn a_multi_selection_keeps_its_list_order_whatever_the_selection_order() {
     assert_eq!(order(&e), [b, a, d, c]);
     assert_eq!(parent(&e, a), Some(b));
     assert_eq!(parent(&e, d), Some(b));
-    assert_eq!(e.undo.len(), steps + 2, "one step per drop");
+    assert_eq!(e.history.undo.len(), steps + 2, "one step per drop");
 }
 
 #[test]
@@ -143,7 +143,7 @@ fn loops_are_refused_and_change_nothing() {
     mv(&mut e, &[b], Some(a), None).unwrap();
     mv(&mut e, &[c], Some(b), None).unwrap();
     let scene = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert!(mv(&mut e, &[a], Some(a), None).is_err(), "onto itself");
     assert!(
         mv(&mut e, &[a], Some(c), None).is_err(),
@@ -154,7 +154,7 @@ fn loops_are_refused_and_change_nothing() {
         "a multi-drag into one dragged row's branch"
     );
     assert_eq!(e.scene, scene);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]

@@ -145,7 +145,7 @@ fn assert_clean_new_document(a: &Operandi) {
     assert_eq!(scene, &a.saved);
     assert!(!a.dirty());
     assert!(a.path.is_none());
-    assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+    assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
     assert!(a.editor.live.is_none());
     assert!(a.editor.cone.is_none(), "no old Cone session or preview");
 }

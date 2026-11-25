@@ -160,13 +160,13 @@ fn toggling_before_drawing_creates_no_geometry() {
     for tool in [Tool::Box, Tool::Sphere, Tool::Cylinder] {
         let mut e = editor();
         let scene = e.scene.clone();
-        let history = e.undo.len();
+        let history = e.history.undo.len();
         e.dispatch(Command::Activate(tool)).unwrap();
         e.dispatch(Command::PrimitiveUvs(false)).unwrap();
         e.dispatch(Command::PrimitiveUvs(true)).unwrap();
         assert_eq!(e.scene, scene, "{tool:?}");
         e.dispatch(Command::Cancel).unwrap();
-        assert_eq!(e.undo.len(), history);
+        assert_eq!(e.history.undo.len(), history);
     }
 }
 

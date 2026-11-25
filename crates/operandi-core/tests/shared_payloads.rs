@@ -67,7 +67,7 @@ fn untouched_mesh_and_identities_stay_shared_through_i2_and_history() {
     assert_ne!(e.scene.items[0].mesh, stage.base.scene.items[0].mesh);
 
     e.dispatch(Command::Drop).unwrap();
-    let checkpoint = e.undo.last().unwrap();
+    let checkpoint = e.history.undo.last().unwrap();
     assert!(Shared::same(
         checkpoint.before.items[1].mesh.shared(),
         mesh.shared()

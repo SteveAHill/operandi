@@ -15,7 +15,7 @@ fn app() -> (Operandi, Context) {
         operandi_core::primitive::cube_geometry(DVec3::ZERO, DVec3::ONE)
             .unwrap()
             .into();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.category = toolbox::Category::Sculpt;
     let ctx = Context::default();
     theme::install(&ctx);

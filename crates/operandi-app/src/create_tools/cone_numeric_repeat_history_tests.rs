@@ -175,8 +175,8 @@ fn state(e: &Editor) -> State {
         cone: e.cone.clone(),
         preset: e.cone_preset.clone(),
         live: e.live.is_some(),
-        undo: labels(&e.undo),
-        redo: labels(&e.redo),
+        undo: labels(&e.history.undo),
+        redo: labels(&e.history.redo),
     }
 }
 
@@ -184,11 +184,11 @@ fn state(e: &Editor) -> State {
 fn assert_matches(a: &Operandi, oracle: &Editor, step: &str) {
     assert_eq!(state(&a.editor), state(oracle), "{step}: state");
     assert!(
-        history(&a.editor.undo) == history(&oracle.undo),
+        history(&a.editor.history.undo) == history(&oracle.history.undo),
         "{step}: undo"
     );
     assert!(
-        history(&a.editor.redo) == history(&oracle.redo),
+        history(&a.editor.history.redo) == history(&oracle.history.redo),
         "{step}: redo"
     );
     a.editor.scene.validate().unwrap();
@@ -223,8 +223,8 @@ fn snapshot(step: &str, e: &Editor) {
             c.error.clone()
         )),
         e.cone_preset.sides,
-        e.undo.iter().map(|c| &c.label).collect::<Vec<_>>(),
-        e.redo.iter().map(|c| &c.label).collect::<Vec<_>>(),
+        e.history.undo.iter().map(|c| &c.label).collect::<Vec<_>>(),
+        e.history.redo.iter().map(|c| &c.label).collect::<Vec<_>>(),
     );
 }
 
@@ -292,7 +292,7 @@ fn ca_con_025_026_actual_panel_two_applies_menu_history_and_reopen() {
     let baseline = a.editor.scene.clone();
     assert_eq!(baseline, oracle.scene, "NSM-001 baseline");
     assert_eq!(counts(&baseline), (0, 0));
-    assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+    assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
     frame(&mut a, &ctx, vec![]);
 
     // Arm through the toolbox Cone button.
@@ -316,7 +316,7 @@ fn ca_con_025_026_actual_panel_two_applies_menu_history_and_reopen() {
     ] {
         type_field(&mut a, &ctx, field, value);
         assert_eq!(a.editor.scene, baseline, "{field}: scene unchanged");
-        assert!(a.editor.undo.is_empty(), "{field}: no history");
+        assert!(a.editor.history.undo.is_empty(), "{field}: no history");
     }
     // Choices through their controls: Axis Y, Face and Single Polygon.
     let below = Some(a.field_rects["cone_sides"]);

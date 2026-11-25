@@ -73,7 +73,7 @@ fn move_moves_the_selection_on_every_mesh_in_one_step() {
     pick(&mut e, a, Component::Polygon(ta));
     pick(&mut e, b, Component::Polygon(tb));
     let (a0, b0) = (mesh(&e, a), mesh(&e, b));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     // One handle at the centre of both tops: x = 3, y = 1.
     let frame = e.live.as_ref().unwrap().action_frame.unwrap();
@@ -90,7 +90,7 @@ fn move_moves_the_selection_on_every_mesh_in_one_step() {
     e.dispatch(Command::Drop).unwrap();
     assert_eq!(moved(&a0, &mesh(&e, a)), 4);
     assert_eq!(moved(&b0, &mesh(&e, b)), 4);
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(mesh(&e, a), a0);
     assert_eq!(mesh(&e, b), b0);
@@ -218,7 +218,7 @@ fn item_mode_moves_rotates_and_scales_every_selected_item() {
     e.dispatch(Command::SelectItem(Some(b))).unwrap();
     drag(&mut e, Tool::Move, DVec3::new(4., 0., 0.));
     e.dispatch(Command::SelectItems(vec![a, b])).unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     // The handle at the shared centre of the items' positions.
     let frame = e.live.as_ref().unwrap().action_frame.unwrap();
@@ -227,7 +227,7 @@ fn item_mode_moves_rotates_and_scales_every_selected_item() {
     drag(&mut e, Tool::Move, DVec3::Y);
     assert_eq!(item(&e, a).transform.translation, DVec3::Y);
     assert_eq!(item(&e, b).transform.translation, DVec3::new(4., 1., 0.));
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(item(&e, a).transform.translation, DVec3::ZERO);
     assert_eq!(item(&e, b).transform.translation, DVec3::new(4., 0., 0.));

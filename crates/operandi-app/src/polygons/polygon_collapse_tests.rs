@@ -209,9 +209,9 @@ fn col_b02_panel_command_and_shortcut_routes_match_on_equal_scenes() {
     assert_eq!(shortcut.editor.scene, want, "{}", shortcut.status);
 
     for a in [&panel, &command, &upper, &action, &shortcut] {
-        assert_eq!(a.editor.undo.len(), 1);
-        assert_eq!(a.editor.undo[0].label, "Collapse");
-        assert!(a.editor.redo.is_empty());
+        assert_eq!(a.editor.history.undo.len(), 1);
+        assert_eq!(a.editor.history.undo[0].label, "Collapse");
+        assert!(a.editor.history.redo.is_empty());
         assert_eq!(a.editor.scene.items.len(), 2, "not item deletion");
     }
 
@@ -223,7 +223,7 @@ fn col_b02_panel_command_and_shortcut_routes_match_on_equal_scenes() {
     // A repeat with nothing selected refuses without a duplicate edit.
     panel.execute("poly.collapse");
     assert_eq!(panel.editor.scene, want);
-    assert_eq!(panel.editor.undo.len(), 1);
+    assert_eq!(panel.editor.history.undo.len(), 1);
     assert!(panel.status.contains("Select polygons"), "{}", panel.status);
 }
 
@@ -279,10 +279,10 @@ fn col_b02_default_binding_is_literal_ctrl_backspace_in_polygon_context() {
     // 2026-11-21: both delete keys run `delete`).
     let mut remove = app(&source);
     chord(&mut remove, &ctx, Key::Backspace, Modifiers::SHIFT);
-    assert_eq!(remove.editor.undo[0].label, "Remove");
+    assert_eq!(remove.editor.history.undo[0].label, "Remove");
     let mut plain = app(&source);
     chord(&mut plain, &ctx, Key::Backspace, Modifiers::NONE);
-    assert_eq!(plain.editor.undo[0].label, "Delete");
+    assert_eq!(plain.editor.history.undo[0].label, "Delete");
     let mut forward = app(&source);
     chord(&mut forward, &ctx, Key::Delete, Modifiers::NONE);
     assert_eq!(plain.editor.scene, forward.editor.scene);
@@ -364,7 +364,7 @@ fn col_b02_saved_input_map_remap_and_legacy_maps() {
         fresh.editor.scene, before,
         "user's own action fired instead"
     );
-    assert!(fresh.editor.undo.is_empty());
+    assert!(fresh.editor.history.undo.is_empty());
 }
 
 #[test]
@@ -461,7 +461,7 @@ fn col_b04_boundary_and_connected_selections_heal() {
     let mesh = &a.editor.scene.active().unwrap().mesh;
     mesh.validate().unwrap();
     assert_eq!(mesh.faces.len(), 4);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 
     // Two adjacent polygons form one piece and collapse to one point. The
     // neighbour sharing two of its edges with the piece closes up entirely.

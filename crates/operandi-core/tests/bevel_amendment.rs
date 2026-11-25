@@ -244,7 +244,7 @@ fn bv_valid_planar_repair_survivors_history_context_and_native_roundtrip() {
     }))
     .unwrap();
     assert_eq!(e.scene, stage);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     e.dispatch(Command::Continue).unwrap();
     let mut next = e.live.as_ref().unwrap().params.clone();
     next.shift = 0.05;

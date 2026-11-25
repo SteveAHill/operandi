@@ -250,14 +250,14 @@ fn x_taps_toggle_and_holding_through_a_drag_flips_back() {
     };
     let (mut app, rect) = two_quads(2, VERTEX);
     app.snapping.enabled = false;
-    let history = app.editor.undo.len();
+    let history = app.editor.history.undo.len();
     // Tap: on, and stays on when the key is up.
     app.execute("snapping toggle");
     assert!(app.snapping.enabled);
     idle(&mut app);
     assert!(app.snapping.enabled && app.snap_hold.is_none());
     // SN-14: toggling is not an undo step.
-    assert_eq!(app.editor.undo.len(), history);
+    assert_eq!(app.editor.history.undo.len(), history);
     // Hold through a drag: off for the drag, back on at release.
     app.execute("snapping toggle");
     assert!(!app.snapping.enabled);

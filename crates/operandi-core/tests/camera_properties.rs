@@ -90,10 +90,10 @@ fn edits_are_one_undo_step_named_after_the_property() {
             "Grid",
         ),
     ] {
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         edit(&mut e, id, change).unwrap();
-        assert_eq!(e.undo.len(), undo + 1);
-        assert_eq!(e.undo.last().unwrap().label, name);
+        assert_eq!(e.history.undo.len(), undo + 1);
+        assert_eq!(e.history.undo.last().unwrap().label, name);
     }
     let c = camera(&e, id);
     assert_eq!(c.overlay.as_ref().unwrap().grid, OverlayGrid::RuleOfThirds);
@@ -113,7 +113,7 @@ fn bad_values_change_nothing() {
     let mut e = new_scene();
     let id = cameras(&e)[0];
     let before = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     for bad in [
         CameraEdit::FStop(0.9),
         CameraEdit::IrisBlades(2),
@@ -132,7 +132,7 @@ fn bad_values_change_nothing() {
         assert!(edit(&mut e, id, bad.clone()).is_err(), "{bad:?}");
     }
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
 }
 
 #[test]
@@ -144,9 +144,9 @@ fn every_selected_camera_follows() {
     e.scene.selection.mode = Mode::Item;
     e.scene.selection.item = Some(ids[0]);
     e.scene.selection.also = vec![ids[1]];
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     edit(&mut e, ids[0], CameraEdit::FStop(2.0)).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     assert!(ids.iter().all(|id| camera(&e, *id).dof.f_stop == 2.0));
     // All or nothing: the lights in the selection are skipped, a refusal
     // on any camera changes none.
@@ -167,7 +167,7 @@ fn film_back_preset_sets_width_and_height_in_one_step() {
         .iter()
         .find(|p| p.name.starts_with("APS-C"))
         .unwrap();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     edit(
         &mut e,
         id,
@@ -177,7 +177,7 @@ fn film_back_preset_sets_width_and_height_in_one_step() {
         },
     )
     .unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     assert_eq!(matching_film_back(camera(&e, id), &presets), Some(apsc));
 }
 
@@ -186,14 +186,14 @@ fn reset_sync_and_autofocus_are_one_step_each() {
     let mut e = new_scene();
     let id = cameras(&e)[0];
     let before = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::ResetTransform {
         items: vec![id],
         part: TransformReset::Rotation,
     })
     .unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Reset Rotation");
+    assert_eq!(e.history.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Reset Rotation");
     let item = e.scene.items.iter().find(|i| i.id == id).unwrap();
     assert_eq!(item.transform.rotation, DVec3::ZERO);
     assert_eq!(item.transform.translation, DVec3::new(0.0, 0.75, 4.0));
@@ -212,14 +212,14 @@ fn reset_sync_and_autofocus_are_one_step_each() {
         target_distance: 19f64.sqrt(),
     })
     .unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Sync to View");
+    assert_eq!(e.history.undo.last().unwrap().label, "Sync to View");
     e.dispatch(Command::Undo).unwrap();
 
     // Autofocus: nothing in view yet, then a 1 m box at the origin.
     assert!(e.dispatch(Command::CameraAutofocus(id)).is_err());
     e.scene.items[0].mesh = Mesh::box_mesh(DVec3::ZERO, DVec3::ONE, 0).unwrap().into();
     e.dispatch(Command::CameraAutofocus(id)).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Autofocus");
+    assert_eq!(e.history.undo.last().unwrap().label, "Autofocus");
     let d = camera(&e, id).focus_distance;
     assert!(d > 3.0 && d < 4.0, "{d}");
 
@@ -250,7 +250,7 @@ fn reset_sync_and_autofocus_are_one_step_each() {
 fn background_image_loads_as_one_step() {
     let mut e = new_scene();
     let id = cameras(&e)[0];
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::CameraBackgroundLoad {
         item: id,
         path: "/tmp/plate.png".into(),
@@ -258,7 +258,7 @@ fn background_image_loads_as_one_step() {
         height: 480,
     })
     .unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     let image = camera(&e, id).background.image.unwrap();
     assert_eq!(e.scene.image(image).unwrap().width, 640);
     edit(

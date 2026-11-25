@@ -29,8 +29,8 @@ pub(crate) struct HistoryPosition {
 impl HistoryPosition {
     pub(crate) fn of(editor: &Editor) -> Self {
         Self {
-            undo_len: editor.undo.len(),
-            has_completed_redo: !editor.redo.is_empty(),
+            undo_len: editor.history.undo.len(),
+            has_completed_redo: !editor.history.redo.is_empty(),
         }
     }
 }

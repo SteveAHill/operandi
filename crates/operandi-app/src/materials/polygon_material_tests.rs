@@ -641,10 +641,10 @@ fn dialog_opens_with_defaults_and_ok_stores_the_settings_in_one_step() {
         ..Default::default()
     };
     a.set_material.as_mut().unwrap().show_material(&lacquer);
-    let depth = a.editor.undo.len();
+    let depth = a.editor.history.undo.len();
     click_button(&mut a, &ctx, "OK");
     assert!(a.set_material.is_none(), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), depth + 1);
+    assert_eq!(a.editor.history.undo.len(), depth + 1);
     assert_eq!(a.editor.scene.material("Lacquer"), Some(&lacquer));
     assert_eq!(
         a.editor.scene.active().unwrap().mesh.faces[0].material,
@@ -724,7 +724,7 @@ fn material_empty_selection_tags_the_whole_mesh() {
         .ensure_material("Warm Clay", &operandi_core::Material::default())
         .unwrap();
     assert_eq!(a.editor.scene, expected);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     // The name-only command does the same without the dialog.
     let mut direct = app(&empty);
     direct.execute("poly.setMaterial {Warm Clay}");

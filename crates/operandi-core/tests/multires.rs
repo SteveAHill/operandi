@@ -253,9 +253,9 @@ fn refusals_name_their_reason() {
         }
     }
     // The polygon budget or the level cap stops it with a reason.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert!(run(&mut e, "operandi.multires.subdivide").is_err());
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]

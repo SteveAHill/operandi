@@ -48,11 +48,11 @@ fn check(what: &str, op: impl Fn(&mut Editor)) {
     let mut plain = editor(Transform::default());
     op(&mut plain);
     let mut e = editor(moved());
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     op(&mut e);
     assert_same_points(&world_points(&plain), &world_points(&e), what);
     assert_eq!(e.scene.active().unwrap().transform, moved(), "{what}");
-    assert_eq!(e.undo.len(), history + 1, "{what}: one undo step");
+    assert_eq!(e.history.undo.len(), history + 1, "{what}: one undo step");
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.active().unwrap().mesh.vertices.is_empty(), "{what}");
     assert_eq!(e.scene.active().unwrap().transform, moved(), "{what}");
@@ -220,7 +220,7 @@ fn zero_scale_mesh_is_refused_and_left_alone() {
     };
     let mut e = editor(flat);
     let base = e.scene.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     for result in [
         e.dispatch(Command::Activate(Tool::Box)),
         e.dispatch(Command::Activate(Tool::Sphere)),
@@ -246,7 +246,7 @@ fn zero_scale_mesh_is_refused_and_left_alone() {
     }
     assert!(!e.has_active_task());
     assert_eq!(e.scene, base);
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
 }
 
 #[test]

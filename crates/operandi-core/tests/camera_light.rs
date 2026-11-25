@@ -172,7 +172,7 @@ fn cameras_and_lights_edit_in_item_mode_only() {
 fn panel_edits_are_single_undo_steps_and_validated() {
     let mut e = new_scene();
     let (c, l) = (camera_id(&e), light_id(&e));
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::EditCamera {
         item: c,
         edit: CameraEdit::FocalLength(0.035),
@@ -183,7 +183,7 @@ fn panel_edits_are_single_undo_steps_and_validated() {
         edit: LightEdit::Intensity(5.0),
     })
     .unwrap();
-    assert_eq!(e.undo.len(), undo + 2);
+    assert_eq!(e.history.undo.len(), undo + 2);
     assert!(
         e.dispatch(Command::EditCamera {
             item: c,
@@ -219,7 +219,7 @@ fn camera_view_navigation_is_one_undo_step() {
     let mut e = new_scene();
     let id = camera_id(&e);
     let before = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     let transform = scene::Transform {
         translation: DVec3::new(1.0, 2.0, 3.0),
         rotation: look_at_rotation(DVec3::new(1.0, 2.0, 3.0), DVec3::ZERO),
@@ -231,7 +231,7 @@ fn camera_view_navigation_is_one_undo_step() {
         target_distance: 14f64.sqrt(),
     })
     .unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     let item = e.scene.items.iter().find(|i| i.id == id).unwrap();
     assert_eq!(item.transform, transform);
     assert!((item.camera.as_ref().unwrap().target_distance - 14f64.sqrt()).abs() < 1e-12);
@@ -297,9 +297,9 @@ fn create_light_makes_each_kind_at_the_origin_alone_selected() {
         (LightKind::Area, "Area Light"),
     ] {
         let mut e = new_scene();
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         e.dispatch(Command::NewLight(kind)).unwrap();
-        assert_eq!(e.undo.len(), undo + 1, "{kind:?}: one undo step");
+        assert_eq!(e.history.undo.len(), undo + 1, "{kind:?}: one undo step");
         let item = e.scene.active().unwrap();
         assert_eq!(item.name, name);
         assert_eq!(item.transform, scene::Transform::default());
@@ -479,9 +479,9 @@ fn tool_channel_edits_survive_moves_and_undo_inside_the_tool() {
     e.dispatch(Command::Redo).unwrap();
     assert_eq!(width(&e, id), 2.0);
     // Drop keeps it as one document step.
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     assert_eq!(width(&e, id), 2.0);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(width(&e, id), 1.0);

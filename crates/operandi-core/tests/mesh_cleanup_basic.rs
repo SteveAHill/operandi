@@ -207,7 +207,7 @@ fn cleanup_maps_sparse_payload_selection_identity_and_history() {
     assert_eq!(editor.scene.items[1], unrelated);
     let after = editor.scene.clone();
     let ids_after = editor.identities.current.clone();
-    assert_eq!(editor.undo.last().unwrap().label, "Mesh Cleanup");
+    assert_eq!(editor.history.undo.last().unwrap().label, "Mesh Cleanup");
     editor.dispatch(Command::Undo).unwrap();
     assert_eq!(editor.scene, before);
     assert_eq!(editor.identities.current, ids_before);
@@ -280,10 +280,10 @@ fn cleanup_requires_an_explicit_visible_idle_item_and_preserves_redo_on_refusal(
     editor.dispatch(Command::Undo).unwrap();
     editor.scene.selection.item = None;
     let before = editor.scene.clone();
-    let redo = editor.redo.clone();
+    let redo = editor.history.redo.clone();
     assert!(editor.dispatch(Command::CleanupFloating(None)).is_err());
     assert_eq!(editor.scene, before);
-    assert!(editor.redo == redo);
+    assert!(editor.history.redo == redo);
 }
 
 #[test]

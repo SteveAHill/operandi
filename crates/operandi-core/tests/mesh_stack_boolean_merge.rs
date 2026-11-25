@@ -272,9 +272,9 @@ fn mm_use_world_transforms_off_keeps_the_placement() {
         (l.x, h.x)
     };
     assert_eq!(x_range(&e), (2.5, 3.5), "default: placed");
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     set(&mut e, op, json!({ "useWorldXfrm": false })).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     assert_eq!(x_range(&e), (2.5, 3.5), "M03");
     set(&mut e, op, json!({ "world": false })).unwrap();
     assert_eq!(x_range(&e), (-0.5, 0.5), "M04");

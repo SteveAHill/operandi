@@ -81,11 +81,11 @@ fn the_falloff_can_be_turned_on_moved_and_off_without_dropping_the_tool() {
     e.dispatch(Command::SpatialFalloff(Some(ramp(0.75))))
         .unwrap();
     let shown = e.scene.active().unwrap().mesh.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::Drop).unwrap();
     assert!(e.live.is_none());
     assert_eq!(e.scene.active().unwrap().mesh.vertices, shown.vertices);
-    assert_eq!(e.undo.len(), history + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), history + 1, "one undo step");
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.active().unwrap().mesh.faces.is_empty());
 }

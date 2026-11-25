@@ -168,9 +168,9 @@ mod tests {
         both.sort_unstable();
         assert_eq!(both, vec![ids[0], ids[1]]);
         assert_eq!(app.menu_targets(ids[2]), vec![ids[2]]);
-        let steps = app.editor.undo.len();
+        let steps = app.editor.history.undo.len();
         app.set_item_editor_color(both, Some(EditorColor::Orange));
-        assert_eq!(app.editor.undo.len(), steps + 1);
+        assert_eq!(app.editor.history.undo.len(), steps + 1);
         app.run(Command::Undo);
         assert_eq!(color_of(&app, ids[0]), None);
         assert_eq!(color_of(&app, ids[1]), None);

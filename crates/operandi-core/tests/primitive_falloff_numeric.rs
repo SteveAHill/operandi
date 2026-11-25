@@ -124,9 +124,9 @@ fn apply_keeps_the_shaped_mesh_in_one_undo_step() {
     e.dispatch(Command::SpatialFalloff(Some(ramp(0.75))))
         .unwrap();
     let shaped = preview(&e);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::Apply).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     assert_eq!(e.scene.active().unwrap().mesh.vertices, shaped.vertices);
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.active().unwrap().mesh.vertices.is_empty());

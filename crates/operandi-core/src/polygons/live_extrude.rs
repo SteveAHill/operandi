@@ -129,7 +129,7 @@ impl Editor {
             .ok_or(HistoryRefusal::NoLocalExtrudeRedo)?;
         match s.cursor {
             0 => {
-                if s.anchor != self.undo.len() || !self.redo.is_empty() {
+                if s.anchor != self.history.undo.len() || !self.history.redo.is_empty() {
                     return Err(HistoryRefusal::ParkedAnchor);
                 }
                 self.i2_resume_owner()?;
@@ -294,7 +294,7 @@ impl Editor {
         Ok(())
     }
     fn i2_begin(&mut self) -> Result<()> {
-        if self.undo.len() + self.redo.len() > 100 {
+        if self.history.undo.len() + self.history.redo.len() > 100 {
             return Err("Malformed completed history capacity".into());
         }
         let l = self.live.as_ref().ok_or("Arm Extrude first")?.clone();
@@ -346,7 +346,7 @@ impl Editor {
             .clone();
         let stage = ExtrudeStage {
             key,
-            anchor: self.undo.len(),
+            anchor: self.history.undo.len(),
             base: StageImage {
                 scene: l.base.clone(),
                 identities: l.identity_base.clone().ok_or("Missing source identities")?,
@@ -628,7 +628,7 @@ impl Editor {
                     }
                     if s.cursor == 0 {
                         s.ever_parked = true;
-                        self.redo.clear();
+                        self.history.redo.clear();
                         self.i2.prior = None;
                     }
                     self.i2.selected = Some(s);

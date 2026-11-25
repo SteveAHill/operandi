@@ -292,13 +292,16 @@ fn normalize_lowers_the_other_maps() {
 #[test]
 fn a_stroke_is_one_undo_step_and_needs_a_map() {
     let (mut e, id) = editor();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     {
         let st = setup(&e, SculptBrush::VmPaint);
         paint(&mut e, id, st, 5)
     };
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Vertex Map Paint Stroke");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(
+        e.history.undo.last().unwrap().label,
+        "Vertex Map Paint Stroke"
+    );
     e.dispatch(Command::Undo).unwrap();
     assert!(map(&e, id).is_empty());
     let mut s = setup(&e, SculptBrush::VmPaint);

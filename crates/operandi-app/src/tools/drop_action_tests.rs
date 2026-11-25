@@ -38,7 +38,7 @@ impl Rig {
         a.run(Command::Mode(Mode::Item));
         a.run(Command::SelectItem(None));
         a.drop_action.action = action;
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         let left = a.editor.scene.items[0].id;
         let right = a.editor.scene.items[1].id;
         let mut rig = Self {
@@ -200,10 +200,10 @@ fn place_lands_on_the_surface_under_the_pointer() {
 #[test]
 fn choosing_an_action_is_not_an_undo_step() {
     let mut rig = Rig::new(DropAction::None);
-    let undo = rig.a.editor.undo.len();
+    let undo = rig.a.editor.history.undo.len();
     rig.a.set_drop_action(DropAction::Insert);
     assert_eq!(rig.a.drop_action.action, DropAction::Insert);
-    assert_eq!(rig.a.editor.undo.len(), undo);
+    assert_eq!(rig.a.editor.history.undo.len(), undo);
     // DA-Q4: the Insert family takes only the pressed item.
     rig.a.editor.scene.selection.item = Some(rig.left);
     rig.a.editor.scene.selection.also = vec![rig.right];

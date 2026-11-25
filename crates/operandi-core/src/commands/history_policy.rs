@@ -161,8 +161,8 @@ impl Editor {
             };
         }
         let stack = match action {
-            HistoryAction::Undo => &self.undo,
-            HistoryAction::Redo => &self.redo,
+            HistoryAction::Undo => &self.history.undo,
+            HistoryAction::Redo => &self.history.redo,
         };
         let label = stack.last().map(|entry| entry.label.as_str());
         // Redo of a tool's activation step, right after Undo closed it (U4).
@@ -221,7 +221,7 @@ impl Editor {
         if action == HistoryAction::Redo
             && let Some(task) = self.tweak_session()
             && self.tweaks.can_undo()
-            && !self.redo.is_empty()
+            && !self.history.redo.is_empty()
         {
             return HistoryEligibility {
                 owner: match task {

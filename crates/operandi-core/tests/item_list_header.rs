@@ -112,10 +112,10 @@ fn adding_a_camera_ahead_of_the_render_camera_keeps_it() {
 fn add_item_is_one_undo_step_and_survives_save_and_reopen() {
     let mut e = editor_with(&["A", "B"]);
     e.dispatch(Command::SelectItem(Some(id(&e, "A")))).unwrap();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::AddItem(AddItemKind::Light(LightKind::Point)))
         .unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(names(&e), ["A", "B"]);
     assert_eq!(e.scene.selection.item, Some(id(&e, "A")));
@@ -213,7 +213,7 @@ fn pattern_actions_are_one_undo_step_each() {
         pattern: p.into(),
         ..Default::default()
     };
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::ItemPattern {
         query: query("b*"),
         action: PatternAction::Select,
@@ -232,7 +232,7 @@ fn pattern_actions_are_one_undo_step_each() {
     })
     .unwrap();
     assert!(!e.scene.items[1].visible && e.scene.items[0].visible);
-    assert_eq!(e.undo.len(), undo + 3);
+    assert_eq!(e.history.undo.len(), undo + 3);
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.items[1].visible);
     e.dispatch(Command::Undo).unwrap();
@@ -240,7 +240,7 @@ fn pattern_actions_are_one_undo_step_each() {
 
     // No match: an error, nothing changes, no undo step.
     let before = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     assert!(
         e.dispatch(Command::ItemPattern {
             query: query("zzz"),
@@ -249,7 +249,7 @@ fn pattern_actions_are_one_undo_step_each() {
         .is_err()
     );
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
 }
 
 /// Arm > Hand > Finger, Leg, Camera.

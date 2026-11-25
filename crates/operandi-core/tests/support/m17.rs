@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 pub fn editor_from(f: &Value) -> Editor {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     let vertices = serde_json::from_value::<Vec<DVec3>>(f["vertices"].clone()).unwrap();
     let loops = serde_json::from_value::<Vec<Vec<u32>>>(f["faces"].clone()).unwrap();
     let faces = loops

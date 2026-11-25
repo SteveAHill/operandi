@@ -140,8 +140,8 @@ pub fn answer_editor(e: &Editor, line: &str) -> Option<Result<String, String>> {
 /// `None` for other lines.
 pub fn check_undo_redo(e: &Editor, line: &str) -> Option<Result<(), String>> {
     match line.split_whitespace().next()? {
-        "app.undo" | "Undo" if e.undo.is_empty() => Some(Err("Nothing to undo".into())),
-        "app.redo" | "Redo" if e.redo.is_empty() => Some(Err("Nothing to redo".into())),
+        "app.undo" | "Undo" if e.history.undo.is_empty() => Some(Err("Nothing to undo".into())),
+        "app.redo" | "Redo" if e.history.redo.is_empty() => Some(Err("Nothing to redo".into())),
         "app.undo" | "Undo" | "app.redo" | "Redo" => Some(Ok(())),
         _ => None,
     }

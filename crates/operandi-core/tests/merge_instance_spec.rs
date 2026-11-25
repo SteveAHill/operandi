@@ -63,7 +63,7 @@ fn mi_1_a_mirrored_instance_bakes_in_facing_the_same_way() {
     assert_eq!(e.scene.items.len(), 2);
     select_source(&mut e);
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::MergeInstance).unwrap();
     assert_eq!(e.scene.items.len(), 1, "the instance is deleted");
     let m = &e.scene.active().unwrap().mesh;
@@ -101,7 +101,7 @@ fn mi_1_a_mirrored_instance_bakes_in_facing_the_same_way() {
     assert_eq!(e.scene.selection.mode, Mode::Polygon);
     assert_eq!(e.scene.selection.faces, vec![4, 5, 6, 7]);
     // MT12-05: one undo step.
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.items == before.items);
 }

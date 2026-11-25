@@ -90,13 +90,13 @@ fn eye_cell(a: &Operandi, id: u64) -> (bool, bool) {
 fn gv01_02_05_a_parent_eye_hides_and_shows_its_children() {
     let (mut a, ctx, parent, child) = family();
     assert!(a.mesh_items_preferences.auto_hide_children, "on by default");
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     click_eye(&mut a, &ctx, parent, Modifiers::NONE);
     assert!(!shown(&a, parent) && !shown(&a, child), "{}", a.status);
     assert!(item(&a, child).visible, "the child keeps its own eye");
     assert_eq!(eye_cell(&a, child), (true, true), "drawn faded (GV-05)");
     assert_eq!(eye_cell(&a, parent), (false, false));
-    assert_eq!(a.editor.undo.len(), steps + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "one undo step");
     click_eye(&mut a, &ctx, parent, Modifiers::NONE);
     assert!(shown(&a, parent) && shown(&a, child), "both come back");
     assert_eq!(eye_cell(&a, child), (true, false));
@@ -177,10 +177,10 @@ fn an_eye_sweep_follows_the_preference() {
     for auto_hide in [true, false] {
         let (mut a, ctx, parent, child) = family();
         a.mesh_items_preferences.auto_hide_children = auto_hide;
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         sweep(&mut a, &ctx, parent, child);
         assert!(!shown(&a, parent) && !shown(&a, child), "{}", a.status);
         assert_eq!(item(&a, parent).hides_children, auto_hide);
-        assert_eq!(a.editor.undo.len(), steps + 1);
+        assert_eq!(a.editor.history.undo.len(), steps + 1);
     }
 }

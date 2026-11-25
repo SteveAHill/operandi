@@ -227,11 +227,11 @@ fn bd_o_16_to_36_size_rules() {
 fn bd_o_37_pixel_size_refused_with_uniform_size_on() {
     let (mut e, id) = backdrop_editor(512, 256);
     edit(&mut e, id, BackdropEdit::UniformSize(true)).unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let err = edit(&mut e, id, BackdropEdit::PixelSize(0.005)).unwrap_err();
     assert_eq!(err, PIXEL_SIZE_REFUSAL);
     assert_eq!(settings(&mut e, id).pixel_size, 0.01);
-    assert_eq!(e.undo.len(), steps, "a refusal is not an undo step");
+    assert_eq!(e.history.undo.len(), steps, "a refusal is not an undo step");
     edit(&mut e, id, BackdropEdit::UniformSize(false)).unwrap();
     edit(&mut e, id, BackdropEdit::PixelSize(0.005)).unwrap();
     assert_eq!(settings(&mut e, id).pixel_size, 0.005);
@@ -416,7 +416,7 @@ fn backdrop_size_buttons_give_exact_sizes() {
 fn every_change_is_one_undo_step_and_undo_restores_it() {
     let mut e = Editor::default();
     e.dispatch(Command::NewBackdrop).unwrap();
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     let id = e.scene.selection.item.unwrap();
     e.dispatch(Command::BackdropLoadImage {
         item: id,
@@ -427,7 +427,7 @@ fn every_change_is_one_undo_step_and_undo_restores_it() {
     .unwrap();
     edit(&mut e, id, BackdropEdit::Flip(true)).unwrap();
     edit(&mut e, id, BackdropEdit::Projection(Projection::Top)).unwrap();
-    assert_eq!(e.undo.len(), 4);
+    assert_eq!(e.history.undo.len(), 4);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(settings(&mut e, id).projection, Projection::Front);
     e.dispatch(Command::Undo).unwrap();
@@ -501,7 +501,11 @@ fn component_tools_refuse_a_backdrop_and_transform_tools_work_in_any_mode() {
     assert!((t.rotation.z.to_degrees() - 30.).abs() < 1e-9);
     assert_eq!(t.scale, DVec3::new(2., 2., 1.));
     assert_eq!(t.translation, DVec3::new(1., 3., 0.));
-    assert_eq!(e.undo.len(), 6, "one step per drop after create and image");
+    assert_eq!(
+        e.history.undo.len(),
+        6,
+        "one step per drop after create and image"
+    );
 }
 
 #[test]

@@ -67,12 +67,12 @@ fn file_menu_saves_an_item_preset_in_the_presets_folder_and_loads_it() {
 
     // Load it into a new scene: one undo step.
     a.initialize_new_document();
-    let (items, steps) = (a.editor.scene.items.len(), a.editor.undo.len());
+    let (items, steps) = (a.editor.scene.items.len(), a.editor.history.undo.len());
     answer(Some(file.clone()));
     a.menu_action(&ctx, app_menu::line_action("preset.do"));
     assert_eq!(asked(), vec![Choose::LoadPreset { folder: presets }]);
     assert_eq!(a.editor.scene.items.len(), items + 1, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     // A cancelled panel does nothing.
     answer(None);
     a.menu_action(&ctx, app_menu::line_action("preset.do"));

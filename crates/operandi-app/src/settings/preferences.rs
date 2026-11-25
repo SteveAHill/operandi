@@ -979,7 +979,7 @@ impl super::Operandi {
         self.file_io_preferences.apply();
         self.ui_preferences.apply();
         self.apply_user_defaults();
-        self.editor.history = self.undo_autosave.history();
+        self.editor.history.settings = self.undo_autosave.history();
         self.clear_fields();
     }
     /// Reset Preferences… confirmation.
@@ -1389,12 +1389,12 @@ mod tests {
             "Operandi: middle is lasso"
         );
         a.input_preferences.navigation = Blender;
-        let checkpoints = a.editor.undo.len();
+        let checkpoints = a.editor.history.undo.len();
         middle_drag(&mut a, &ctx, Modifiers::NONE);
         assert_ne!((a.camera.yaw, a.camera.pitch), camera);
         assert!(a.navigation.is_none());
         assert_eq!(
-            a.editor.undo.len(),
+            a.editor.history.undo.len(),
             checkpoints,
             "navigation records no history"
         );

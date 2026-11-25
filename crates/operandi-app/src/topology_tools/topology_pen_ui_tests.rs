@@ -33,7 +33,7 @@ fn grid_app() -> (Operandi, Context) {
     draw(&mut a, &ctx, SIZE, vec![]);
     a.execute("topology pen");
     assert!(a.topology_pen_open(), "{}", a.status);
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     draw(&mut a, &ctx, SIZE, vec![]);
     (a, ctx)
 }
@@ -137,13 +137,13 @@ fn tp12_remove_mode_click_deletes_a_polygon_in_one_step() {
     let at = screen(&a, -1.5, -1.5);
     click(&mut a, &ctx, at, Modifiers::NONE);
     assert_eq!(faces(&a), 15, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     assert!(a.topology_pen_open(), "the pen stays up");
     // Nothing under the pointer: no change, no undo step.
     let away = screen(&a, 3.5, 3.5);
     click(&mut a, &ctx, away, Modifiers::NONE);
     assert_eq!(faces(&a), 15);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 #[test]
@@ -160,7 +160,7 @@ fn tp13_middle_drag_splits_a_quad() {
         Modifiers::NONE,
     );
     assert_eq!(faces(&a), 17, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     // Released on a neighbour: nothing, and why.
     let next = screen(&a, -1., -2.);
     drag_with(
@@ -202,7 +202,7 @@ fn tp11_shift_drag_pulls_a_border_edge_and_refuses_an_interior_one() {
         shift,
     );
     assert_eq!(faces(&a), 17, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 #[test]
@@ -213,7 +213,7 @@ fn tp20_ctrl_click_in_empty_space_makes_a_quad() {
     assert_eq!(faces(&a), 17, "{}", a.status);
     let m = &a.editor.scene.active().unwrap().mesh;
     assert!(m.normal(16).z > 0.9, "faces the front view");
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 #[test]
@@ -244,7 +244,7 @@ fn tp30_dragging_a_border_point_onto_another_welds_on_release() {
     let m = &a.editor.scene.active().unwrap().mesh;
     assert_eq!(m.vertices.len(), before - 1, "{}", a.status);
     assert!(m.faces.iter().any(|f| f.vertices.len() == 3));
-    assert_eq!(a.editor.undo.len(), 1, "move and weld are one step");
+    assert_eq!(a.editor.history.undo.len(), 1, "move and weld are one step");
     let _ = point(0, 0);
 }
 

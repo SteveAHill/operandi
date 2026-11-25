@@ -28,13 +28,13 @@ fn app() -> Operandi {
 #[test]
 fn the_menu_toggle_turns_it_on_and_off_without_history() {
     let mut a = app();
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     a.execute("constrain to background");
     assert_eq!(a.editor.background_constraint, Some(Default::default()));
     assert!(a.tool_properties_open);
     a.execute("constrain to background");
     assert_eq!(a.editor.background_constraint, None);
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     assert_eq!(
         a.bindings.get(background_ui::ACTION).map(String::as_str),
         Some("")

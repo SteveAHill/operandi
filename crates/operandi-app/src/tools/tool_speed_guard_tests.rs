@@ -578,7 +578,7 @@ fn sculpt_strokes_stay_on_the_fast_path() {
             size,
             vec![super::tests::pointer(at(10.), false, Modifiers::NONE)],
         );
-        if a.editor.undo.last().map(|c| c.label.as_str())
+        if a.editor.history.undo.last().map(|c| c.label.as_str())
             != Some(&if brush.is_vertex_map() {
                 format!("Vertex Map {} Stroke", brush.label())
             } else {

@@ -107,7 +107,7 @@ fn airbrush_paints_white_and_one_undo_removes_it_exactly() {
         s.take_dirty().is_some(),
         "changed pixels are reported for upload"
     );
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Paint(PaintEdit::Stroke {
         image,
         via: None,
@@ -115,8 +115,8 @@ fn airbrush_paints_white_and_one_undo_removes_it_exactly() {
         label: s.label(),
     }))
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Airbrush Stroke");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Airbrush Stroke");
     assert!(e.image_changed(image));
     e.dispatch(Command::Undo).unwrap();
     assert!(Arc::ptr_eq(&e.scene.paint.buffers[&image], &before));

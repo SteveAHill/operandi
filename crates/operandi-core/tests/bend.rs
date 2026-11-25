@@ -33,7 +33,7 @@ fn strip() -> Editor {
     e.scene.selection.mode = Mode::Polygon;
     // The strip stands in XY: work in the front view's plane.
     e.scene.workplane.plane = 2;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn points(e: &Editor) -> Vec<DVec3> {

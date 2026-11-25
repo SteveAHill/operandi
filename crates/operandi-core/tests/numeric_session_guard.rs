@@ -23,7 +23,7 @@ fn editor() -> Editor {
         .unwrap()
         .into();
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 

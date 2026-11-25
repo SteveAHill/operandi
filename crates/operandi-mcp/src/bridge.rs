@@ -121,8 +121,8 @@ impl Bridge {
             .dispatch(Command::NewMesh)
             .expect("an empty editor accepts New Mesh");
         // A new document starts with no history, as an opened one does.
-        editor.undo.clear();
-        editor.redo.clear();
+        editor.history.undo.clear();
+        editor.history.redo.clear();
         let saved = editor.scene.clone();
         Self {
             editor,
@@ -655,9 +655,9 @@ impl Bridge {
             "undo" | "redo" => {
                 let count = opt_u64(args, "count")?.unwrap_or(1);
                 let available = if name == "undo" {
-                    self.editor.undo.len()
+                    self.editor.history.undo.len()
                 } else {
-                    self.editor.redo.len()
+                    self.editor.history.redo.len()
                 };
                 if count as usize > available {
                     return Err(format!("Only {available} step(s) to {name}"));
@@ -696,8 +696,8 @@ impl Bridge {
             "revision": e.revision,
             "active": mesh,
             "selection": selection_json(e),
-            "undo": e.undo.len(),
-            "redo": e.redo.len(),
+            "undo": e.history.undo.len(),
+            "redo": e.history.redo.len(),
         })
     }
 
@@ -743,8 +743,8 @@ impl Bridge {
             "selection": selection_json(e),
             "live_tool": e.live.as_ref().map(|l| l.tool.label()),
             "symmetry": {"axis": e.symmetry.axis, "offset": e.symmetry.offset},
-            "undo": e.undo.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(),
-            "redo": e.redo.iter().rev().map(|c| c.label.as_str()).collect::<Vec<_>>(),
+            "undo": e.history.undo.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(),
+            "redo": e.history.redo.iter().rev().map(|c| c.label.as_str()).collect::<Vec<_>>(),
         })
     }
 

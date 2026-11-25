@@ -347,7 +347,7 @@ mod tests {
             (Mode::Item, "Item Operations"),
         ] {
             let (mut a, ctx, at) = app(mode);
-            let (scene, history) = (a.editor.scene.clone(), a.editor.undo.len());
+            let (scene, history) = (a.editor.scene.clone(), a.editor.history.undo.len());
             let shown = click(&mut a, &ctx, at, Modifiers::MAC_CMD);
             assert!(egui::Popup::is_any_open(&ctx), "menu open");
             let root = button(&shown, title).expect("submenu entry");
@@ -372,7 +372,7 @@ mod tests {
                 "{mode:?} submenu"
             );
             assert_eq!(a.editor.scene, scene, "no selection change");
-            assert_eq!(a.editor.undo.len(), history);
+            assert_eq!(a.editor.history.undo.len(), history);
             assert!(a.editor.live.is_none());
         }
     }

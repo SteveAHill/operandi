@@ -23,7 +23,7 @@ fn editor() -> Editor {
         .unwrap()
         .into();
     e.dispatch(Command::Mode(Mode::Item)).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -277,7 +277,7 @@ fn mesh_paint_replica_makes_one_replicator_per_stroke() {
     ))
     .unwrap();
     let cube = e.scene.items[0].id;
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let stroke = |points: Vec<PaintPoint>| {
         Command::MeshPaint(Box::new(MeshPaintStroke {
             settings: MeshPaintSettings {
@@ -293,8 +293,8 @@ fn mesh_paint_replica_makes_one_replicator_per_stroke() {
     };
     let at = |x: f64| PaintPoint::at(DVec3::new(x, 0., 0.), DVec3::Y);
     e.dispatch(stroke(vec![at(0.1), at(0.2), at(0.3)])).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Mesh Paint Instancer");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Mesh Paint Instancer");
     let reps: Vec<&Item> = e
         .scene
         .items

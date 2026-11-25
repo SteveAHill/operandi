@@ -22,11 +22,11 @@ fn each_edit_is_one_step_and_rebuilds_the_last_polygon() {
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = Mesh::box_mesh(DVec3::ZERO, DVec3::ONE, 0).unwrap().into();
     e.synchronize_identities().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e.dispatch(curve(&[DVec3::ZERO, DVec3::X], None)).unwrap();
     e.dispatch(curve(&[DVec3::ZERO, DVec3::X, DVec3::Y], Some(6)))
         .unwrap();
-    assert_eq!(e.undo.len(), 2);
+    assert_eq!(e.history.undo.len(), 2);
     let m = &e.scene.active().unwrap().mesh;
     assert_eq!(m.faces.len(), 7);
     assert_eq!(m.vertices.len(), 8 + 3, "old curve points went");

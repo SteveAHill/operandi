@@ -10,14 +10,14 @@ fn flip_command_rejects_arguments_and_uses_one_shot_history() {
             .into();
     a.editor.scene.selection.mode = Mode::Polygon;
     a.editor.scene.selection.faces = vec![0];
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     let source = a.editor.scene.clone();
     a.execute("poly.flip extra");
     assert_eq!(a.editor.scene, source);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     a.execute("poly.flip");
     assert_ne!(a.editor.scene, source);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Flip");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Flip");
     a.execute("undo");
     assert_eq!(a.editor.scene, source);
 }
@@ -33,7 +33,7 @@ fn polygon_button_and_factory_f_match_command() {
                 .into();
         a.editor.scene.selection.mode = Mode::Polygon;
         a.editor.scene.selection.faces = vec![0];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         a.category = toolbox::Category::Polygon;
         a
     }

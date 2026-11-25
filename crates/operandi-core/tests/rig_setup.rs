@@ -35,9 +35,9 @@ fn keyed() -> (Editor, u64) {
 fn sk01_setup_shows_the_setup_pose_and_edits_change_it() {
     let (mut e, id) = keyed();
     assert_eq!(y(&e, id), 4.);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, "operandi.anim.setup on:true");
-    assert_eq!(e.undo.len(), steps, "not an undo step");
+    assert_eq!(e.history.undo.len(), steps, "not an undo step");
     assert_eq!(y(&e, id), 1., "the setup value, keys ignored");
     // Scrubbing in setup mode keeps the setup pose.
     ok(&mut e, "operandi.time.set frame:5");
@@ -82,9 +82,9 @@ fn sk03_item_to_setup_and_restore_setup() {
     let (mut e, id) = keyed();
     ok(&mut e, "operandi.time.set frame:5");
     let now = y(&e, id);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, &format!("operandi.anim.itemToSetup items:{id}"));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let k = animation::ChannelKey::new(id, "pos.Y");
     assert_eq!(e.scene.animation.channels[&k].rest, now);
     ok(

@@ -183,13 +183,13 @@ impl Editor {
     ) -> Result<()> {
         let initial = self.scene.clone();
         let mark = self.history_mark();
-        let tool_steps = self.tool_steps;
-        let max_undo = self.history.max_undo_level;
-        let fold = self.undo_fold.take();
+        let tool_steps = self.history.tool_steps;
+        let max_undo = self.history.settings.max_undo_level;
+        let fold = self.history.undo_fold.take();
         // No trimming or folding until the runs' steps are joined below
         // (Astra P9-001).
-        self.history.max_undo_level = usize::MAX;
-        let paused = std::mem::replace(&mut self.undo_trim_paused, true);
+        self.history.settings.max_undo_level = usize::MAX;
+        let paused = std::mem::replace(&mut self.history.undo_trim_paused, true);
         let result = (|| {
             let mut first_error = None;
             let mut done = 0;
@@ -207,7 +207,9 @@ impl Editor {
                     }
                     // Lenient: this mesh stays as it was.
                     self.scene = scene_before;
-                    self.undo.truncate(self.undo.len() - self.steps_since(mark));
+                    self.history
+                        .undo
+                        .truncate(self.history.undo.len() - self.steps_since(mark));
                     first_error.get_or_insert(e);
                     continue;
                 }
@@ -220,12 +222,12 @@ impl Editor {
                 _ => Ok(()),
             }
         })();
-        self.history.max_undo_level = max_undo;
-        self.undo_fold = fold;
-        self.undo_trim_paused = paused;
+        self.history.settings.max_undo_level = max_undo;
+        self.history.undo_fold = fold;
+        self.history.undo_trim_paused = paused;
         result?;
-        let from = self.undo.len() - self.steps_since(mark);
-        let mut steps = self.undo.drain(from..);
+        let from = self.history.undo.len() - self.steps_since(mark);
+        let mut steps = self.history.undo.drain(from..);
         let first = steps.next().map(std::sync::Arc::unwrap_or_clone);
         let mut records = first
             .as_ref()
@@ -239,20 +241,22 @@ impl Editor {
             merged += 1;
         }
         if let Some(first) = first {
-            self.undo.push(std::sync::Arc::new(crate::Checkpoint {
-                identity_before: first.identity_before,
-                identity_after: None,
-                label: first.label,
-                before: initial,
-                after: self.scene.clone(),
-                fold: self.undo_fold,
-                records,
-                mark: first.mark,
-            }));
-            let excess = self.undo.len().saturating_sub(max_undo.max(1));
-            self.undo.drain(..excess);
+            self.history
+                .undo
+                .push(std::sync::Arc::new(crate::Checkpoint {
+                    identity_before: first.identity_before,
+                    identity_after: None,
+                    label: first.label,
+                    before: initial,
+                    after: self.scene.clone(),
+                    fold: self.history.undo_fold,
+                    records,
+                    mark: first.mark,
+                }));
+            let excess = self.history.undo.len().saturating_sub(max_undo.max(1));
+            self.history.undo.drain(..excess);
             self.trim_undo_memory();
-            if let (Some(n), Some(start)) = (self.tool_steps.as_mut(), tool_steps) {
+            if let (Some(n), Some(start)) = (self.history.tool_steps.as_mut(), tool_steps) {
                 *n = (*n).saturating_sub(merged).max(start);
             }
         }

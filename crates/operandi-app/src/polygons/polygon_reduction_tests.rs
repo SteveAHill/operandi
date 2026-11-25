@@ -28,8 +28,8 @@ fn reduction_request_does_not_confirm_or_drop_active_pen() {
     a.editor.dispatch(Command::PenCapture(DVec3::ZERO)).unwrap();
     let scene = a.editor.scene.clone();
     let draft = a.editor.pen_draft.clone();
-    let undo = a.editor.undo.clone();
-    let redo = a.editor.redo.clone();
+    let undo = a.editor.history.undo.clone();
+    let redo = a.editor.history.redo.clone();
     let ids = a.editor.identities.current.clone();
     a.fields.insert("pen_x".into(), "bad".into());
     let fields = a.fields.clone();
@@ -38,6 +38,6 @@ fn reduction_request_does_not_confirm_or_drop_active_pen() {
     assert_eq!(a.editor.pen_draft, draft);
     assert_eq!(a.editor.scene, scene);
     assert_eq!(a.editor.identities.current, ids);
-    assert!(a.editor.undo == undo && a.editor.redo == redo);
+    assert!(a.editor.history.undo == undo && a.editor.history.redo == redo);
     assert_eq!(a.fields, fields);
 }

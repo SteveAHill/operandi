@@ -18,12 +18,12 @@ fn three_meshes() -> (Editor, Vec<u64>) {
 #[test]
 fn select_items_keeps_the_given_order_with_the_first_primary() {
     let (mut e, ids) = three_meshes();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::SelectItems(vec![ids[2], ids[0], ids[2]]))
         .unwrap();
     assert_eq!(e.scene.selection.item, Some(ids[2]));
     assert_eq!(e.scene.selection.also, [ids[0]], "duplicates dropped");
-    assert_eq!(e.undo.len(), steps, "selecting isn't an undo step");
+    assert_eq!(e.history.undo.len(), steps, "selecting isn't an undo step");
     assert!(e.dispatch(Command::SelectItems(vec![999])).is_err());
     e.dispatch(Command::SelectItems(vec![])).unwrap();
     assert_eq!(e.scene.selection.item, None);
@@ -37,7 +37,7 @@ fn set_items_visible_is_one_step_and_skips_locked_items() {
         edit: ItemCommonEdit::Lock(Choice::Yes),
     })
     .unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::SetItemsVisible {
         items: ids.clone(),
         visible: false,
@@ -46,7 +46,7 @@ fn set_items_visible_is_one_step_and_skips_locked_items() {
     .unwrap();
     let visible: Vec<bool> = e.scene.items.iter().map(|i| i.visible).collect();
     assert_eq!(visible, [false, true, false]);
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(
         e.dispatch(Command::SetItemsVisible {
             items: vec![ids[1]],

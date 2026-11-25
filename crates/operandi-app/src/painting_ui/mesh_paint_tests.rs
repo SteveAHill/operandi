@@ -72,10 +72,14 @@ fn each_paint_mode_places_its_copies_as_one_step() {
         (PaintMode::Array, vec2(-100., -100.), vec2(100., 100.), 4),
         (PaintMode::Radial, vec2(0., 0.), vec2(100., 0.), 6),
     ] {
-        let (before, steps) = (faces(&a), a.editor.undo.len());
+        let (before, steps) = (faces(&a), a.editor.history.undo.len());
         paint(&mut a, mode, from, to, Modifiers::NONE);
         assert_eq!(faces(&a) - before, copies * cube, "{mode:?}: {}", a.status);
-        assert_eq!(a.editor.undo.len(), steps + 1, "{mode:?}: one step (MP-16)");
+        assert_eq!(
+            a.editor.history.undo.len(),
+            steps + 1,
+            "{mode:?}: one step (MP-16)"
+        );
     }
 }
 

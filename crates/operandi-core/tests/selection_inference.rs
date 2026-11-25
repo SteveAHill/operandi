@@ -121,7 +121,7 @@ fn m01_vertex_bevel_from_polygons_matches_their_points() {
         "nothing once the tool is gone"
     );
     // One undo step back to the scene as it was.
-    assert_eq!(e.undo.last().unwrap().label, "Vertex Bevel");
+    assert_eq!(e.history.undo.last().unwrap().label, "Vertex Bevel");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(mesh(&e), mesh_of(&before));
     assert_eq!(e.scene.selection.mode, Mode::Polygon);
@@ -266,7 +266,7 @@ fn every_active_mesh_converts_its_own_selection() {
         })
         .unwrap();
     }
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     run(&mut e, Tool::VertexBevel, 0.2);
     let want = vertex_bevel_on(vec![5, 6, 10, 9]);
     for id in ids {
@@ -274,7 +274,7 @@ fn every_active_mesh_converts_its_own_selection() {
         assert_eq!(Mesh::clone(&item.mesh), want);
     }
     assert_eq!(e.scene.selection.mode, Mode::Polygon);
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
 }
 
 #[test]

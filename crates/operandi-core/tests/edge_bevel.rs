@@ -125,7 +125,7 @@ fn bevel_through_the_editor_is_one_step_and_refuses_shared_points() {
         p.chamfer.segments = 2;
         e.dispatch(Command::Preview(p)).unwrap();
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.undo.last().unwrap().label, tool.label());
+        assert_eq!(e.history.undo.last().unwrap().label, tool.label());
         assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 8);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, before);

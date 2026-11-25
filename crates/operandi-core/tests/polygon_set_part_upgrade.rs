@@ -38,7 +38,7 @@ fn editor(mesh: Mesh, selected: &[u32]) -> Editor {
     e.scene.selection.mode = Mode::Polygon;
     e.scene.selection.faces = selected.to_vec();
     e.scene.validate().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -67,8 +67,8 @@ fn sp_c01_selected_polygons_get_the_part_others_keep_theirs() {
     assert_eq!(parts(&e), [Some("Spout".into()), Some("Body".into())]);
     let faces = &e.scene.active().unwrap().mesh.faces;
     assert!(faces.iter().all(|f| f.material == "Red"), "SP-02");
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo[0].label, "Set Part");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo[0].label, "Set Part");
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn sp_c02_nothing_selected_tags_every_polygon_in_one_step() {
     let before = e.scene.clone();
     e.dispatch(assign("Body")).unwrap();
     assert_eq!(parts(&e), [Some("Body".into()), Some("Body".into())]);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     assert!(
         e.scene.selection.faces.is_empty(),
         "the selection stays empty"
@@ -111,7 +111,7 @@ fn sp_c05_reapplying_the_same_name_to_everything_is_a_no_op() {
     let before = e.scene.clone();
     e.dispatch(assign("Lid")).unwrap();
     assert!(
-        e.scene == before && e.undo.is_empty(),
+        e.scene == before && e.history.undo.is_empty(),
         "no change and no undo step"
     );
 }

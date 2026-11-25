@@ -29,7 +29,7 @@ fn t17_interior_vertices_remain_editable_without_orphan_slots() {
 fn t17_real_24_corner_cylinder_cap_and_successful_staged_save() {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     let mesh = cylinder_geometry(
         DVec3::new(0., -0.5, 0.),
         RadialParameters {
@@ -65,7 +65,7 @@ fn t17_real_24_corner_cylinder_cap_and_successful_staged_save() {
     let path = folder.join("cylinder.opscene");
     e.save_committed(&path).unwrap();
     assert!(e.live.is_none());
-    assert_eq!(e.undo.len(), 2);
+    assert_eq!(e.history.undo.len(), 2);
     assert_eq!(persistence::load(&path).unwrap(), scene);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(counts(&e.scene.active().unwrap().mesh), [72, 120, 50]);

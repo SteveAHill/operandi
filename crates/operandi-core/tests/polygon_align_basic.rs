@@ -55,11 +55,11 @@ fn loops(e: &Editor) -> Vec<Vec<u32>> {
 fn align_and_check_history(e: &mut Editor, expected_count: usize) {
     let before = e.scene.clone();
     let before_ids = e.identities.current.clone();
-    let undo_len = e.undo.len();
+    let undo_len = e.history.undo.len();
     assert_eq!(e.align_flip_count().unwrap(), expected_count);
     e.dispatch(Command::AlignPolygons).unwrap();
-    assert_eq!(e.undo.len(), undo_len + 1);
-    assert!(e.redo.is_empty());
+    assert_eq!(e.history.undo.len(), undo_len + 1);
+    assert!(e.history.redo.is_empty());
     assert_eq!(e.scene.selection, before.selection);
     let after = e.scene.clone();
     let after_ids = e.identities.current.clone();
@@ -341,7 +341,7 @@ fn consistent_pair_is_a_no_change_with_zero_count() {
     assert_eq!(e.align_flip_count().unwrap(), 0);
     e.dispatch(Command::AlignPolygons).unwrap();
     assert_eq!(e.scene, before.scene);
-    assert_eq!(e.undo.len(), before.undo.len());
+    assert_eq!(e.history.undo.len(), before.history.undo.len());
 }
 
 fn pair() -> Editor {
@@ -410,7 +410,7 @@ fn redo_and_active_owner_are_not_consumed_by_refusal() {
     let mut e = pair();
     e.dispatch(Command::AlignPolygons).unwrap();
     e.dispatch(Command::Undo).unwrap();
-    assert!(!e.redo.is_empty());
+    assert!(!e.history.redo.is_empty());
     e.scene.selection.faces = vec![];
     refuses(&mut e);
     e.scene.selection.faces = vec![0, 1];
@@ -460,7 +460,7 @@ fn fan_editor(slots: [Vec<u32>; 2], fan_on: (u32, u32), order: Vec<u32>) -> Edit
     // Park a genuine redo entry, then restore the ordered selection.
     e.dispatch(Command::NewMesh).unwrap();
     e.dispatch(Command::Undo).unwrap();
-    assert!(!e.redo.is_empty());
+    assert!(!e.history.redo.is_empty());
     e.scene.selection.mode = Mode::Polygon;
     e.scene.selection.faces = order;
     e
@@ -511,7 +511,7 @@ fn nonmanifold_edge_off_the_pair_keeps_supported_outcomes() {
     assert_eq!(e.align_flip_count().unwrap(), 0);
     e.dispatch(Command::AlignPolygons).unwrap();
     assert_eq!(e.scene, before.scene);
-    assert_eq!(e.undo.len(), before.undo.len());
+    assert_eq!(e.history.undo.len(), before.history.undo.len());
     // Reversal needed: anchor kept, other face anchored-reversed, unrelated
     // nonmanifold record unchanged.
     let mut faces = vec![face(vec![0, 1, 4, 3], "A"), face(vec![1, 4, 5, 2], "B")];
@@ -573,5 +573,5 @@ fn one_selected_polygon_aligns_its_whole_piece() {
         out.attributes.extrude_edge_uses.is_empty(),
         "now consistent"
     );
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }

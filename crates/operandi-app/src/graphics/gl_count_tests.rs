@@ -24,7 +24,7 @@ fn sphere_app() -> Operandi {
     assert_eq!(sides.iter().filter(|&&n| n == 3).count(), 48);
     assert_eq!(sides.len(), 288);
     a.editor.scene.active_mut().unwrap().mesh = sphere.into();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a
 }
 

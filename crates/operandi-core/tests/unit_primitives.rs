@@ -100,7 +100,7 @@ fn pm_t13_t15_t17_canonical_existing_origin_retained_resolution_attributes_and_h
         assert_eq!(e.cube_preset, before.cube_preset);
         assert_eq!(e.sphere_unit_resolution, before.sphere_unit_resolution);
         assert_eq!(e.cylinder_unit_resolution, before.cylinder_unit_resolution);
-        assert_eq!(e.undo.len(), before.undo.len() + 1);
+        assert_eq!(e.history.undo.len(), before.history.undo.len() + 1);
         let result = e.scene.clone();
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, before.scene);
@@ -160,7 +160,7 @@ fn pm_t14_t15_new_mesh_and_geometry_are_one_action_with_existing_naming_selectio
         assert!(e.scene.selection.faces.is_empty());
         canonical(tool, &item.mesh, 0);
         assert!(e.live.is_none());
-        assert_eq!(e.undo.len(), before.undo.len() + 1);
+        assert_eq!(e.history.undo.len(), before.history.undo.len() + 1);
         let id = item.id;
         let result = e.scene.clone();
         e.dispatch(Command::Undo).unwrap();

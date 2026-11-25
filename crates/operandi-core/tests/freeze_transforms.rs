@@ -123,7 +123,10 @@ fn freeze_each_part_keeps_parent_and_child_in_place() {
             part.apply(&before.item(parent).unwrap().transform),
             "{part:?}"
         );
-        assert_eq!(e.undo.last().unwrap().label, part.step_label("Freeze"));
+        assert_eq!(
+            e.history.undo.last().unwrap().label,
+            part.step_label("Freeze")
+        );
         // Undo restores geometry, channels and the child exactly.
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene.items, before.items, "{part:?}");
@@ -150,9 +153,9 @@ fn parent_and_child_selected_both_freeze_and_nothing_moves() {
     let (pp, cp) = (world_points(&e, parent), world_points(&e, child));
     // Child listed first: the parent still goes first.
     select(&mut e, &[child, parent]);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     freeze(&mut e, &[child, parent], TransformReset::All).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     same_points(&world_points(&e, parent), &pp);
     same_points(&world_points(&e, child), &cp);
     for id in [parent, child] {
@@ -274,7 +277,7 @@ fn locked_items_are_skipped_with_one_note() {
 fn identity_records_no_step_and_non_mesh_items_are_skipped() {
     let mut e = editor();
     let id = add_cube(&mut e, DVec3::ZERO, scene::Transform::default(), None);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     for part in TransformReset::ALL {
         freeze(&mut e, &[id], part).unwrap();
         e.dispatch(Command::ResetTransform {
@@ -283,7 +286,7 @@ fn identity_records_no_step_and_non_mesh_items_are_skipped() {
         })
         .unwrap();
     }
-    assert_eq!(e.undo.len(), undo, "nothing changed, no undo step");
+    assert_eq!(e.history.undo.len(), undo, "nothing changed, no undo step");
     // A camera (no geometry) alone can't Freeze; mixed in, it's skipped.
     e.scene.add_default_camera_and_light().unwrap();
     e.next_item_id = e.scene.next_id;
@@ -418,14 +421,14 @@ fn script_commands_act_on_the_item_selection() {
     command_line::run_line(&mut e, "transform.freeze scale")
         .unwrap()
         .unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Freeze Scale");
+    assert_eq!(e.history.undo.last().unwrap().label, "Freeze Scale");
     same_points(&world_points(&e, a), &points);
     assert_eq!(e.scene.item(b).unwrap().transform.scale, DVec3::ONE);
     // No argument means all.
     command_line::run_line(&mut e, "transform.freeze")
         .unwrap()
         .unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Freeze Transform");
+    assert_eq!(e.history.undo.last().unwrap().label, "Freeze Transform");
     same_points(&world_points(&e, a), &points);
     command_line::run_line(&mut e, "transform.reset translation")
         .unwrap()
@@ -436,11 +439,11 @@ fn script_commands_act_on_the_item_selection() {
             .is_err()
     );
     // Reset after Freeze All is a no-op: no new step.
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     command_line::run_line(&mut e, "transform.reset")
         .unwrap()
         .unwrap();
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
 }
 
 #[test]
@@ -465,7 +468,7 @@ fn reset_moves_the_item_but_not_its_geometry_or_child_channels() {
         part: TransformReset::All,
     })
     .unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Reset Transform");
+    assert_eq!(e.history.undo.last().unwrap().label, "Reset Transform");
     let p = e.scene.item(parent).unwrap();
     assert_eq!(p.transform, scene::Transform::default());
     assert_eq!(p.mesh, mesh);

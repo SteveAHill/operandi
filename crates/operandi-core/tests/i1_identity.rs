@@ -117,7 +117,7 @@ fn editor_numeric_apply_drop_undo_redo_restores_ids_and_authored_data() {
         e.dispatch(Command::ConfigureExtrude(parameters(0.5)))
             .unwrap();
         assert_eq!(e.scene, source(name));
-        assert!(e.undo.is_empty());
+        assert!(e.history.undo.is_empty());
         e.dispatch(Command::Apply).unwrap();
         assert_eq!(e.scene, expected(&format!("{name}-moved")));
         let moved = e.identities.current.clone();
@@ -231,9 +231,9 @@ fn named_set_recall_is_ordered_and_selection_history_uses_existing_policy() {
     assert_eq!(e.scene.selection.faces, vec![1, 3]);
     assert_eq!(e.scene.items[0].mesh, geometry);
     assert_eq!(e.identities.current, ids);
-    let records = e.undo.len();
+    let records = e.history.undo.len();
     e.dispatch(Command::SelectPolygonSet("r".into())).unwrap();
-    assert_eq!(e.undo.len(), records);
+    assert_eq!(e.history.undo.len(), records);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.selection.faces, vec![0]);
     e.dispatch(Command::Redo).unwrap();
@@ -257,7 +257,7 @@ fn branch_reservations_stale_requests_and_cross_document_handles() {
     e.dispatch(Command::ConfigureExtrude(parameters(0.25)))
         .unwrap();
     e.dispatch(Command::Apply).unwrap();
-    assert!(e.redo.is_empty());
+    assert!(e.history.redo.is_empty());
     assert!(e.identities.current.meshes[&1].vertices[8].0 >= high);
     assert_ne!(
         e.identities.current.meshes[&1].vertices[8],
@@ -311,12 +311,12 @@ fn unsupported_new_set_profiles_and_bad_numbers_refuse_atomically() {
         e.dispatch(Command::ConfigureExtrude(p)).ok();
         let before = e.scene.clone();
         let ids = e.identities.current.clone();
-        let history = e.undo.clone();
+        let history = e.history.undo.clone();
         let token = e.identities.publication;
         assert!(e.dispatch(Command::Apply).is_err());
         assert_eq!(e.scene, before);
         assert_eq!(e.identities.current, ids);
-        assert!(e.undo == history);
+        assert!(e.history.undo == history);
         assert_eq!(e.identities.publication, token);
     }
     let mut e = armed("cube");
@@ -436,7 +436,7 @@ fn scoped_target_list_refuses_without_retargeting_or_partial_publication() {
         assert_eq!(e.scene, scene);
         assert_eq!(e.identities.current, ids);
         assert_eq!(e.identities.publication, pubid);
-        assert!(e.undo.is_empty());
+        assert!(e.history.undo.is_empty());
     }
     let ticket = e.identity_ticket().unwrap();
     e.dispatch_faces(ticket, &[top], Command::Apply).unwrap();
@@ -581,7 +581,7 @@ fn failed_private_save_burns_ids_without_mutating_frozen_authored_snapshots() {
     assert_eq!(e.scene, held.scene);
     assert_eq!(e.identities.current, ids);
     assert_eq!(e.identities.publication, held.identities.publication);
-    assert!(e.undo == held.undo);
+    assert!(e.history.undo == held.history.undo);
     e.dispatch(Command::Apply).unwrap();
     let item = e.scene.selection.item.unwrap();
     assert!(e.identities.current.meshes[&item].vertices[0].0 >= burned);

@@ -199,15 +199,18 @@ fn stabilization_baseline() {
         };
         editor.synchronize_identities().unwrap();
         for depth in [0, 10, 100] {
-            while editor.undo.len() < depth {
+            while editor.history.undo.len() < depth {
                 editor
-                    .dispatch(Command::Rename(format!("history-{}", editor.undo.len())))
+                    .dispatch(Command::Rename(format!(
+                        "history-{}",
+                        editor.history.undo.len()
+                    )))
                     .unwrap();
             }
             println!(
                 "STAB_FIXTURE {label} history={} redo={} encoded_bytes={}",
-                editor.undo.len(),
-                editor.redo.len(),
+                editor.history.undo.len(),
+                editor.history.redo.len(),
                 persistence::encode(&editor.scene).unwrap().len()
             );
             measure(&format!("{label}/editor_clone_history_{depth}"), || {
@@ -815,7 +818,7 @@ fn item_move_drag_gpu() {
         a.run(Command::Drop);
     }
     a.editor.scene.selection.vertices.clear();
-    println!("undo steps: {}", a.editor.undo.len());
+    println!("undo steps: {}", a.editor.history.undo.len());
     let ctx = Context::default();
     theme::install(&ctx);
     let size = vec2(1440., 900.);
@@ -1111,7 +1114,11 @@ fn item_move_drag_scene_file() {
             p.delta.x = 0.001 * k;
             a.run(Command::Preview(p));
         });
-        println!("undo steps {}, dirty {}", a.editor.undo.len(), a.dirty());
+        println!(
+            "undo steps {}, dirty {}",
+            a.editor.history.undo.len(),
+            a.dirty()
+        );
     }
 }
 
@@ -1785,7 +1792,7 @@ fn camera_view_navigation() {
             a.resident_cache.builds(),
             a.surface_cache.builds(),
             a.subdivision_cache.full_builds(),
-            a.editor.undo.len() as u64,
+            a.editor.history.undo.len() as u64,
         ]
     };
     let run = |a: &mut Operandi, label: &str| {

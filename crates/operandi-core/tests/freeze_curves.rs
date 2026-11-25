@@ -265,12 +265,12 @@ fn frz_c09_item_mode_freezes_all_vertex_mode_nothing() {
     let input = two_beziers();
     let mut e = editor_with(input.clone(), Mode::Vertex);
     e.scene.selection.vertices = vec![0];
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let err = e
         .dispatch(Command::Freeze(options(FreezeCurves::Faces)))
         .unwrap_err();
     assert!(err.starts_with(NOTHING_TO_FREEZE), "{err}");
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     assert_eq!(*e.scene.active().unwrap().mesh, input);
     assert_eq!(e.scene.selection.vertices, vec![0]);
 }
@@ -301,7 +301,7 @@ fn mixed() -> Mesh {
 fn frz_c10_tessellation_off_changes_nothing() {
     for input in [c01(), mixed()] {
         let mut e = editor_with(input.clone(), Mode::Item);
-        let steps = e.undo.len();
+        let steps = e.history.undo.len();
         let err = e
             .dispatch(Command::Freeze(FreezeOptions {
                 tessellation: false,
@@ -309,7 +309,7 @@ fn frz_c10_tessellation_off_changes_nothing() {
             }))
             .unwrap_err();
         assert!(err.starts_with(NOTHING_TO_FREEZE), "{err}");
-        assert_eq!(e.undo.len(), steps);
+        assert_eq!(e.history.undo.len(), steps);
         assert_eq!(*e.scene.active().unwrap().mesh, input);
     }
 }
@@ -327,11 +327,11 @@ fn frz_c11_mixed_mesh_freezes_in_one_step() {
     )
     .unwrap();
     let mut e = editor_with(mixed(), Mode::Item);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Freeze(options(FreezeCurves::Faces)))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Freeze");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Freeze");
     let m = &e.scene.active().unwrap().mesh;
     assert!(!has_smooth(m));
     assert_eq!(curves_left(m), 0);
@@ -364,12 +364,12 @@ fn frz_c12_nothing_to_freeze() {
         ],
     );
     let mut e = editor_with(m.clone(), Mode::Item);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let err = e
         .dispatch(Command::Freeze(options(FreezeCurves::Faces)))
         .unwrap_err();
     assert!(err.starts_with(NOTHING_TO_FREEZE), "{err}");
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     assert_eq!(*e.scene.active().unwrap().mesh, m);
 }
 

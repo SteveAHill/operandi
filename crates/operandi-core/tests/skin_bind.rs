@@ -121,9 +121,9 @@ fn sk02_bind_needs_setup_mode() {
 #[test]
 fn sk21_heat_bind_bends_the_arm_with_nothing_left_behind() {
     let mut a = arm();
-    let steps = a.e.undo.len();
+    let steps = a.e.history.undo.len();
     bind(&mut a, "");
-    assert_eq!(a.e.undo.len(), steps + 1, "SK-23 one step");
+    assert_eq!(a.e.history.undo.len(), steps + 1, "SK-23 one step");
     let m = maps(&a);
     for name in ["Shoulder1", "Elbow1", "Wrist1"] {
         assert!(m.contains_key(name), "{:?}", m.keys());
@@ -187,10 +187,10 @@ fn sk21_heat_refuses_bad_geometry_and_selects_it() {
         it.mesh = mesh.into();
     }
     ok(&mut a.e, "operandi.anim.setup on:true");
-    let steps = a.e.undo.len();
+    let steps = a.e.history.undo.len();
     let text = format!("operandi.skin.bind items:{} root:{}", a.mesh, a.joints[0]);
     assert!(err(&mut a.e, &text).contains("loose points"));
-    assert_eq!(a.e.undo.len(), steps, "nothing changes");
+    assert_eq!(a.e.history.undo.len(), steps, "nothing changes");
     assert!(a.e.scene.item(a.mesh).unwrap().mesh_stack.is_none());
     let n = rest(&a).len() as u32;
     assert_eq!(a.e.scene.selection.vertices, vec![n - 1]);

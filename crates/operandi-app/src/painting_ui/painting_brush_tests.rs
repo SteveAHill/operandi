@@ -115,7 +115,7 @@ fn a_stroke_paints_live_and_is_one_undo_step() {
     let image = a.current_image().unwrap();
     let before = a.editor.scene.paint.buffers[&image].clone();
     let r = rect();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let kind = a.paint_press(r.center(), r, Modifiers::NONE);
     assert!(matches!(kind, input::GestureKind::Paint), "{}", a.status);
     for k in 1..20 {
@@ -127,8 +127,11 @@ fn a_stroke_paints_live_and_is_one_undo_step() {
     let white = (0..live.pixel_count()).any(|i| live.get(i)[0] > 0.99);
     assert!(white, "white paint during the stroke");
     a.finish_paint_stroke();
-    assert_eq!(a.editor.undo.len(), steps + 1);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Airbrush Stroke");
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Airbrush Stroke"
+    );
     assert!(a.editor.image_changed(image));
     a.execute("app.undo");
     assert!(
@@ -329,7 +332,7 @@ fn line_previews_while_dragging_and_paints_on_release() {
     let image = a.current_image().unwrap();
     let before = a.editor.scene.paint.buffers[&image].clone();
     let r = rect();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     assert!(matches!(
         a.paint_press(r.center() - vec2(60., 0.), r, Modifiers::NONE),
         input::GestureKind::Paint
@@ -340,8 +343,8 @@ fn line_previews_while_dragging_and_paints_on_release() {
         "nothing written while dragging"
     );
     a.finish_paint_stroke();
-    assert_eq!(a.editor.undo.len(), steps + 1, "{}", a.status);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Line Stroke");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Line Stroke");
     a.execute("operandi.paint.set lineShape:circle");
     assert_eq!(
         a.painting.brush.settings(PaintTool::Line).shape,
@@ -355,13 +358,13 @@ fn fill_is_one_click_and_gradients_go_down_on_release() {
     let r = rect();
     a.execute("operandi.paint.fill");
     a.execute("operandi.paint.set fg:1,0,0");
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     assert!(matches!(
         a.paint_press(r.center(), r, Modifiers::NONE),
         input::GestureKind::Blocked
     ));
-    assert_eq!(a.editor.undo.len(), steps + 1, "{}", a.status);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Fill");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Fill");
     let image = a.current_image().unwrap();
     // Black everywhere, so the whole image is now red.
     assert_eq!(a.editor.scene.paint.buffers[&image].get(0)[0], 1.);
@@ -373,7 +376,7 @@ fn fill_is_one_click_and_gradients_go_down_on_release() {
     a.paint_drag(r.center() + vec2(30., 0.), r);
     a.finish_paint_stroke();
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Linear Gradient",
         "{}",
         a.status
@@ -461,7 +464,7 @@ fn stamp_and_text_tips_lay_one_copy_on_release() {
     a.execute("operandi.paint.paintbrush");
     a.execute("operandi.paint.tip kind:text");
     let before = a.editor.scene.paint.buffers[&image].clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     assert!(matches!(
         a.paint_press(r.center(), r, Modifiers::NONE),
         input::GestureKind::Paint
@@ -472,7 +475,7 @@ fn stamp_and_text_tips_lay_one_copy_on_release() {
         "nothing until release"
     );
     a.finish_paint_stroke();
-    assert_eq!(a.editor.undo.len(), steps + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "{}", a.status);
     let px = &a.editor.scene.paint.buffers[&image];
     assert!(
         (0..px.pixel_count()).any(|i| px.get(i)[0] > 0.5),
@@ -492,7 +495,7 @@ fn stamp_and_text_tips_lay_one_copy_on_release() {
     ));
     a.paint_drag(r.center() + vec2(0., 50.), r);
     a.finish_paint_stroke();
-    assert_eq!(a.editor.undo.len(), steps + 2, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), steps + 2, "{}", a.status);
 }
 
 #[test]
@@ -511,13 +514,13 @@ fn nozzle_rows_and_jitter_through_commands() {
     assert!(a.status.contains("500 %"), "{}", a.status);
     // A jittered stroke still paints and is one step.
     let r = rect();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.paint_press(r.center(), r, Modifiers::NONE);
     for k in 1..10 {
         a.paint_drag(r.center() + vec2(k as f32 * 4., 0.), r);
     }
     a.finish_paint_stroke();
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
 }
 
 #[test]
@@ -565,7 +568,7 @@ fn a_left_drag_in_the_viewport_paints_through_the_real_input_path() {
     a.execute("operandi.paint.set size:30");
     let image = a.current_image().unwrap();
     let before = a.editor.scene.paint.buffers[&image].clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let _ = draw(&mut a, &ctx, size, vec![]);
     let _ = draw(&mut a, &ctx, size, vec![]);
     let c = a.viewport_rect.center();
@@ -583,12 +586,15 @@ fn a_left_drag_in_the_viewport_paints_through_the_real_input_path() {
     }
     let _ = draw(&mut a, &ctx, size, vec![]);
     assert_eq!(
-        a.editor.undo.len(),
+        a.editor.history.undo.len(),
         steps + 1,
         "one stroke step; status: {}",
         a.status
     );
-    assert_eq!(a.editor.undo.last().unwrap().label, "Airbrush Stroke");
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Airbrush Stroke"
+    );
     let after = &a.editor.scene.paint.buffers[&image];
     assert!(!Arc::ptr_eq(after, &before));
     assert!(

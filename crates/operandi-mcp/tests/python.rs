@@ -47,7 +47,7 @@ fn without_python_the_tool_says_so() {
 #[test]
 fn a_script_keys_a_ball_and_builds_a_mesh_in_one_step() {
     let mut b = Bridge::new();
-    let undo = b.editor.undo.len();
+    let undo = b.editor.history.undo.len();
     let out = call(
         &mut b,
         "python_run",
@@ -65,7 +65,11 @@ print(q['channels'][0]['values']['12'])
     )
     .unwrap();
     assert_eq!(out["output"], "0.0\n");
-    assert_eq!(b.editor.undo.len(), undo + 1, "the script is one step");
+    assert_eq!(
+        b.editor.history.undo.len(),
+        undo + 1,
+        "the script is one step"
+    );
 }
 
 #[cfg(feature = "python")]

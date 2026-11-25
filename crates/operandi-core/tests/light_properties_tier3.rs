@@ -36,7 +36,7 @@ fn edit(e: &mut Editor, id: u64, edit: LightEdit) -> Result<()> {
 }
 
 fn last_label(e: &Editor) -> &str {
-    &e.undo.last().unwrap().label
+    &e.history.undo.last().unwrap().label
 }
 
 fn round_trip(scene: &Scene) -> Scene {

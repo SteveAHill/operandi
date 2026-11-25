@@ -38,24 +38,24 @@ impl Editor {
     /// Provisional (UND-Q1): any other recorded step, Undo, Redo or untracked
     /// scene change ends a group; a pause does not.
     pub(crate) fn record_selection(&mut self, label: String, before: Scene) {
-        let settings = self.history;
+        let settings = self.history.settings;
         if settings.group_selection
-            && self.selection_run > 0
-            && self.selection_run < settings.max_sub_commands
-            && self.redo.is_empty()
-            && let Some(last) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+            && self.history.selection_run > 0
+            && self.history.selection_run < settings.max_sub_commands
+            && self.history.redo.is_empty()
+            && let Some(last) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
             && last.after == before
         {
             last.after = self.scene.clone();
-            let pending = std::mem::take(&mut self.pending_records.0);
+            let pending = std::mem::take(&mut self.history.pending_records.0);
             last.records
                 .extend_capped(pending, settings.max_sub_commands as usize);
-            self.selection_run += 1;
-            self.history_mark += 1;
+            self.history.selection_run += 1;
+            self.history.history_mark += 1;
             return;
         }
         self.record(label, before);
-        self.selection_run = 1;
+        self.history.selection_run = 1;
     }
 
     /// True when the scene holds only committed work, so an auto-save backup
@@ -89,17 +89,15 @@ mod tests {
     use crate::{Command, Component, Mode};
 
     fn editor(settings: HistorySettings) -> (Editor, u64) {
-        let mut e = Editor {
-            history: settings,
-            ..Default::default()
-        };
+        let mut e = Editor::default();
+        e.history.settings = settings;
         e.dispatch(Command::NewMesh).unwrap();
         e.scene.active_mut().unwrap().mesh =
             crate::cube_geometry(glam::DVec3::ZERO, glam::DVec3::ONE)
                 .unwrap()
                 .into();
         e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
-        e.undo.clear();
+        e.history.undo.clear();
         let id = e.scene.selection.item.unwrap();
         (e, id)
     }
@@ -141,11 +139,11 @@ mod tests {
         assert_eq!(d.max_undo_level, 100);
         assert!(!d.group_selection);
         let (mut e, id) = editor(d);
-        let start = e.undo.len();
+        let start = e.history.undo.len();
         for face in 0..3 {
             click(&mut e, id, face);
         }
-        assert_eq!(e.undo.len(), start + 3);
+        assert_eq!(e.history.undo.len(), start + 3);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene.selection.faces, vec![1]);
     }
@@ -159,13 +157,13 @@ mod tests {
         for face in 0..6 {
             click(&mut e, id, face % 2);
         }
-        assert_eq!(e.undo.len(), 3);
+        assert_eq!(e.history.undo.len(), 3);
         for _ in 0..3 {
             e.dispatch(Command::Undo).unwrap();
         }
         // Three steps back from the last click; earlier ones are gone.
         assert_eq!(e.scene.selection.faces, vec![0]);
-        assert!(e.undo.is_empty());
+        assert!(e.history.undo.is_empty());
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene.selection.faces, vec![0]);
     }
@@ -176,22 +174,26 @@ mod tests {
         for face in 0..5 {
             click(&mut e, id, face);
         }
-        let len = e.undo.len();
-        e.history.max_undo_level = 2;
-        assert_eq!(e.undo.len(), len, "nothing is lost until a new step");
+        let len = e.history.undo.len();
+        e.history.settings.max_undo_level = 2;
+        assert_eq!(
+            e.history.undo.len(),
+            len,
+            "nothing is lost until a new step"
+        );
         click(&mut e, id, 0);
-        assert_eq!(e.undo.len(), 2);
+        assert_eq!(e.history.undo.len(), 2);
     }
 
     #[test]
     fn grouped_selection_clicks_undo_together() {
         let (mut e, id) = editor(grouped(100));
         let before = e.scene.clone();
-        let start = e.undo.len();
+        let start = e.history.undo.len();
         for face in 0..4 {
             click(&mut e, id, face);
         }
-        assert_eq!(e.undo.len(), start + 1);
+        assert_eq!(e.history.undo.len(), start + 1);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, before);
         e.dispatch(Command::Redo).unwrap();
@@ -201,12 +203,12 @@ mod tests {
     #[test]
     fn group_starts_a_new_step_after_max_sub_commands() {
         let (mut e, id) = editor(grouped(2));
-        let start = e.undo.len();
+        let start = e.history.undo.len();
         for face in 0..5 {
             click(&mut e, id, face);
         }
         // 2 + 2 + 1 changes.
-        assert_eq!(e.undo.len(), start + 3);
+        assert_eq!(e.history.undo.len(), start + 3);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene.selection.faces, vec![3]);
     }
@@ -214,22 +216,26 @@ mod tests {
     #[test]
     fn a_modeling_step_or_undo_ends_a_group() {
         let (mut e, id) = editor(grouped(100));
-        let start = e.undo.len();
+        let start = e.history.undo.len();
         click(&mut e, id, 0);
         click(&mut e, id, 1);
         e.dispatch(Command::ClearSelection).unwrap();
         e.dispatch(Command::NewMesh).unwrap();
         e.dispatch(Command::SelectItem(Some(id))).unwrap();
         e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
-        let after_new = e.undo.len();
+        let after_new = e.history.undo.len();
         assert!(after_new >= start + 2);
         click(&mut e, id, 2);
-        assert_eq!(e.undo.len(), after_new + 1, "new group after New Mesh");
+        assert_eq!(
+            e.history.undo.len(),
+            after_new + 1,
+            "new group after New Mesh"
+        );
         e.dispatch(Command::Undo).unwrap();
         let base = e.scene.clone();
         click(&mut e, id, 3);
         click(&mut e, id, 4);
-        assert_eq!(e.undo.len(), after_new + 1, "Undo ended the group");
+        assert_eq!(e.history.undo.len(), after_new + 1, "Undo ended the group");
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, base, "both later clicks undo together");
     }
@@ -238,11 +244,11 @@ mod tests {
     fn turning_grouping_on_lets_the_last_selection_step_grow() {
         let (mut e, id) = editor(HistorySettings::default());
         click(&mut e, id, 0);
-        let len = e.undo.len();
-        e.history = grouped(100);
+        let len = e.history.undo.len();
+        e.history.settings = grouped(100);
         // The previous step was recorded as a group of one, so it may grow.
         click(&mut e, id, 1);
-        assert_eq!(e.undo.len(), len);
+        assert_eq!(e.history.undo.len(), len);
         e.dispatch(Command::Undo).unwrap();
         assert!(e.scene.selection.faces.is_empty());
     }

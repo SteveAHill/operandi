@@ -118,9 +118,9 @@ fn duplicate_lands_above_with_the_next_number_and_its_own_locator() {
         .unwrap()
         .transform
         .translation = DVec3::new(1., 2., 3.);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     edit(&mut e, ShaderTreeEdit::Duplicate(vec![layer]));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(order(&e, Some(group)), ["Layer (2)", "Layer"]);
     let copy = by_name(&e, "Layer (2)").id;
     // Its own locator, same settings and placement.
@@ -244,7 +244,7 @@ fn paste_values_needs_the_same_type_and_keeps_name_and_locator() {
     );
     let from = node(&e, a).clone();
     let (name, loc) = (node(&e, b).name.clone(), locator(&e, b));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     edit(
         &mut e,
         ShaderTreeEdit::PasteValues {
@@ -252,7 +252,7 @@ fn paste_values_needs_the_same_type_and_keeps_name_and_locator() {
             targets: vec![b],
         },
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(constant_color(&e, b), [0.2, 0.4, 0.6]);
     assert_eq!(node(&e, b).layer.opacity, 0.5);
     assert_eq!(node(&e, b).name, name);
@@ -267,14 +267,14 @@ fn paste_values_needs_the_same_type_and_keeps_name_and_locator() {
         err.to_string()
             .contains("Paste Values needs a layer of the same type")
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
 }
 
 #[test]
 fn editor_color_is_one_step_and_saves_as_version_31_instances_as_32() {
     let mut e = Editor::default();
     let a = add(&mut e, NewLayer::Material, None);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     edit(
         &mut e,
         ShaderTreeEdit::SetEditorColor {
@@ -282,7 +282,7 @@ fn editor_color_is_one_step_and_saves_as_version_31_instances_as_32() {
             color: Some(EditorColor::Cyan),
         },
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(node(&e, a).layer.editor_color, Some(EditorColor::Cyan));
     // A pre-OpenPBR material, so the older version is what is tested.
     e.scene.shader_tree.legacy_openpbr();
@@ -414,7 +414,7 @@ fn change_type_replaces_in_place_and_keeps_the_layer_settings() {
     );
     let loc = locator(&e, layer);
     let before = order(&e, Some(group));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let noise = NewLayer::Procedural(ProceduralKind::Noise);
     edit(
         &mut e,
@@ -423,7 +423,7 @@ fn change_type_replaces_in_place_and_keeps_the_layer_settings() {
             to: noise,
         },
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let changed = node(&e, layer);
     assert_eq!(changed.name, "Layer (2)");
     assert_eq!(changed.parent, Some(group));
@@ -515,9 +515,9 @@ fn instance_rig() -> (Editor, NodeId, NodeId) {
     let mut e = Editor::default();
     let source = add(&mut e, NewLayer::Constant, None);
     rename(&mut e, source, "Layer");
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     edit(&mut e, ShaderTreeEdit::CreateInstance(vec![source]));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let inst = by_name(&e, "Layer (2)").id;
     (e, source, inst)
 }
@@ -849,9 +849,9 @@ fn a_reference_shades_as_its_library_group_and_follows_edits() {
 fn dereference_makes_an_unlinked_copy() {
     let (mut e, group, material) = library_rig();
     let r = reference(&mut e, group);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     edit(&mut e, ShaderTreeEdit::DeReference(vec![r]));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(e.scene.shader_tree.get(r).is_none());
     let copy = by_name(&e, "Paint (2)");
     assert!(matches!(copy.kind, NodeKind::Group(_)));

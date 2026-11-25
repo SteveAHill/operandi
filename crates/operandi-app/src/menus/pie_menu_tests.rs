@@ -56,7 +56,7 @@ fn perspective_app() -> Operandi {
 fn flicks_pick_the_slot_they_point_at() {
     let mut a = perspective_app();
     let ctx = Context::default();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     flick(&mut a, &ctx, vec2(0., -80.));
     assert!(a.pie.is_none());
     assert_eq!(a.camera.view, View::Top);
@@ -68,7 +68,7 @@ fn flicks_pick_the_slot_they_point_at() {
     flick(&mut a, &ctx, vec2(0., -(pie_menu::DEAD_ZONE + 2.)));
     assert_eq!(a.camera.view, View::Top);
     // Views are never undo steps; the pie isn't one either.
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
 }
 
 /// T2: a tap (release in the dead zone without leaving it) keeps the pie
@@ -126,7 +126,7 @@ fn escape_closes_without_a_change() {
     let mut a = perspective_app();
     let ctx = Context::default();
     let scene = a.editor.scene.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     press_view_pie(&mut a, &ctx);
     frame(&mut a, &ctx, vec![Event::PointerMoved(AT + vec2(0., -80.))]);
     frame(
@@ -139,7 +139,7 @@ fn escape_closes_without_a_change() {
     release_space(&mut a, &ctx);
     assert_eq!(a.camera.view, View::Perspective);
     assert_eq!(a.editor.scene, scene);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
 }
 
 /// T4: the toggles pie shows Vertices on when they are shown; picking it
@@ -153,7 +153,7 @@ fn toggle_entries_show_and_flip_their_state() {
     let vertices = pie.slot(3).unwrap();
     assert_eq!(vertices.label, "Vertices");
     assert_eq!(a.pie_status(&vertices.command).mark, Mark::Toggle(true));
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.bindings
         .insert(pie_menu::TOGGLES.into(), "Ctrl+Alt+T".into());
     frame(&mut a, &ctx, vec![Event::PointerMoved(AT)]);
@@ -172,7 +172,7 @@ fn toggle_entries_show_and_flip_their_state() {
     assert!(a.pie.is_none());
     assert!(!a.display.settings.drawing.show_verts);
     assert_eq!(a.pie_status(&vertices.command).mark, Mark::Toggle(false));
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     // Every built-in toggle flips and flips back.
     for i in 0..pie_menu::SLOTS {
         let Some(entry) = pie.slot(i) else { continue };
@@ -327,7 +327,7 @@ fn disabled_entries_cannot_be_picked() {
         "Edge Extend"
     );
     let scene = a.editor.scene.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.bindings
         .insert(pie_menu::MODELING.into(), "Ctrl+Alt+M".into());
     frame(&mut a, &ctx, vec![Event::PointerMoved(AT)]);
@@ -345,7 +345,7 @@ fn disabled_entries_cannot_be_picked() {
     assert!(a.pie.is_none());
     assert!(a.editor.live.is_none());
     assert_eq!(a.editor.scene, scene);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
 }
 
 /// T9: binding a pie to a key another action uses shows the input map's

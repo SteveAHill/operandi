@@ -12,12 +12,12 @@ fn full_history(limit: usize) -> Operandi {
     let mut a = box_app();
     a.run(Command::Mode(Mode::Polygon));
     a.editor.scene.selection.faces = vec![5];
-    a.editor.history.max_undo_level = limit;
-    while a.editor.undo.len() < limit {
+    a.editor.history.settings.max_undo_level = limit;
+    while a.editor.history.undo.len() < limit {
         a.execute("poly.flip");
     }
     a.execute("poly.flip");
-    assert_eq!(a.editor.undo.len(), limit, "full");
+    assert_eq!(a.editor.history.undo.len(), limit, "full");
     a
 }
 
@@ -27,8 +27,8 @@ fn a_batch_at_the_history_limit_is_still_one_step() {
     let before = a.editor.scene.clone();
     a.execute("cmds.batch label:Both c1:poly.flip c2:\"poly.setPart Road\"");
     // Two steps trimmed two old ones, then became one.
-    assert_eq!(a.editor.undo.len(), 3);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Both");
+    assert_eq!(a.editor.history.undo.len(), 3);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Both");
     a.execute("Undo");
     assert_eq!(
         a.editor.scene, before,
@@ -45,12 +45,12 @@ fn moving_an_item_to_another_scene_at_the_history_limit_moves_it() {
     let count = a.editor.scene.items.len();
     a.request_file(FileAction::New);
     let to = a.scenes.tabs[1].id;
-    a.editor.history.max_undo_level = 2;
+    a.editor.history.settings.max_undo_level = 2;
     // Fill this scene's history too.
     for _ in 0..3 {
         a.run(Command::NewMesh);
     }
-    assert_eq!(a.editor.undo.len(), 2);
+    assert_eq!(a.editor.history.undo.len(), 2);
     assert!(a.switch_scene(0));
     a.scene_row_action(SceneRowAction::Transfer {
         from,

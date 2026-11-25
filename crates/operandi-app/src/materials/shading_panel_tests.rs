@@ -97,7 +97,7 @@ fn st1_default_rows_select_and_delete_with_undo() {
 #[test]
 fn st1_eye_click_and_opacity_drag_are_one_step_each() {
     let (mut a, ctx) = shading_app();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let eye = a.shading.row_rects[&4][0].center();
     click(&mut a, &ctx, eye);
     assert!(!a.editor.scene.shader_tree.get(4).unwrap().layer.enable);
@@ -105,7 +105,7 @@ fn st1_eye_click_and_opacity_drag_are_one_step_each() {
     drag(&mut a, &ctx, cell.center(), cell.center() - vec2(60., 0.));
     let opacity = a.editor.scene.shader_tree.get(3).unwrap().layer.opacity;
     assert!(opacity < 0.9, "opacity {opacity}");
-    assert_eq!(a.editor.undo.len(), steps + 2);
+    assert_eq!(a.editor.history.undo.len(), steps + 2);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.shader_tree.get(3).unwrap().layer.opacity, 1.);
 }

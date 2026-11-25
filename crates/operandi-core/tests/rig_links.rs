@@ -188,12 +188,12 @@ fn rg53_user_channels_are_keyable_linkable_saved_and_deleted_with_their_links() 
     let back = persistence::decode(&persistence::encode(&e.scene).unwrap()).unwrap();
     assert_eq!(back.animation.rig, e.scene.animation.rig);
     // Delete removes its links too, in one step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(
         &mut e,
         &format!("operandi.rig.userChannelRemove item:{a} name:crank"),
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(e.scene.animation.rig.pieces.is_empty());
     assert!(e.anim.note.as_deref().is_some_and(|n| n.contains("1 link")));
 }

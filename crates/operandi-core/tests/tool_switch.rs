@@ -31,7 +31,7 @@ fn fixture() -> Editor {
 fn switching_commits_each_stage_once_and_cancel_restores_new_base() {
     let mut e = fixture();
     let original = e.scene.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     for inset in [0.1, 0.05, 0.1] {
         e.dispatch(Command::Preview(Parameters {
@@ -50,7 +50,7 @@ fn switching_commits_each_stage_once_and_cancel_restores_new_base() {
     .unwrap();
     let b = e.scene.clone();
     e.dispatch(Command::Activate(Tool::Extrude)).unwrap();
-    assert_eq!(e.undo.len(), history + 2);
+    assert_eq!(e.history.undo.len(), history + 2);
     assert_eq!(e.live.as_ref().unwrap().base, b);
     for extent in [0.2, 0.1, 0.2] {
         e.dispatch(Command::Preview(Parameters {
@@ -61,7 +61,7 @@ fn switching_commits_each_stage_once_and_cancel_restores_new_base() {
     }
     let c = e.scene.clone();
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
-    assert_eq!(e.undo.len(), history + 3);
+    assert_eq!(e.history.undo.len(), history + 3);
     assert_eq!(e.live.as_ref().unwrap().base, c);
     e.dispatch(Command::Preview(Parameters {
         delta: DVec3::X,
@@ -128,15 +128,15 @@ fn every_tool_can_switch_to_another_eligible_tool() {
                 e.dispatch(Command::Apply).unwrap();
             }
             let scene = e.scene.clone();
-            let history = e.undo.len();
+            let history = e.history.undo.len();
             e.dispatch(Command::Activate(to))
                 .unwrap_or_else(|error| panic!("{from:?} -> {to:?}: {error}"));
             assert_eq!(e.scene, scene);
             let live = e.live.as_ref().unwrap();
             assert_eq!(live.tool, to);
             assert_eq!(live.base, scene);
-            assert_eq!(e.undo.len(), history + 1);
-            assert_eq!(e.undo.last().unwrap().label, from.label());
+            assert_eq!(e.history.undo.len(), history + 1);
+            assert_eq!(e.history.undo.last().unwrap().label, from.label());
             if from == Tool::Box {
                 assert_eq!(e.cube_preset, p);
             }
@@ -169,10 +169,10 @@ fn invalid_target_preserves_task_history_and_parameters() {
 fn neutral_flat_and_same_tool_keep_drop_semantics() {
     let mut e = fixture();
     let scene = e.scene.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     e.dispatch(Command::Activate(Tool::Sphere)).unwrap();
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
     let mut p = e.live.as_ref().unwrap().params.clone();
     p.radial.as_mut().unwrap().radius.y = 0.;
     p.radial.as_mut().unwrap().sides = 16;
@@ -181,9 +181,9 @@ fn neutral_flat_and_same_tool_keep_drop_semantics() {
     assert_eq!(e.sphere_unit_resolution, Some([16, 12]));
     // drag-creation-2026-11-06: the flat base is kept as one step.
     assert_ne!(e.scene, scene);
-    assert_eq!(e.undo.len(), history + 1);
+    assert_eq!(e.history.undo.len(), history + 1);
     let history = history + 1;
     e.dispatch(Command::Activate(Tool::Cylinder)).unwrap();
     assert!(e.live.is_none());
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
 }

@@ -68,8 +68,8 @@ fn fixture() -> Operandi {
 fn assert_unchanged(a: &Operandi, before: &Editor) {
     assert_eq!(a.editor.scene, before.scene);
     assert!(a.editor.live == before.live);
-    assert_eq!(a.editor.undo.len(), before.undo.len());
-    assert_eq!(a.editor.redo.len(), before.redo.len());
+    assert_eq!(a.editor.history.undo.len(), before.history.undo.len());
+    assert_eq!(a.editor.history.redo.len(), before.history.redo.len());
     assert_eq!(a.editor.cube_preset, before.cube_preset);
 }
 /// Create-panel cells on the primitive-quick template (MB-Q8): Cube,
@@ -191,7 +191,7 @@ fn pm_t05_t06_t08_t10_unit_clicks_route_by_event_and_preserve_live_task_guards()
                 } else {
                     // A live tool (nothing drawn yet) is dropped first.
                     assert!(a.editor.live.is_none());
-                    assert_eq!(a.editor.undo.len(), before.undo.len() + 1);
+                    assert_eq!(a.editor.history.undo.len(), before.history.undo.len() + 1);
                     assert_eq!(
                         a.editor.scene.items.len(),
                         before.scene.items.len() + usize::from(mods.shift)
@@ -283,7 +283,7 @@ fn pm_t08_t09_field_menu_modal_and_navigation_own_modifiers() {
             );
             if owner == "text" {
                 assert!(a.editor.live.is_none(), "{}", a.status);
-                assert_eq!(a.editor.undo.len(), before.undo.len() + 1);
+                assert_eq!(a.editor.history.undo.len(), before.history.undo.len() + 1);
                 assert_ne!(a.editor.scene, before.scene);
             } else {
                 assert_unchanged(&a, &before);
@@ -311,7 +311,7 @@ fn pm_t01_t11_uniform_sphere_geometry_seams_history_and_persistence() {
             frame(&mut a, &ctx, Modifiers::NONE, true, vec![]);
         }
         let before = a.editor.scene.clone();
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         let r = a.viewport_rect;
         let start = a.camera.project(DVec3::ZERO, r).unwrap().0;
         let end = a.camera.project(end, r).unwrap().0;
@@ -337,10 +337,10 @@ fn pm_t01_t11_uniform_sphere_geometry_seams_history_and_persistence() {
             assert!(((v - params.position).length() - radius.x).abs() < 1e-8);
         }
         mesh.validate().unwrap();
-        assert_eq!(a.editor.undo.len(), history);
+        assert_eq!(a.editor.history.undo.len(), history);
         a.run(Command::Drop);
         let result = a.editor.scene.clone();
-        assert_eq!(a.editor.undo.len(), history + 1);
+        assert_eq!(a.editor.history.undo.len(), history + 1);
         a.run(Command::Undo);
         assert_eq!(a.editor.scene, before);
         a.run(Command::Redo);
@@ -514,7 +514,10 @@ fn pm_t03_modifier_change_mid_drag_is_ignored_and_focus_loss_releases_capture() 
         );
         assert!(x.applied == y.applied && x.action_frame == y.action_frame);
         assert!(x.identity_preview == y.identity_preview && x.preview_error == y.preview_error);
-        assert_eq!(a.editor.undo.len(), steady.editor.undo.len());
+        assert_eq!(
+            a.editor.history.undo.len(),
+            steady.editor.history.undo.len()
+        );
         // Focus loss ends capture; return with no modifier cannot continue it.
         frame(
             &mut a,
@@ -640,7 +643,7 @@ fn pm_drag_uniform_primitives_geometry_history_and_roundtrip() {
                 frame(&mut a, &ctx, Modifiers::NONE, true, vec![]);
             }
             let before = a.editor.scene.clone();
-            let history = a.editor.undo.len();
+            let history = a.editor.history.undo.len();
             let r = a.viewport_rect;
             let start = a.camera.project(center, r).unwrap().0;
             let end = a.camera.project(center + extent, r).unwrap().0;
@@ -684,10 +687,10 @@ fn pm_drag_uniform_primitives_geometry_history_and_roundtrip() {
                 assert!((surface - size * 0.5).abs() < 1e-8);
             }
             mesh.validate().unwrap();
-            assert_eq!(a.editor.undo.len(), history);
+            assert_eq!(a.editor.history.undo.len(), history);
             a.run(Command::Drop);
             let result = a.editor.scene.clone();
-            assert_eq!(a.editor.undo.len(), history + 1);
+            assert_eq!(a.editor.history.undo.len(), history + 1);
             a.run(Command::Undo);
             assert_eq!(a.editor.scene, before);
             a.run(Command::Redo);
@@ -813,7 +816,7 @@ fn pm_t13_t16_unit_click_size_ignores_view_grid_plane_and_refusal_keeps_pending_
         });
         assert!(a.editor.live.is_none(), "{}", a.status);
         assert_eq!(a.editor.scene.items.len(), before.scene.items.len() + 1);
-        assert!(a.editor.undo.len() > before.undo.len());
+        assert!(a.editor.history.undo.len() > before.history.undo.len());
     }
 }
 
@@ -962,7 +965,7 @@ fn shift_drag_off_handles_keeps_the_primitive_and_draws_the_next() {
         }
         a.run(Command::Preview(p));
         let first = a.editor.scene.active().unwrap().mesh.faces.len();
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         let start = c + vec2(250., 150.);
         drag(
             &mut a,
@@ -973,7 +976,11 @@ fn shift_drag_off_handles_keeps_the_primitive_and_draws_the_next() {
         );
         let live = a.editor.live.as_ref().expect("next primitive is live");
         assert_eq!(live.tool, tool);
-        assert_eq!(a.editor.undo.len(), history + 1, "{tool:?}: first one kept");
+        assert_eq!(
+            a.editor.history.undo.len(),
+            history + 1,
+            "{tool:?}: first one kept"
+        );
         let faces = a.editor.scene.active().unwrap().mesh.faces.len();
         assert!(
             faces > first,
@@ -1001,7 +1008,7 @@ fn shift_drag_before_drawing_starts_nothing_new() {
     let before = a.editor.clone();
     let c = a.viewport_rect.center();
     drag(&mut a, &ctx, c, c + vec2(60., 40.), Modifiers::SHIFT);
-    assert_eq!(a.editor.undo.len(), before.undo.len());
+    assert_eq!(a.editor.history.undo.len(), before.history.undo.len());
     assert_eq!(a.editor.scene, before.scene);
 }
 
@@ -1026,8 +1033,8 @@ fn ellipsoid_cone_torus_capsule_cells_make_units() {
             );
             assert!(!a.editor.has_active_task(), "{label}: {}", a.status);
             assert_eq!(
-                a.editor.undo.len(),
-                before.undo.len() + 1,
+                a.editor.history.undo.len(),
+                before.history.undo.len() + 1,
                 "{label}: {}",
                 a.status
             );

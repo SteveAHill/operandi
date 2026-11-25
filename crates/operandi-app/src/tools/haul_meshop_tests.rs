@@ -56,7 +56,7 @@ fn right_drag_changes_a_primitive_ops_counts_in_whole_steps() {
         let from = away(&a);
         let sideways = row.right.sideways.clone().unwrap();
         let before = value(&a, &sideways).expect("the op has the value");
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         right_drag(&mut a, &ctx, from, from + vec2(2. * px + 3., 0.));
         assert_eq!(
             value(&a, &sideways),
@@ -65,7 +65,12 @@ fn right_drag_changes_a_primitive_ops_counts_in_whole_steps() {
             row.tool,
             a.status
         );
-        assert_eq!(a.editor.undo.len(), history + 1, "{}: one step", row.tool);
+        assert_eq!(
+            a.editor.history.undo.len(),
+            history + 1,
+            "{}: one step",
+            row.tool
+        );
         a.run(Command::Undo);
         assert_eq!(value(&a, &sideways), Some(before), "{}: undo", row.tool);
         if let Some(up) = row.right.up.clone() {

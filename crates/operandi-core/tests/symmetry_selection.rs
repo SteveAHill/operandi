@@ -128,7 +128,7 @@ fn lasso_picks_add_partners_in_one_step_and_ctrl_removes_both() {
         .collect();
     let (mut e, id) = editor(m, Symmetry::x());
     e.dispatch(Command::Mode(Mode::Vertex)).unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     // What the viewport's lasso and rectangle send.
     e.dispatch(Command::BeginSelection).unwrap();
     for &v in &right {
@@ -150,7 +150,7 @@ fn lasso_picks_add_partners_in_one_step_and_ctrl_removes_both() {
             .iter()
             .all(|&v| mesh.vertices[v as usize].x < -1.5)
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::BeginSelection).unwrap();
     e.dispatch(Command::Select {
         item: id,

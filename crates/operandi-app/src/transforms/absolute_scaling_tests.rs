@@ -27,7 +27,7 @@ fn app() -> (Operandi, Context) {
     item.mesh = Mesh::box_mesh(DVec3::ZERO, DVec3::ONE, 0).unwrap().into();
     let id = item.id;
     a.editor.synchronize_identities().unwrap();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.run(Command::SelectItem(Some(id)));
     a.category = toolbox::Category::Create;
     a.create_folded.clear();
@@ -59,7 +59,7 @@ fn grab_size_fills_the_fields_without_an_undo_step() {
     a.execute("scale.absolute mode:grab");
     assert_eq!(a.absolute.size, DVec3::ONE);
     assert_eq!(a.absolute.uniform, 1.);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }
 
 #[test]
@@ -76,7 +76,7 @@ fn explicit_from_a_script_is_one_undo_step_and_refreshes_the_fields() {
     assert_eq!(min_x, -0.5, "Low X stays put");
     assert_eq!(a.absolute.size, DVec3::new(2., 1., 1.));
     assert_eq!(a.absolute.uniform, 2.);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     a.run(Command::Undo);
     assert_eq!(size(&a), DVec3::ONE);
 }
@@ -115,6 +115,6 @@ fn bad_arguments_change_nothing() {
     a.execute("scale.absolute mode:sideways");
     assert!(a.status.contains("mode"), "{}", a.status);
     a.execute("scale.absolute mode:explicit absolute_size_x:abc");
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     assert_eq!(size(&a), DVec3::ONE);
 }

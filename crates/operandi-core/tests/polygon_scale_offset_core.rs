@@ -327,13 +327,13 @@ fn rich_data_identities_undo_redo_and_native_encoding() {
     let mut e = rich();
     let before = e.scene.clone();
     let ids = e.identities.current.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     let expected = rich_square_result(&e, 0.25);
     offset(&mut e, 0.25).unwrap();
     assert_scene(&e.scene, &expected, 0.);
     assert_eq!(e.identities.current, ids);
-    assert_eq!(e.undo.len(), undo + 1);
-    assert!(e.redo.is_empty());
+    assert_eq!(e.history.undo.len(), undo + 1);
+    assert!(e.history.redo.is_empty());
     let after = e.scene.clone();
     let bytes = persistence::encode(&e.scene).unwrap();
     assert_eq!(persistence::decode(&bytes).unwrap(), after);
@@ -354,7 +354,7 @@ fn rich_data_identities_undo_redo_and_native_encoding() {
     }
     offset(&mut e, 0.5).unwrap();
     assert_scene(&e.scene, &twice, 0.);
-    assert_eq!(e.undo.len(), undo + 2);
+    assert_eq!(e.history.undo.len(), undo + 2);
     // Outward from the original.
     e.dispatch(Command::Undo).unwrap();
     e.dispatch(Command::Undo).unwrap();
@@ -382,7 +382,7 @@ fn zero_preserves_everything_including_parked_redo() {
     let mut e = rich();
     offset(&mut e, 0.25).unwrap();
     e.dispatch(Command::Undo).unwrap();
-    assert_eq!(e.redo.len(), 1);
+    assert_eq!(e.history.redo.len(), 1);
     let before = e.clone();
     offset(&mut e, 0.).unwrap();
     assert_no_change(&e, &before);

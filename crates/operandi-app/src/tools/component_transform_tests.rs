@@ -194,7 +194,7 @@ fn extrude_click_starts_then_gizmo_and_free_drag() {
         (0..m.faces.len()).find(|&f| m.normal(f).y > 0.9).unwrap() as u32
     };
     a.editor.scene.selection.faces = vec![top];
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.camera.view = View::Perspective;
     a.run(Command::Activate(Tool::Extrude));
     draw(&mut a, &ctx, size, vec![]);

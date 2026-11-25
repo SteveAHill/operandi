@@ -200,9 +200,9 @@ fn rem_004_panel_command_and_shortcut_routes_match_on_equal_scenes() {
     assert_eq!(shortcut.editor.scene, want, "{}", shortcut.status);
 
     for a in [&panel, &command, &upper, &shortcut] {
-        assert_eq!(a.editor.undo.len(), 1);
-        assert_eq!(a.editor.undo[0].label, "Remove");
-        assert!(a.editor.redo.is_empty());
+        assert_eq!(a.editor.history.undo.len(), 1);
+        assert_eq!(a.editor.history.undo[0].label, "Remove");
+        assert!(a.editor.history.redo.is_empty());
         assert_eq!(a.editor.scene.items.len(), 2, "not item deletion");
     }
 
@@ -283,10 +283,10 @@ fn rem_001_default_binding_is_contextual_and_distinct_from_item_deletion() {
     chord(&mut b, &ctx, Key::Backspace, Modifiers::NONE);
     let mut c = app(&source);
     chord(&mut c, &ctx, Key::Backspace, Modifiers::SHIFT);
-    assert_eq!(c.editor.undo.last().unwrap().label, "Remove");
+    assert_eq!(c.editor.history.undo.last().unwrap().label, "Remove");
     let mut d = app(&source);
     chord(&mut d, &ctx, Key::Delete, Modifiers::NONE);
-    assert_eq!(d.editor.undo.last().unwrap().label, "Delete");
+    assert_eq!(d.editor.history.undo.last().unwrap().label, "Delete");
     assert_eq!(b.editor.scene, d.editor.scene);
     let (deleted, removed) = (
         d.editor.scene.active().unwrap(),

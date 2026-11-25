@@ -367,11 +367,11 @@ fn deprecated_names_still_run() {
 #[test]
 fn headless_commands_run_from_the_command_line() {
     let mut a = box_app();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.execute("item.rename {Road Sign}");
     assert_eq!(a.status, "Ready");
     assert_eq!(a.editor.scene.active().unwrap().name, "Road Sign");
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     a.execute("mesh.new name:Second");
     assert_eq!(a.editor.scene.active().unwrap().name, "Second");
     a.run(Command::Undo);
@@ -466,11 +466,11 @@ fn modo_names_run_their_phrases() {
     assert_eq!(a.editor.scene.selection.mode, Mode::Polygon);
     a.execute("select.convert nonsense");
     assert!(a.status.contains("vertex, edge or polygon"), "{}", a.status);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.execute("item.name Renamed");
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     a.execute("app.undo");
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     a.execute("app.undo steps:2");
     assert!(
         a.status.contains("arguments aren't supported"),

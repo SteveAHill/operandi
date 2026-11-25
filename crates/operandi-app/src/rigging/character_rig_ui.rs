@@ -133,7 +133,7 @@ mod tests {
         let r = Rect::from_min_size(Pos2::ZERO, vec2(800., 600.));
         let at = cr::world_pos(&a.editor.scene, knee);
         let (screen, _) = a.camera.projector(r).project(at).unwrap();
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         let Some(input::GestureKind::Skeleton(d)) = a.rig_guide_press(screen, r) else {
             panic!("the press should pick the knee guide");
         };
@@ -142,7 +142,7 @@ mod tests {
         a.skeleton_drag(&d, screen, screen + vec2(20., 0.), r);
         a.skeleton_drag(&d, screen, screen + vec2(40., -10.), r);
         a.skeleton_release(&d);
-        assert_eq!(a.editor.undo.len(), steps + 1, "one undo step");
+        assert_eq!(a.editor.history.undo.len(), steps + 1, "one undo step");
         let moved = cr::world_pos(&a.editor.scene, knee);
         assert!(moved.distance(at) > 1e-3);
         // Symmetry: the right knee followed, mirrored.

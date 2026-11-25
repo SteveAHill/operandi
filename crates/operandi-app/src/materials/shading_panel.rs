@@ -3913,7 +3913,7 @@ pub(super) fn channel_widget(ui: &mut Ui, channel: Channel<'_>) -> bool {
             response.dragged() && !response.drag_started()
         }
         Channel::Color(c) => {
-            // Undo folds by the field's gesture (Editor::undo_fold).
+            // Undo folds by the field's gesture (History::undo_fold).
             crate::colour_field::show(ui, c, crate::colour_field::Options::scene());
             false
         }
@@ -4374,7 +4374,7 @@ mod channel_light_tests {
             node: node.clone(),
             continuing: false,
         }));
-        let steps = app.editor.undo.len();
+        let steps = app.editor.history.undo.len();
         let mut fresh = node.clone();
         fresh.kind = node.kind.defaults(false).unwrap();
         let defaults = channel_defaults(fresh.channels());
@@ -4388,7 +4388,7 @@ mod channel_light_tests {
             node: node.clone(),
             continuing: false,
         }));
-        assert_eq!(app.editor.undo.len(), steps + 1);
+        assert_eq!(app.editor.history.undo.len(), steps + 1);
         assert!(lights(&node, false).iter().all(|(_, c)| !c));
     }
 }

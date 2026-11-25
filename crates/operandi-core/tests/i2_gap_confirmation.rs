@@ -116,12 +116,18 @@ fn check(e: &Editor, name: &str) {
     image(&e.scene, &e.identities.current, &v["visible"], epoch);
     e.scene.validate().unwrap();
     assert_eq!(
-        e.undo.len() as u64,
+        e.history.undo.len() as u64,
         v["document"]["cursor"].as_u64().unwrap()
     );
     let entries = v["document"]["entries"].as_array().unwrap();
-    assert_eq!(e.undo.len() + e.redo.len(), entries.len());
-    for (a, b) in e.undo.iter().chain(e.redo.iter().rev()).zip(entries) {
+    assert_eq!(e.history.undo.len() + e.history.redo.len(), entries.len());
+    for (a, b) in e
+        .history
+        .undo
+        .iter()
+        .chain(e.history.redo.iter().rev())
+        .zip(entries)
+    {
         checkpoint(a, b, epoch)
     }
     assert!(e.i2.prior.is_none());
@@ -215,7 +221,7 @@ fn check(e: &Editor, name: &str) {
         .collect::<Vec<_>>();
     exact(&json!(selected), &v["ordered_selected_face_ids"]);
     let roots = 1
-        + 2 * (e.undo.len() + e.redo.len())
+        + 2 * (e.history.undo.len() + e.history.redo.len())
         + usize::from(e.live.is_some())
         + e.i2
             .selected

@@ -51,7 +51,7 @@ pub(super) fn add_live_patch(a: &mut Operandi) {
     operandi_core::append_mesh(mesh, patch).unwrap();
     let patch = mesh.faces.len() as u32 - 1;
     mesh.validate().unwrap();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.run(Command::Mode(Mode::Polygon));
     let selection = &mut a.editor.scene.selection;
     selection.edges.clear();

@@ -42,10 +42,10 @@ fn tree() -> (Editor, [u64; 4]) {
 #[test]
 fn copies_the_whole_branch_with_its_links() {
     let (mut e, [root, child, grand, _]) = tree();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let before = e.scene.clone();
     e.dispatch(Command::DuplicateHierarchy).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(e.scene.items.len(), 7);
     let new: Vec<&Item> = e.scene.items[4..].iter().collect();
     let name = |id: u64| before.item(id).unwrap().name.clone();

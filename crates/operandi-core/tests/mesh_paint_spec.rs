@@ -66,7 +66,7 @@ fn mp_01_without_a_background_mesh_it_refuses() {
 fn mp_14_a_click_adds_the_source_as_geometry_at_the_point_one_undo_step() {
     let mut e = editor();
     let before = target(&e).clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(stroke(
         Default::default(),
         vec![PaintPoint::at(DVec3::new(0.2, 0., 0.1), DVec3::Y)],
@@ -79,8 +79,8 @@ fn mp_14_a_click_adds_the_source_as_geometry_at_the_point_one_undo_step() {
     let (lo, hi) = bounds(&m.vertices[4..]);
     assert!(((lo + hi) / 2. - DVec3::new(0.2, 0., 0.1)).length() < 1e-9);
     assert!((hi - lo - DVec3::ONE).length() < 1e-9);
-    assert_eq!(e.undo.len(), steps + 1, "MP-16");
-    assert_eq!(e.undo.last().unwrap().label, "Mesh Paint");
+    assert_eq!(e.history.undo.len(), steps + 1, "MP-16");
+    assert_eq!(e.history.undo.last().unwrap().label, "Mesh Paint");
     e.dispatch(Command::Undo).unwrap();
     assert!(target(&e) == &before);
     // The background is untouched.
@@ -212,7 +212,7 @@ fn mp_15_instances_are_new_items_placed_and_parented() {
             vec![PaintPoint::at(DVec3::new(1., 2., 3.), DVec3::Y)],
         ))
         .unwrap();
-        assert_eq!(e.undo.last().unwrap().label, "Mesh Paint Instance");
+        assert_eq!(e.history.undo.last().unwrap().label, "Mesh Paint Instance");
         let copies: Vec<&Item> = e
             .scene
             .items

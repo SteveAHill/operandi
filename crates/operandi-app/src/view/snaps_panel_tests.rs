@@ -51,7 +51,7 @@ impl Rig {
         a.run(Command::Mode(Mode::Polygon));
         // The middle quad: points 5, 6, 10, 9.
         a.editor.scene.selection.faces = vec![4];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         let mut rig = Self {
             a,
             ctx,

@@ -148,7 +148,7 @@ fn retopo_sketch_accepts_first_sample_and_samples_at_least_three_cm_apart() {
 fn retopo_sketch_clears_the_previous_stroke_and_discards_short_strokes() {
     let mut app = Operandi::empty();
     let before = app.editor.scene.clone();
-    let undo = app.editor.undo.len();
+    let undo = app.editor.history.undo.len();
     app.retopo_stroke = vec![DVec3::X, DVec3::Y];
     let rect = Rect::from_min_size(Pos2::ZERO, vec2(800., 600.));
     assert!(matches!(
@@ -163,7 +163,7 @@ fn retopo_sketch_clears_the_previous_stroke_and_discards_short_strokes() {
     assert!(app.status.contains("drag further"));
     assert!(app.retopo_stroke.is_empty());
     assert_eq!(app.editor.scene, before);
-    assert_eq!(app.editor.undo.len(), undo);
+    assert_eq!(app.editor.history.undo.len(), undo);
 }
 
 #[test]
@@ -171,7 +171,7 @@ fn retopo_sketch_passes_ordered_points_and_open_curve_options_to_the_edit() {
     let mut app = tests::box_app();
     let points = [DVec3::new(2., 1., 0.), DVec3::new(1., 2., 0.)];
     let before = app.editor.scene.clone();
-    let undo = app.editor.undo.len();
+    let undo = app.editor.history.undo.len();
     let face = before.active().unwrap().mesh.faces.len();
     app.retopo_stroke = points.to_vec();
     app.retopo_sketch_release();
@@ -195,8 +195,11 @@ fn retopo_sketch_passes_ordered_points_and_open_curve_options_to_the_edit() {
         .collect();
     assert_eq!(actual, points);
     assert!(app.retopo_stroke.is_empty());
-    assert_eq!(app.editor.undo.len(), undo + 1);
-    assert_eq!(app.editor.undo.last().unwrap().label, "Retopo Sketch");
+    assert_eq!(app.editor.history.undo.len(), undo + 1);
+    assert_eq!(
+        app.editor.history.undo.last().unwrap().label,
+        "Retopo Sketch"
+    );
     let after = app.editor.scene.clone();
     app.run(Command::Undo);
     assert_eq!(app.editor.scene, before);
@@ -215,12 +218,12 @@ fn retopo_guide_commands_require_a_polygon_selection() {
             app.editor.scene.selection.mode = mode;
             app.editor.scene.selection.faces = faces;
             let before = app.editor.scene.clone();
-            let undo = app.editor.undo.len();
+            let undo = app.editor.history.undo.len();
             app.execute(command);
             assert!(app.status.starts_with(label), "{}", app.status);
             assert!(app.status.contains("select the guide curves first"));
             assert_eq!(app.editor.scene, before);
-            assert_eq!(app.editor.undo.len(), undo);
+            assert_eq!(app.editor.history.undo.len(), undo);
         }
     }
 }

@@ -50,7 +50,7 @@ fn acceptance_30_painting_in_the_uv_view_changes_the_image_and_the_3d_view_at_on
     let r = uv_rect(&a);
     let image = a.current_image().unwrap();
     let before = a.editor.scene.paint.buffers[&image].clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let c = r.center();
     let mut events = vec![
         vec![Event::PointerMoved(c)],
@@ -80,8 +80,16 @@ fn acceptance_30_painting_in_the_uv_view_changes_the_image_and_the_3d_view_at_on
         vec![pointer(c + vec2(50., 0.), false, Modifiers::NONE)],
     );
     frames(&mut a, &ctx, 1);
-    assert_eq!(a.editor.undo.len(), steps + 1, "one step: {}", a.status);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Paintbrush Stroke");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        steps + 1,
+        "one step: {}",
+        a.status
+    );
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Paintbrush Stroke"
+    );
     let after = a.editor.scene.paint.buffers[&image].clone();
     // The UV view's centre is UV (0.5, 0.5): the middle row of the image.
     let (w, h) = (after.width as usize, after.height as usize);
@@ -123,7 +131,7 @@ fn fill_in_the_uv_view_is_one_click() {
     frames(&mut a, &ctx, 3);
     let r = uv_rect(&a);
     let image = a.current_image().unwrap();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     for e in [
         vec![Event::PointerMoved(r.center())],
         vec![pointer(r.center(), true, Modifiers::NONE)],
@@ -132,8 +140,19 @@ fn fill_in_the_uv_view_is_one_click() {
         let _ = draw(&mut a, &ctx, SIZE, e);
     }
     frames(&mut a, &ctx, 1);
-    let labels: Vec<String> = a.editor.undo.iter().map(|u| u.label.clone()).collect();
-    assert_eq!(a.editor.undo.len(), steps + 1, "{} {labels:?}", a.status);
+    let labels: Vec<String> = a
+        .editor
+        .history
+        .undo
+        .iter()
+        .map(|u| u.label.clone())
+        .collect();
+    assert_eq!(
+        a.editor.history.undo.len(),
+        steps + 1,
+        "{} {labels:?}",
+        a.status
+    );
     let px = &a.editor.scene.paint.buffers[&image];
     assert_eq!(white(px), px.pixel_count(), "the whole black image filled");
 }

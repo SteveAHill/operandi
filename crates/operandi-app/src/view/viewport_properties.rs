@@ -2488,7 +2488,7 @@ mod tests {
         press_o(&mut a, &ctx, other);
         a.corner.properties.tab = Tab::Visibility;
         settle(&mut a, &ctx);
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         let cameras = a.displays[&1].settings.drawing.cameras;
         let row = a.corner.properties.rows[key::CAMERAS];
         click(&mut a, &ctx, row.center());
@@ -2498,7 +2498,7 @@ mod tests {
             a.display.settings.drawing.cameras, cameras,
             "view 0 kept its own"
         );
-        assert_eq!(a.editor.undo.len(), history, "never an undo step");
+        assert_eq!(a.editor.history.undo.len(), history, "never an undo step");
         assert_eq!(a.active_view, 0, "the panel's view isn't made active");
     }
 

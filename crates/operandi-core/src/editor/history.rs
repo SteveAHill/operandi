@@ -49,15 +49,15 @@ impl Editor {
         let transform = self
             .live_transform_tool()
             .or_else(|| self.live_primitive_tool());
-        if transform.is_some() && self.undo.is_empty() {
+        if transform.is_some() && self.history.undo.is_empty() {
             return Ok(());
         }
         // Only supported unapplied surface tools and transform tools can
         // reach ordinary Undo with live state; the policy above is its
         // single guard.
         self.live = None;
-        self.selection_run = 0;
-        if let Some(c) = self.undo.pop() {
+        self.history.selection_run = 0;
+        if let Some(c) = self.history.undo.pop() {
             if let Some(report) = report {
                 report.effect = crate::HistoryEffect::Completed {
                     action: crate::HistoryAction::Undo,
@@ -74,10 +74,10 @@ impl Editor {
                 self.identities.current = ids.clone();
                 self.identities.observe(&self.scene)?;
             }
-            if let Some(n) = self.tool_steps.as_mut() {
+            if let Some(n) = self.history.tool_steps.as_mut() {
                 *n = n.saturating_sub(1);
             }
-            self.redo.push(c);
+            self.history.redo.push(c);
         }
         if let Some(tool) = transform {
             self.resume_transform(tool);
@@ -114,11 +114,11 @@ impl Editor {
         let transform = self
             .live_transform_tool()
             .or_else(|| self.live_primitive_tool());
-        if transform.is_some() && !self.redo.is_empty() {
+        if transform.is_some() && !self.history.redo.is_empty() {
             self.live = None;
         }
-        self.selection_run = 0;
-        if let Some(c) = self.redo.pop() {
+        self.history.selection_run = 0;
+        if let Some(c) = self.history.redo.pop() {
             if let Some(report) = report {
                 report.effect = crate::HistoryEffect::Completed {
                     action: crate::HistoryAction::Redo,
@@ -133,10 +133,10 @@ impl Editor {
                 self.identities.current = ids.clone();
                 self.identities.observe(&self.scene)?;
             }
-            if let Some(n) = self.tool_steps.as_mut() {
+            if let Some(n) = self.history.tool_steps.as_mut() {
                 *n += 1;
             }
-            self.undo.push(c);
+            self.history.undo.push(c);
             if let Some(tool) = transform {
                 self.resume_transform(tool);
             }
@@ -164,46 +164,47 @@ impl Editor {
         self.multi_fresh = fresh;
         // One gesture, one step: a later edit of the same gesture replaces
         // the previous step's result when nothing came in between.
-        if let Some(gesture) = self.undo_fold
-            && self.redo.is_empty()
-            && let Some(last) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+        if let Some(gesture) = self.history.undo_fold
+            && self.history.redo.is_empty()
+            && let Some(last) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
             && last.fold == Some(gesture)
             && last.after == before
         {
             last.after = self.scene.clone();
-            let pending = std::mem::take(&mut self.pending_records.0);
+            let pending = std::mem::take(&mut self.history.pending_records.0);
             last.records
-                .extend_capped(pending, self.history.max_sub_commands as usize);
-            self.history_serial = self.history_serial.wrapping_add(1);
-            self.history_mark += 1;
+                .extend_capped(pending, self.history.settings.max_sub_commands as usize);
+            self.history.history_serial = self.history.history_serial.wrapping_add(1);
+            self.history.history_mark += 1;
             return;
         }
         self.i2_branch();
-        self.history_mark += 1;
-        self.undo.push(std::sync::Arc::new(Checkpoint {
+        self.history.history_mark += 1;
+        self.history.undo.push(std::sync::Arc::new(Checkpoint {
             identity_before: self.identities.record_before.clone(),
             identity_after: None,
             label,
             before,
             after: self.scene.clone(),
-            fold: self.undo_fold,
-            records: std::mem::take(&mut self.pending_records),
-            mark: self.history_mark,
+            fold: self.history.undo_fold,
+            records: std::mem::take(&mut self.history.pending_records),
+            mark: self.history.history_mark,
         }));
         // Max Undo Level: the oldest steps go once a new one exceeds it.
         // A lowered limit trims here, on the next step (UND-Q2, provisional).
         let excess = self
+            .history
             .undo
             .len()
-            .saturating_sub(self.history.max_undo_level.max(1));
-        self.undo.drain(..excess);
+            .saturating_sub(self.history.settings.max_undo_level.max(1));
+        self.history.undo.drain(..excess);
         self.trim_undo_memory();
-        self.redo.clear();
-        self.selection_run = 0;
-        if let Some(n) = self.tool_steps.as_mut() {
+        self.history.redo.clear();
+        self.history.selection_run = 0;
+        if let Some(n) = self.history.tool_steps.as_mut() {
             *n += 1;
         }
-        self.history_serial = self.history_serial.wrapping_add(1);
+        self.history.history_serial = self.history.history_serial.wrapping_add(1);
     }
     /// Drops the oldest undo steps while the history's item copies pass
     /// `UNDO_MEMORY_BUDGET`, keeping at least the newest step. Each step
@@ -212,10 +213,14 @@ impl Editor {
     /// of a 100,000-item scene were about 35 GB). Provisional
     /// (scene-budget, 2026-11-20).
     pub(crate) fn trim_undo_memory(&mut self) {
-        if self.undo_trim_paused {
+        if self.history.undo_trim_paused {
             return;
         }
-        self.trim_undo_memory_to(self.undo_memory_budget.unwrap_or(UNDO_MEMORY_BUDGET));
+        self.trim_undo_memory_to(
+            self.history
+                .undo_memory_budget
+                .unwrap_or(UNDO_MEMORY_BUDGET),
+        );
     }
     /// `trim_undo_memory` with another budget, in bytes.
     /// The history counts the mesh data each step alone keeps alive
@@ -223,7 +228,8 @@ impl Editor {
     /// the memory free beside it, when a free-memory source is set. The
     /// newest step is always kept.
     pub fn trim_undo_memory_to(&mut self, budget: usize) {
-        let costs = crate::undo_memory::step_costs(&self.scene, &self.undo, &self.redo);
+        let costs =
+            crate::undo_memory::step_costs(&self.scene, &self.history.undo, &self.history.redo);
         let mut total: usize = costs.iter().sum();
         let budget = match self.free_memory {
             crate::FreeMemory(Some(free)) => {
@@ -233,41 +239,46 @@ impl Editor {
             crate::FreeMemory(None) => budget,
         };
         let mut excess = 0;
-        while total > budget && excess + 1 < self.undo.len() {
+        while total > budget && excess + 1 < self.history.undo.len() {
             total -= costs[excess];
             excess += 1;
         }
-        self.undo.drain(..excess);
+        self.history.undo.drain(..excess);
     }
     /// The history's mark now; pass it to `recorded_since` or
     /// `steps_since` after running something (Astra P4-003: "did that
     /// record?" was guessed from `undo.len()` growing, which stops working
     /// once Max Undo Level trims a step for every new one).
     pub fn history_mark(&self) -> u64 {
-        self.history_mark
+        self.history.history_mark
     }
     /// Whether recording changed the undo history since `mark`: a new step,
     /// an edit folded into the newest one, or a joined selection change.
     pub fn recorded_since(&self, mark: u64) -> bool {
-        self.history_mark != mark
+        self.history.history_mark != mark
     }
     /// How many undo steps are newer than `mark` (still in the history).
     pub fn steps_since(&self, mark: u64) -> usize {
-        self.undo.iter().rev().take_while(|c| c.mark > mark).count()
+        self.history
+            .undo
+            .iter()
+            .rev()
+            .take_while(|c| c.mark > mark)
+            .count()
     }
     /// For a command that sets its result selection after recording its
     /// step: the step recorded since `mark` ends with that selection, so
     /// Redo gives it back (Astra P4-002).
     pub(crate) fn amend_step_selection(&mut self, mark: u64) {
         if self.steps_since(mark) > 0
-            && let Some(step) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+            && let Some(step) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
         {
             step.after.selection = self.scene.selection.clone();
         }
     }
     /// The bytes the undo history holds beyond the scene and redo list.
     pub fn undo_memory_bytes(&self) -> usize {
-        crate::undo_memory::step_costs(&self.scene, &self.undo, &self.redo)
+        crate::undo_memory::step_costs(&self.scene, &self.history.undo, &self.history.redo)
             .iter()
             .sum()
     }

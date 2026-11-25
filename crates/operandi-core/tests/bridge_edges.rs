@@ -126,7 +126,7 @@ fn two_border_edges_bridge_under_any_work_plane_action_center_and_falloff() {
     // The source edges stay selected; mode stays Edge (BR16/BR17).
     assert_eq!(e.scene.selection.mode, Mode::Edge);
     assert_eq!(e.scene.selection.edges, vec![(1, 2), (4, 7)]);
-    assert_eq!(e.undo.last().unwrap().label, "Bridge Apply");
+    assert_eq!(e.history.undo.last().unwrap().label, "Bridge Apply");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(
         e.scene.active().unwrap().mesh,

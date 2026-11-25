@@ -78,6 +78,7 @@ fn auto_create_then_paint(subd: Option<operandi_core::subdivision::Toggle>) {
         a.painting.brush.tool,
         a.painting.brush.notice,
         a.editor
+            .history
             .undo
             .iter()
             .map(|u| u.label.clone())

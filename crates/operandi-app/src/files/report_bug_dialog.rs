@@ -354,7 +354,7 @@ impl Operandi {
     pub(super) fn report_link(&self, o: ReportOptions) -> String {
         let env = bug_report::Environment::current(&self.gpu);
         let undone = |r: &operandi_core::CommandRecord| {
-            self.editor.redo.iter().any(|step| {
+            self.editor.history.redo.iter().any(|step| {
                 step.records
                     .0
                     .iter()
@@ -624,7 +624,7 @@ mod tests {
         );
         assert_eq!(lines[0].source, operandi_core::Source::Menu);
         assert_eq!(lines[0].class, operandi_core::CommandClass::SideEffect);
-        assert!(a.editor.undo.is_empty(), "no undo step (BUG-20)");
+        assert!(a.editor.history.undo.is_empty(), "no undo step (BUG-20)");
         let again = a.report_link(ReportOptions::default());
         assert!(
             !again.contains("operandi.help.reportBug"),
@@ -674,7 +674,7 @@ mod tests {
         assert_eq!(s.polygons, polygons(&a));
         let records: Vec<_> = a.history.log.records.iter().cloned().collect();
         let undone = |r: &operandi_core::CommandRecord| {
-            a.editor.redo.iter().any(|step| {
+            a.editor.history.redo.iter().any(|step| {
                 step.records
                     .0
                     .iter()

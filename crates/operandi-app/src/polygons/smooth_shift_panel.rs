@@ -242,7 +242,7 @@ mod tests {
             a.run(Command::Apply);
             assert_ne!(a.editor.scene, source);
             assert!(!a.editor.live.as_ref().unwrap().applied);
-            assert_eq!(a.editor.undo.last().unwrap().label, tool.label());
+            assert_eq!(a.editor.history.undo.last().unwrap().label, tool.label());
             a.execute("tool properties");
             assert!(a.surface_mini_properties);
             a.execute("Drop");

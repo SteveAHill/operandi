@@ -67,7 +67,7 @@ fn twenty_million_polygons_in_one_mesh() {
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = MeshSlot::new(mesh);
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     let before = e.scene.clone();
     let t = Instant::now();
     e.dispatch(Command::FlipPolygons).unwrap();

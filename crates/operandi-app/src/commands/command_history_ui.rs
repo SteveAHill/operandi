@@ -254,12 +254,14 @@ impl Operandi {
         };
         let steps: Vec<(bool, usize, &operandi_core::Checkpoint)> = self
             .editor
+            .history
             .undo
             .iter()
             .enumerate()
             .map(|(i, c)| (false, i, &**c))
             .chain(
                 self.editor
+                    .history
                     .redo
                     .iter()
                     .rev()
@@ -329,7 +331,7 @@ impl Operandi {
         let mut editors = std::mem::take(&mut self.text_editors);
         let events = tree_list::show(ui, &spec, &mut trees.undos, &rows, &mut cells, &mut editors);
         self.text_editors = editors;
-        let done = self.editor.undo.len();
+        let done = self.editor.history.undo.len();
         for event in events {
             match event {
                 TreeEvent::Click { key, .. } => {
@@ -356,7 +358,7 @@ impl Operandi {
                     }
                 }
                 TreeEvent::Drop { keys, at, .. } if keys == [UndoKey::Marker] => {
-                    let target = drop_target(at, done, self.editor.redo.len());
+                    let target = drop_target(at, done, self.editor.history.redo.len());
                     if let Some(target) = target.filter(|&t| t != done) {
                         self.execute_from(Source::Button, &format!("cmds.undoTo {target}"));
                         trees.open_steps.clear();
@@ -371,10 +373,11 @@ impl Operandi {
     fn undo_row_line(&self, key: UndoKey) -> Option<String> {
         let step = |undone: bool, i: usize| {
             if undone {
-                let n = self.editor.redo.len();
-                n.checked_sub(i + 1).and_then(|j| self.editor.redo.get(j))
+                let n = self.editor.history.redo.len();
+                n.checked_sub(i + 1)
+                    .and_then(|j| self.editor.history.redo.get(j))
             } else {
-                self.editor.undo.get(i)
+                self.editor.history.undo.get(i)
             }
         };
         match key {

@@ -24,12 +24,15 @@ impl Editor {
     pub fn swap_document_state(&mut self, other: &mut Editor) {
         let (a, b) = (self, other);
         swap(&mut a.scene, &mut b.scene);
-        swap(&mut a.undo, &mut b.undo);
-        swap(&mut a.redo, &mut b.redo);
-        swap(&mut a.history_serial, &mut b.history_serial);
-        swap(&mut a.history_mark, &mut b.history_mark);
-        swap(&mut a.pending_records, &mut b.pending_records);
-        swap(&mut a.selection_run, &mut b.selection_run);
+        swap(&mut a.history.undo, &mut b.history.undo);
+        swap(&mut a.history.redo, &mut b.history.redo);
+        swap(&mut a.history.history_serial, &mut b.history.history_serial);
+        swap(&mut a.history.history_mark, &mut b.history.history_mark);
+        swap(
+            &mut a.history.pending_records,
+            &mut b.history.pending_records,
+        );
+        swap(&mut a.history.selection_run, &mut b.history.selection_run);
         swap(&mut a.selection_start, &mut b.selection_start);
         swap(&mut a.next_item_id, &mut b.next_item_id);
         swap(&mut a.identities, &mut b.identities);
@@ -45,9 +48,12 @@ impl Editor {
         swap(&mut a.preset, &mut b.preset);
         swap(&mut a.inference, &mut b.inference);
         swap(&mut a.tweaks, &mut b.tweaks);
-        swap(&mut a.tool_steps, &mut b.tool_steps);
+        swap(&mut a.history.tool_steps, &mut b.history.tool_steps);
         swap(&mut a.tool_reopen, &mut b.tool_reopen);
-        swap(&mut a.tool_redo_floor, &mut b.tool_redo_floor);
+        swap(
+            &mut a.history.tool_redo_floor,
+            &mut b.history.tool_redo_floor,
+        );
         swap(&mut a.multi_fresh, &mut b.multi_fresh);
         swap(&mut a.multi_extrude, &mut b.multi_extrude);
         swap(&mut a.extrude_moved_caps, &mut b.extrude_moved_caps);
@@ -79,12 +85,8 @@ fn every_field_is_sorted(e: Editor) {
     let Editor {
         // Document (swapped above).
         scene: _,
-        undo: _,
-        redo: _,
-        history_serial: _,
-        history_mark: _,
-        pending_records: _,
-        selection_run: _,
+        // Split field by field in `every_history_field_is_sorted`.
+        history: _,
         selection_start: _,
         next_item_id: _,
         identities: _,
@@ -98,9 +100,7 @@ fn every_field_is_sorted(e: Editor) {
         preset: _,
         inference: _,
         tweaks: _,
-        tool_steps: _,
         tool_reopen: _,
-        tool_redo_floor: _,
         multi_fresh: _,
         multi_extrude: _,
         extrude_moved_caps: _,
@@ -135,10 +135,8 @@ fn every_field_is_sorted(e: Editor) {
         background_constraint: _,
         background_constraint_preset: _,
         background_view: _,
-        history: _,
         auto_activate_flags: _,
         free_memory: _,
-        undo_memory_budget: _,
         // Shared: last-used tool options (UIC-95).
         pen_options: _,
         solid_sketch_options: _,
@@ -200,8 +198,6 @@ fn every_field_is_sorted(e: Editor) {
         // Shared: bookkeeping of the command running now and one-off
         // status notes the app shows and clears.
         dispatch_depth: _,
-        undo_fold: _,
-        undo_trim_paused: _,
         tweak_held: _,
         revision: _,
         symmetry_note: _,
@@ -210,4 +206,27 @@ fn every_field_is_sorted(e: Editor) {
         command_note: _,
         transform_note: _,
     } = e;
+}
+
+/// The same for the undo history's fields (`crate::History`): the steps
+/// and their counters belong to the scene; the limits the app sets and the
+/// bookkeeping of the command running now are shared.
+#[allow(dead_code)]
+fn every_history_field_is_sorted(h: crate::History) {
+    let crate::History {
+        // Document (swapped above).
+        undo: _,
+        redo: _,
+        history_serial: _,
+        history_mark: _,
+        pending_records: _,
+        selection_run: _,
+        tool_steps: _,
+        tool_redo_floor: _,
+        // Shared: settings and bookkeeping.
+        settings: _,
+        undo_memory_budget: _,
+        undo_fold: _,
+        undo_trim_paused: _,
+    } = h;
 }

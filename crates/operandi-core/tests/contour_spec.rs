@@ -228,9 +228,9 @@ fn ct_1_curve_lines_and_face_add_one_polygon_each_with_ten_points() {
 #[test]
 fn the_tool_is_one_undo_step_and_cancel_leaves_nothing() {
     let mut e = scene();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     run(&mut e, params()).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.active().unwrap().mesh.faces.is_empty());
     // Cancel: nothing is added.

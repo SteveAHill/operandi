@@ -117,7 +117,7 @@ fn file_menu_imports_materialx_above_the_selected_layer_in_one_step() {
     let mut a = app();
     let dir = material_folder(&a, "Import", "");
     let g = group(&mut a);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     answer(Some(dir.join("Wall.mtlx")));
     a.menu_action(&ctx, app_menu::line_action("operandi.materialx.import"));
     assert!(
@@ -132,7 +132,7 @@ fn file_menu_imports_materialx_above_the_selected_layer_in_one_step() {
         a.status
     );
     assert!(a.status.starts_with("Loaded MaterialX"), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "one undo step");
     // The menu passes the selected layer: the new material sits directly
     // above it, in its group (here the top level), and the group is kept.
     let tree = &a.editor.scene.shader_tree;
@@ -167,7 +167,7 @@ fn a_material_needing_nodes_is_refused_and_nothing_changes() {
         "<hextiledimage name=\"noise\" type=\"float\"><input name=\"file\" type=\"filename\" value=\"n.png\"/></hextiledimage>",
     );
     group(&mut a);
-    let (before, steps) = (a.editor.scene.clone(), a.editor.undo.len());
+    let (before, steps) = (a.editor.scene.clone(), a.editor.history.undo.len());
     a.execute(&format!(
         "operandi.materialx.import filename:\"{}\"",
         dir.join("Wall.mtlx").display()
@@ -178,7 +178,7 @@ fn a_material_needing_nodes_is_refused_and_nothing_changes() {
         a.status
     );
     assert_eq!(a.editor.scene, before);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
 }
 
 #[test]
@@ -251,13 +251,13 @@ fn import_args_parse_and_place_the_layers() {
         a.editor.scene.shader_tree.get(inner).unwrap().parent,
         Some(g)
     );
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute(&format!(
         "operandi.materialx.import filename:\"{}\" layer:{inner}",
         file.display()
     ));
     assert_eq!(
-        a.editor.undo.len(),
+        a.editor.history.undo.len(),
         steps + 1,
         "one undo step: {}",
         a.status
@@ -271,7 +271,7 @@ fn import_args_parse_and_place_the_layers() {
         "operandi.materialx.import filename:\"{}\"",
         file.display()
     ));
-    assert_eq!(a.editor.undo.len(), steps + 2, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), steps + 2, "{}", a.status);
     assert!(newest_group(&a) > inner, "a new top-level group");
     assert_eq!(effects(&a).len(), 4);
     // Undo takes each import back as one step.
@@ -279,7 +279,7 @@ fn import_args_parse_and_place_the_layers() {
     a.run(Command::Undo);
     assert!(effects(&a).is_empty());
     // A layer that isn't there: a message, nothing changes.
-    let (before, steps) = (a.editor.scene.clone(), a.editor.undo.len());
+    let (before, steps) = (a.editor.scene.clone(), a.editor.history.undo.len());
     a.execute(&format!(
         "operandi.materialx.import filename:\"{}\" layer:9999",
         file.display()
@@ -290,7 +290,7 @@ fn import_args_parse_and_place_the_layers() {
         a.status
     );
     assert_eq!(
-        (a.editor.scene.clone(), a.editor.undo.len()),
+        (a.editor.scene.clone(), a.editor.history.undo.len()),
         (before, steps)
     );
     // No filename: the file panel, which keeps layer:.
@@ -310,7 +310,7 @@ fn export_takes_an_item_and_is_not_undoable() {
     let g = import_top(&mut a, &dir.join("Wall.mtlx"));
     a.shading.selected.clear();
     let name = a.editor.scene.shader_tree.get(g).unwrap().name.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let by_id = dir.join("ById.mtlx");
     a.execute(&format!(
         "operandi.materialx.export filename:\"{}\" item:{g}",
@@ -323,7 +323,11 @@ fn export_takes_an_item_and_is_not_undoable() {
         by_name.display()
     ));
     assert!(by_name.is_file(), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps, "export adds no undo step");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        steps,
+        "export adds no undo step"
+    );
     // Not a material: readable text, no file.
     let none = dir.join("None.mtlx");
     a.execute(&format!(

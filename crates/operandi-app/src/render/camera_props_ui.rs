@@ -1030,7 +1030,7 @@ impl Operandi {
             crate::option_row::label(ui, label);
             crate::option_row::fill(ui, |ui| {
                 let mut rgb = value;
-                // One undo step per drag or pick (Editor::undo_fold).
+                // One undo step per drag or pick (History::undo_fold).
                 if crate::colour_field::show(ui, &mut rgb, crate::colour_field::Options::ui())
                     .changed()
                 {

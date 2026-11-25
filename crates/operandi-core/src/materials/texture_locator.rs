@@ -1078,12 +1078,12 @@ mod behaviour_tests {
         let mut e = Editor::default();
         let id = add(&mut e, NewLayer::ImageMap);
         let locator = layer(&e, id).locator.unwrap();
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         set_locator(&mut e, locator, |l, t| {
             l.projection = Projection::Planar;
             t.scale = DVec3::splat(2.);
         });
-        assert_eq!(e.undo.len(), undo + 1);
+        assert_eq!(e.history.undo.len(), undo + 1);
         // A drag folds into one step.
         let item = e.scene.item(locator).unwrap().clone();
         for (k, x) in [0.1, 0.2, 0.3].into_iter().enumerate() {
@@ -1099,7 +1099,7 @@ mod behaviour_tests {
                 },
             );
         }
-        assert_eq!(e.undo.len(), undo + 2);
+        assert_eq!(e.history.undo.len(), undo + 2);
         e.dispatch(Command::Undo).unwrap();
         let item = e.scene.item(locator).unwrap();
         assert_eq!(item.transform.translation.x, 0.);
@@ -1327,9 +1327,9 @@ mod behaviour_tests {
         let (id, locator) = image_layer(&mut e);
         let item_id = e.scene.selection.item.unwrap();
         e.scene.item_mut(item_id).unwrap().transform.translation = DVec3::new(3., 0., 0.);
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         edit(&mut e, ShaderTreeEdit::AutoSize { layer: id });
-        assert_eq!(e.undo.len(), undo + 1);
+        assert_eq!(e.history.undo.len(), undo + 1);
         let t = &e.scene.item(locator).unwrap().transform;
         // World Coordinates off: the item's own space.
         assert!((t.translation - DVec3::ZERO).length() < 1e-9);

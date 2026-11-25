@@ -160,7 +160,7 @@ fn failures_and_cancel_are_atomic() {
     let mut e = box_editor();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     let before = e.scene.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     // A non-finite Inset refuses (an Inset past the centre no longer does,
     // PB-C-01).
     assert!(
@@ -171,7 +171,7 @@ fn failures_and_cancel_are_atomic() {
         .is_err()
     );
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
     let invalid = e.clone();
     assert!(e.dispatch(Command::Activate(Tool::Box)).is_err());
     assert!(e == invalid);
@@ -182,7 +182,7 @@ fn failures_and_cancel_are_atomic() {
     .unwrap();
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
 }
 #[test]
 fn items_empty_visibility_and_transform_distinction() {
@@ -357,7 +357,7 @@ fn creation_reapply_is_single_task_and_invalid_preview_recovers() {
     .unwrap();
     assert_eq!(counts(&e.scene.active().unwrap().mesh), (8, 12, 6));
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), 2);
+    assert_eq!(e.history.undo.len(), 2);
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.active().unwrap().mesh.faces.is_empty());
     e.dispatch(Command::Redo).unwrap();
@@ -368,7 +368,7 @@ fn creation_reapply_is_single_task_and_invalid_preview_recovers() {
 fn m11_history_hidden_items_identity_and_scene_state() {
     let mut e = box_editor();
     let id = e.scene.selection.item.unwrap();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     for tool in [Tool::Move, Tool::Rotate, Tool::Scale] {
         e.dispatch(Command::Activate(tool)).unwrap();
         // Undo/Redo work with a transform tool live and keep it (Jason,
@@ -386,7 +386,7 @@ fn m11_history_hidden_items_identity_and_scene_state() {
         e.dispatch(Command::Activate(tool)).unwrap();
         e.dispatch(Command::Apply).unwrap();
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.undo.len(), history);
+        assert_eq!(e.history.undo.len(), history);
     }
     e.dispatch(Command::Visibility(id)).unwrap();
     assert!(
@@ -455,11 +455,11 @@ fn m11_failed_staged_save_preserves_exact_live_ownership_and_existing_destinatio
         e.live.as_ref().unwrap().params,
         before.live.as_ref().unwrap().params
     );
-    assert_eq!(e.undo.len(), before.undo.len());
+    assert_eq!(e.history.undo.len(), before.history.undo.len());
     std::fs::remove_file(temp).unwrap();
     e.save_committed(&path).unwrap();
     assert!(e.live.is_none());
-    assert_eq!(e.undo.len(), before.undo.len() + 1);
+    assert_eq!(e.history.undo.len(), before.history.undo.len() + 1);
     assert_eq!(persistence::load(&path).unwrap(), e.scene);
     std::fs::remove_file(path).unwrap();
 }
@@ -552,7 +552,7 @@ fn par_combined_transform_replacement_cancel_attributes_and_native_roundtrip() {
     }))
     .unwrap();
     let original = e.scene.clone();
-    let n = e.undo.len();
+    let n = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Transform)).unwrap();
     let mut params = Parameters {
         delta: DVec3::new(3., 4., 5.),
@@ -581,7 +581,7 @@ fn par_combined_transform_replacement_cancel_attributes_and_native_roundtrip() {
     assert_eq!(e.scene, scene);
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, original);
-    assert_eq!(e.undo.len(), n);
+    assert_eq!(e.history.undo.len(), n);
     e.dispatch(Command::ActionContext(ActionContext::default()))
         .unwrap();
     e.dispatch(Command::Mode(Mode::Item)).unwrap();
@@ -602,7 +602,7 @@ fn par_combined_transform_replacement_cancel_attributes_and_native_roundtrip() {
     );
     let changed = e.scene.clone();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), n + 1);
+    assert_eq!(e.history.undo.len(), n + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, before);
     e.dispatch(Command::Redo).unwrap();

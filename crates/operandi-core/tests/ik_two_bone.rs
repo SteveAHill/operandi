@@ -120,9 +120,9 @@ fn ik02_apply_makes_goal_group_and_solver_in_one_step() {
         ),
         ik_commands::THREE_JOINTS
     );
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, &line);
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let goal = e
         .scene
         .items

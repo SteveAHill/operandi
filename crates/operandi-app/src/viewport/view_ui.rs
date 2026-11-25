@@ -1456,7 +1456,7 @@ impl Operandi {
                     let wanted = crate::tag_mode_ui::outline(
                         item,
                         &selection.faces,
-                        self.editor.history_serial,
+                        self.editor.history.history_serial,
                     );
                     let paths = crate::subdivision_view::edge_segments(
                         &self.subdivision_cache,

@@ -25,7 +25,7 @@ fn scene(cubes: &[(DVec3, DVec3)]) -> (Editor, Vec<u64>) {
     }
     e.dispatch(Command::SelectItem(Some(ids[0]))).unwrap();
     e.synchronize_identities().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     (e, ids)
 }
 
@@ -153,7 +153,7 @@ fn undo_and_redo_are_one_step() {
     let before = e.scene.clone();
     run(&mut e, BooleanOp::Subtract).unwrap();
     let after = e.scene.clone();
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.items, before.items);
     e.dispatch(Command::Redo).unwrap();
@@ -258,7 +258,7 @@ fn no_driver_changes_nothing_and_adds_no_undo_step() {
     let err = run(&mut e, BooleanOp::Union).unwrap_err();
     assert!(err.contains("no driver"), "{err}");
     assert_eq!(e.scene, before);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     let _ = ids;
 }
 

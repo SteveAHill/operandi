@@ -62,7 +62,7 @@ fn sk10_joints_chain_as_children_and_each_add_is_one_step() {
     assert_eq!(e.scene.item(b).unwrap().parent, Some(a));
     assert_eq!(e.scene.item(c).unwrap().parent, Some(b));
     near(pos(&e, c), DVec3::new(0., 2., 0.));
-    assert_eq!(e.undo.len(), 3, "SK-19 one step per joint");
+    assert_eq!(e.history.undo.len(), 3, "SK-19 one step per joint");
     assert_eq!(e.scene.selection.item, Some(c));
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.item(c).is_none());
@@ -174,7 +174,7 @@ fn sk14_sk15_symmetry_mirrors_and_names_by_side() {
         "under the mirrored parent"
     );
     near(pos(&e, r2), DVec3::new(-2., 1., 0.));
-    assert_eq!(e.undo.len(), 3, "a mirrored pair is one step");
+    assert_eq!(e.history.undo.len(), 3, "a mirrored pair is one step");
 }
 
 #[test]

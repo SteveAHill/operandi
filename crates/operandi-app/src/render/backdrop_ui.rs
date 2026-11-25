@@ -1639,15 +1639,15 @@ mod tests {
         assert_eq!(listed[0].name, "clip-first");
 
         // Pick an existing clip: no file panel, no new clip, one step.
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         a.pick_backdrop_clip(id, ClipPick::Existing(listed[0].id));
         assert_eq!(backdrop_image(&a, id), Some(listed[0].id));
         assert_eq!(a.editor.scene.images.len(), 1);
         assert_eq!(CLIP_ASKED.with(|n| n.get()), 0);
-        assert_eq!(a.editor.undo.len(), steps + 1);
+        assert_eq!(a.editor.history.undo.len(), steps + 1);
         // Picking it again changes nothing and adds no step.
         a.pick_backdrop_clip(id, ClipPick::Existing(listed[0].id));
-        assert_eq!(a.editor.undo.len(), steps + 1);
+        assert_eq!(a.editor.history.undo.len(), steps + 1);
 
         // Add Clip…: the file panel opens; its file is one new clip, shown.
         CLIP_ANSWER.with(|p| *p.borrow_mut() = Some(second.clone()));
@@ -1656,16 +1656,16 @@ mod tests {
         assert_eq!(a.editor.scene.images.len(), 2);
         let added = a.editor.scene.images[1].id;
         assert_eq!(backdrop_image(&a, id), Some(added));
-        assert_eq!(a.editor.undo.len(), steps + 2);
+        assert_eq!(a.editor.history.undo.len(), steps + 2);
         // Add Clip… with a file the scene has reuses its entry.
         CLIP_ANSWER.with(|p| *p.borrow_mut() = Some(first.clone()));
         a.pick_backdrop_clip(id, ClipPick::Add);
         assert_eq!(a.editor.scene.images.len(), 2);
         assert_eq!(backdrop_image(&a, id), Some(listed[0].id));
         // Cancelling the panel changes nothing.
-        let before = a.editor.undo.len();
+        let before = a.editor.history.undo.len();
         a.pick_backdrop_clip(id, ClipPick::Add);
-        assert_eq!(a.editor.undo.len(), before);
+        assert_eq!(a.editor.history.undo.len(), before);
         assert_eq!(backdrop_image(&a, id), Some(listed[0].id));
 
         // (none) clears; the clips stay in the scene.
@@ -1673,9 +1673,9 @@ mod tests {
         assert_eq!(backdrop_image(&a, id), None);
         assert_eq!(a.editor.scene.images.len(), 2);
         // (none) again is no step.
-        let cleared = a.editor.undo.len();
+        let cleared = a.editor.history.undo.len();
         a.pick_backdrop_clip(id, ClipPick::Clear);
-        assert_eq!(a.editor.undo.len(), cleared);
+        assert_eq!(a.editor.history.undo.len(), cleared);
 
         // Each choice undoes on its own.
         a.run(Command::Undo);
@@ -1703,7 +1703,7 @@ mod tests {
         let id = a.editor.scene.selection.item.unwrap();
         a.backdrop_image_chosen(id, path.clone());
         let image = backdrop_image(&a, id);
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         let ctx = egui::Context::default();
         let run = |a: &mut Operandi, events: Vec<egui::Event>| {
             let _ = ctx.run(
@@ -1734,7 +1734,7 @@ mod tests {
         );
         assert!(!a.backdrop_images.chooser.is_open());
         assert_eq!(backdrop_image(&a, id), image);
-        assert_eq!(a.editor.undo.len(), steps);
+        assert_eq!(a.editor.history.undo.len(), steps);
         // Its Backdrop deleted: the chooser closes.
         a.open_backdrop_clips(id);
         a.backdrop_images.chooser_item = Some(u64::MAX);

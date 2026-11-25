@@ -11,7 +11,7 @@
 //! Right-click copies, pastes or resets.
 //!
 //! Each change reports a gesture id; callers run their command with
-//! `Editor::undo_fold` set to it, so one drag (or one picker drag) is one
+//! `History::undo_fold` set to it, so one drag (or one picker drag) is one
 //! undo step however many frames and items it touches.
 use crate::colour_picker;
 use crate::unavailable::Gate;
@@ -40,7 +40,7 @@ pub fn begin_frame() {
 }
 
 /// The undo gesture of a colour change made this frame, if any. The app
-/// sets `Editor::undo_fold` to it while it runs commands, so a drag over
+/// sets `History::undo_fold` to it while it runs commands, so a drag over
 /// frames (and items) is one undo step.
 pub fn frame_gesture() -> Option<u64> {
     FRAME_CHANGE.with(Cell::get).map(|(g, _)| g)

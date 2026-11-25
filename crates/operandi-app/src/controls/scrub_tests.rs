@@ -84,7 +84,7 @@ fn move_offset_scrubs_live_and_each_drag_undoes_alone() {
     a.editor.scene.selection.faces = vec![5];
     a.activate(Tool::Move);
     let before_y = top_y(&a);
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let at = start_scrub(&mut a, &ctx, "delta1");
     let mut pos = at;
     for _ in 0..5 {
@@ -94,10 +94,14 @@ fn move_offset_scrubs_live_and_each_drag_undoes_alone() {
     // 50 points at 1 cm each.
     assert_eq!(a.fields["delta1"], workspace::number_text(0.5, " m"));
     assert!((top_y(&a) - before_y - 0.5).abs() < 1e-9, "live preview");
-    assert_eq!(a.editor.undo.len(), history, "nothing recorded mid-drag");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        history,
+        "nothing recorded mid-drag"
+    );
     release(&mut a, &ctx, pos);
     // The scrub is one tweak of Move, recorded when Move drops.
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     assert!(a.editor.tweaks.can_undo());
     assert!((top_y(&a) - before_y - 0.5).abs() < 1e-9);
     assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Move);
@@ -107,7 +111,7 @@ fn move_offset_scrubs_live_and_each_drag_undoes_alone() {
     let at = start_scrub(&mut a, &ctx, "delta1");
     move_to(&mut a, &ctx, at + vec2(-20., 0.), Modifiers::NONE);
     release(&mut a, &ctx, at + vec2(-20., 0.));
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     assert!(
         (top_y(&a) - before_y - 0.3).abs() < 1e-9,
         "{} {:?}",
@@ -127,11 +131,11 @@ fn a_click_on_the_handle_changes_nothing() {
     a.editor.scene.selection.faces = vec![5];
     a.activate(Tool::Move);
     let before = a.editor.scene.clone();
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let at = start_scrub(&mut a, &ctx, "delta0");
     release(&mut a, &ctx, at);
     assert!(a.editor.scene == before);
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
 }
 
 /// Shift is ten times coarser and Option ten times finer.
@@ -162,7 +166,7 @@ fn escape_puts_the_value_back() {
         a.editor.live.as_ref().unwrap().params.clone(),
     ));
     let start = a.editor.live.as_ref().unwrap().params.shift;
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let at = start_scrub(&mut a, &ctx, "shift");
     move_to(&mut a, &ctx, at + vec2(25., 0.), Modifiers::NONE);
     assert!((a.editor.live.as_ref().unwrap().params.shift - start - 0.25).abs() < 1e-9);
@@ -181,7 +185,7 @@ fn escape_puts_the_value_back() {
     move_to(&mut a, &ctx, at + vec2(60., 0.), Modifiers::NONE);
     assert_eq!(a.editor.live.as_ref().unwrap().params.shift, start);
     release(&mut a, &ctx, at + vec2(60., 0.));
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     assert_eq!(a.fields["shift"], workspace::number_text(start, " m"));
 }
 
@@ -199,7 +203,7 @@ fn counts_step_whole_numbers_and_stop_at_the_limit() {
     ));
     a.fields.insert("inset".into(), "0.1 m".into());
     assert!(a.confirm_fields());
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let segments = || "bevel_segments";
     let at = start_scrub(&mut a, &ctx, segments());
     move_to(&mut a, &ctx, at + vec2(10., 0.), Modifiers::NONE);
@@ -212,10 +216,10 @@ fn counts_step_whole_numbers_and_stop_at_the_limit() {
     move_to(&mut a, &ctx, at + vec2(-195., 0.), Modifiers::NONE);
     assert_eq!(a.editor.live.as_ref().unwrap().params.bevel.segments, 2);
     release(&mut a, &ctx, at + vec2(-195., 0.));
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     a.run(Command::Drop);
     assert_eq!(
-        a.editor.undo.len(),
+        a.editor.history.undo.len(),
         history + 1,
         "{} live={:?}",
         a.status,

@@ -123,7 +123,7 @@ fn only_old_rows_keep_an_older_version_and_new_rows_need_36() {
 fn invalid_values_are_refused_and_leave_the_scene() {
     let mut e = new_scene();
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     for bad in [
         RenderSettings {
             frame: [0, 1080],
@@ -161,29 +161,29 @@ fn invalid_values_are_refused_and_leave_the_scene() {
         assert!(e.dispatch(Command::SetRenderSettings(bad)).is_err());
     }
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]
 fn a_change_is_one_undo_step() {
     let mut e = new_scene();
     let before = e.scene.render.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let after = RenderSettings {
         reflection_depth: 1,
         ..before.clone()
     };
     e.dispatch(Command::SetRenderSettings(after.clone()))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Render Settings");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Render Settings");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.render, before);
     e.dispatch(Command::Redo).unwrap();
     assert_eq!(e.scene.render, after);
     // Setting what is already there records nothing.
     e.dispatch(Command::SetRenderSettings(after)).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
 }
 
 #[test]

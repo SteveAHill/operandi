@@ -69,7 +69,12 @@ impl Editor {
     fn remake_bridge(&mut self, p: BridgeParameters) -> Result<()> {
         let fold = self.bridge.as_ref().and_then(|s| s.applied_step);
         let fold = fold.ok_or("No Bridge result")?;
-        let last = self.undo.last().cloned().ok_or("No Bridge result")?;
+        let last = self
+            .history
+            .undo
+            .last()
+            .cloned()
+            .ok_or("No Bridge result")?;
         let candidate = self.bridged_from(&last.before, p)?;
         candidate.validate()?;
         let edges = last.before.selection.mode == Mode::Edge;

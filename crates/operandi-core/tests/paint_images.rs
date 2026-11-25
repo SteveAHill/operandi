@@ -65,7 +65,7 @@ fn base_group(e: &Editor) -> u64 {
 #[test]
 fn new_image_starts_blank_rgba_2048_and_is_not_an_undo_step() {
     let mut e = Editor::default();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Paint(PaintEdit::NewImage(NewImage::default())))
         .unwrap();
     let id = e.paint.last_image.unwrap();
@@ -76,7 +76,7 @@ fn new_image_starts_blank_rgba_2048_and_is_not_an_undo_step() {
     assert_eq!(px.format, pixels::Format::Rgba);
     assert_eq!(px.depth, pixels::Depth::U8);
     assert_eq!(px.get(12345), [0.; 4]);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     assert!(e.image_changed(id), "a new image has no file yet");
     // Out of range sizes are refused and change nothing.
     let before = e.scene.clone();
@@ -228,13 +228,13 @@ fn displacement_is_float_vector_displacement() {
 #[test]
 fn undoing_add_texture_removes_the_layer_but_keeps_the_image() {
     let mut e = cube();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let layer = {
         let g = base_group(&e);
         add(&mut e, TextureKind::Color, Some(g))
     };
     let image = e.paint.last_image.unwrap();
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.shader_tree.get(layer).is_none());
     assert!(e.scene.images.iter().any(|i| i.id == image));
@@ -290,12 +290,12 @@ fn image_commands_are_one_undo_step_each_and_mark_the_image_changed() {
         path.display().to_string()
     );
 
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Paint(PaintEdit::Invert { image, via: None }))
         .unwrap();
     assert_eq!(e.scene.paint.buffers[&image].get(0), [0., 1., 1., 1.]);
     assert!(e.image_changed(image));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert!(!e.image_changed(image), "undone back to the saved pixels");
     e.dispatch(Command::Redo).unwrap();
@@ -311,7 +311,7 @@ fn image_commands_are_one_undo_step_each_and_mark_the_image_changed() {
     .unwrap();
     let record = e.scene.images.iter().find(|i| i.id == image).unwrap();
     assert_eq!((record.width, record.height), (128, 128));
-    assert_eq!(e.undo.len(), steps + 3);
+    assert_eq!(e.history.undo.len(), steps + 3);
     assert!(
         e.dispatch(Command::Paint(PaintEdit::SetResolution {
             image,
@@ -416,7 +416,7 @@ fn expand_uv_seams_grows_colour_past_the_islands() {
     }
     let before = Arc::new(px);
     e.scene.paint.buffers.insert(image, before.clone());
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let expand = |e: &mut Editor, border| {
         e.dispatch(Command::Paint(PaintEdit::ExpandSeams {
             image,
@@ -428,9 +428,9 @@ fn expand_uv_seams_grows_colour_past_the_islands() {
     };
     // Border 0 changes nothing and makes no step.
     expand(&mut e, 0).unwrap();
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     expand(&mut e, 4).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let after = &e.scene.paint.buffers[&image];
     let changed = (0..after.pixel_count())
         .filter(|&i| after.get(i) != before.get(i))
@@ -474,12 +474,12 @@ fn flatten_composites_in_tree_order_into_a_new_layer() {
     n.layer.blend = BlendMode::Normal;
     e.scene.shader_tree.replace(n).unwrap();
     let images = e.scene.images.len();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Paint(PaintEdit::Flatten {
         layers: vec![bottom, top],
     }))
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(e.scene.images.len(), images + 1);
     let flat = e.paint.last_layer.unwrap();
     let order: Vec<u64> = e
@@ -527,10 +527,10 @@ fn photoshop_images_paint_into_a_layer_and_save_whole() {
         .unwrap_err();
     assert_eq!(err, PSD_WHICH_LAYER);
     // New Layer: "Operandi Paint 1", and the map shows it.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Paint(PaintEdit::NewPsdLayer { via: layer }))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(
         psd_layer_of(&e.scene, layer).as_deref(),
         Some("Operandi Paint 1")

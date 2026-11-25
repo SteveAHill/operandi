@@ -160,7 +160,7 @@ fn the_selection_drawn_under_a_sculpt_stroke_follows_the_mesh() {
     // The middle four rows.
     a.editor.scene.selection.faces = (8 * n..12 * n).collect();
     let id = a.editor.scene.active().unwrap().id;
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.activate_sculpt(operandi_core::SculptBrush::Move);
     a.sculpt
         .settings
@@ -189,7 +189,7 @@ fn the_selection_drawn_under_a_sculpt_stroke_follows_the_mesh() {
     let during = picture(&mut a, &ctx);
     let _ = draw(&mut a, &ctx, SIZE, vec![button(end, false)]);
     let after = picture(&mut a, &ctx);
-    assert_eq!(a.editor.undo.len(), 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), 1, "{}", a.status);
     assert!(
         differing(&before, &after) > 500,
         "the band moved: {} pixels differ",

@@ -88,7 +88,7 @@ except operandi.CommandError as err:
 #[test]
 fn key_a_bouncing_ball_from_python_and_read_it_back() {
     let (mut e, id) = triangle();
-    let undo_before = e.undo.len();
+    let undo_before = e.history.undo.len();
     let out = ok(
         &mut e,
         &format!(
@@ -114,14 +114,14 @@ print([round(channel['values'][f], 4) for f in ('0', '6', '12', '24')])
         "{values}"
     );
     // The whole script is one undo step (UIC-227).
-    assert_eq!(e.undo.len(), undo_before + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Script <test>");
+    assert_eq!(e.history.undo.len(), undo_before + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Script <test>");
 }
 
 #[test]
 fn undo_group_makes_one_step() {
     let (mut e, id) = triangle();
-    let before = e.undo.len();
+    let before = e.history.undo.len();
     let y0 = e.scene.item(id).unwrap().transform.translation.y;
     ok(
         &mut e,
@@ -133,8 +133,8 @@ with operandi.undo_group('Raise three times'):
 "
         ),
     );
-    assert_eq!(e.undo.len(), before + 1, "one step");
-    assert_eq!(e.undo.last().unwrap().label, "Raise three times");
+    assert_eq!(e.history.undo.len(), before + 1, "one step");
+    assert_eq!(e.history.undo.last().unwrap().label, "Raise three times");
     assert_eq!(e.scene.item(id).unwrap().transform.translation.y, 3.);
     e.dispatch(operandi_core::Command::Undo).unwrap();
     assert_eq!(e.scene.item(id).unwrap().transform.translation.y, y0);
@@ -143,7 +143,7 @@ with operandi.undo_group('Raise three times'):
 #[test]
 fn an_error_inside_an_undo_group_still_closes_it() {
     let (mut e, id) = triangle();
-    let before = e.undo.len();
+    let before = e.history.undo.len();
     let out = run(
         &mut e,
         &format!(
@@ -156,13 +156,13 @@ with operandi.undo_group('Half'):
         ),
     );
     assert!(out.error.is_some_and(|t| t.contains("stop here")));
-    assert_eq!(e.undo.len(), before + 1);
+    assert_eq!(e.history.undo.len(), before + 1);
 }
 
 #[test]
 fn mesh_bulk_round_trip_is_one_undo_step() {
     let (mut e, id) = triangle();
-    let before = e.undo.len();
+    let before = e.history.undo.len();
     let out = ok(
         &mut e,
         "import operandi, array
@@ -187,7 +187,7 @@ except operandi.CommandError as err:
     assert_eq!(lines[1], "(3.0, 3.0, 1.0) [[0, 1, 2, 3]]");
     assert_eq!(lines[2], "refused");
     // Two writes, folded with the rest of the script (UIC-227).
-    assert_eq!(e.undo.len(), before + 1);
+    assert_eq!(e.history.undo.len(), before + 1);
     let mesh = e.scene.item(id).unwrap().mesh.open();
     assert_eq!(mesh.vertices.len(), 4);
     assert_eq!(mesh.faces.len(), 1);

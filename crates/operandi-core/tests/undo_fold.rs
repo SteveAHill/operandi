@@ -1,4 +1,4 @@
-//! `Editor::undo_fold`: every step recorded under one gesture id is one
+//! `History::undo_fold`: every step recorded under one gesture id is one
 //! undo step (a colour-field drag over several items and frames).
 use operandi_core::{Command, Editor};
 
@@ -15,19 +15,19 @@ fn smoothing(e: &Editor, amount: f64) -> Command {
 fn one_gesture_is_one_undo_step() {
     let mut e = Editor::default();
     let start = e.scene.smoothing.amount;
-    e.undo_fold = Some(7);
+    e.history.undo_fold = Some(7);
     for amount in [10., 20., 30.] {
         e.dispatch(smoothing(&e, amount)).unwrap();
     }
-    e.undo_fold = None;
-    assert_eq!(e.undo.len(), 1);
+    e.history.undo_fold = None;
+    assert_eq!(e.history.undo.len(), 1);
     assert_eq!(e.scene.smoothing.amount, 30.);
     // A new gesture (or no gesture) is a new step.
-    e.undo_fold = Some(8);
+    e.history.undo_fold = Some(8);
     e.dispatch(smoothing(&e, 40.)).unwrap();
-    e.undo_fold = None;
+    e.history.undo_fold = None;
     e.dispatch(smoothing(&e, 50.)).unwrap();
-    assert_eq!(e.undo.len(), 3);
+    assert_eq!(e.history.undo.len(), 3);
     e.dispatch(Command::Undo).unwrap();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.smoothing.amount, 30.);

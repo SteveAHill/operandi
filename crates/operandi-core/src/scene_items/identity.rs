@@ -1146,13 +1146,14 @@ mod cleanup_noop_tests {
         editor.scene.selection.mode = Mode::Item;
         editor.dispatch(Command::NewMesh).unwrap();
         editor.dispatch(Command::Undo).unwrap();
-        assert!(!editor.redo.is_empty());
+        assert!(!editor.history.redo.is_empty());
         assert_eq!(editor.scene.selection.mode, Mode::Item);
         // Exercise the review's conditional incomplete-checkpoint case as well
         // as the real parked redo produced by the public history commands.
         for incomplete in [false, true] {
             if incomplete {
                 let parked = editor
+                    .history
                     .redo
                     .last_mut()
                     .map(std::sync::Arc::make_mut)

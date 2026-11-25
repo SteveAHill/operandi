@@ -68,12 +68,12 @@ fn connect(e: &mut Editor, group: NodeId, from: &str, target: Target) -> crate::
 /// named for the setting, then unwires and checks the surface is back.
 fn wires_and_unwires(e: &mut Editor, group: NodeId, from: &str, layer: NodeId, key: &str) {
     let own = base_colour(e, group);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     connect(e, group, from, to(layer, key)).unwrap();
-    assert_eq!(e.undo.len(), steps + 1, "one undo step per wire");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step per wire");
     let label = label(key).unwrap();
     assert_eq!(
-        e.undo.last().unwrap().label,
+        e.history.undo.last().unwrap().label,
         format!("Connect {from} > {label}")
     );
     assert!(

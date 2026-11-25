@@ -57,7 +57,7 @@ fn scene_with(active: Mesh) -> (Editor, u64) {
     e.scene.active_mut().unwrap().mesh = active.into();
     let id = e.scene.active().unwrap().id;
     e.scene.selection.mode = Mode::Vertex;
-    e.undo.clear();
+    e.history.undo.clear();
     (e, id)
 }
 
@@ -129,7 +129,7 @@ fn tp12_remove_polygon_edge_and_vertex() {
     )
     .unwrap();
     assert_eq!(mesh(&e).faces.len(), 3);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     // Interior edge (1,0)-(1,1) = points 3-4: its two polygons join.
     pen(
@@ -162,7 +162,7 @@ fn tp12_remove_polygon_edge_and_vertex() {
     assert_eq!(m.vertices.len(), 4);
     e.dispatch(Command::Undo).unwrap();
     // Border edges are never removed, and a refusal is no undo step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let err = pen(
         &mut e,
         PenEdit::Remove {
@@ -174,7 +174,7 @@ fn tp12_remove_polygon_edge_and_vertex() {
     )
     .unwrap_err();
     assert!(err.contains("border"), "{err}");
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     assert_eq!(mesh(&e).faces.len(), 4);
 }
 
@@ -231,7 +231,7 @@ fn tp13_split_cuts_between_two_points_of_one_polygon() {
     )
     .unwrap();
     assert_eq!(mesh(&e).faces.len(), 3);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     // Already an edge: nothing, and why.
     let err = pen(
         &mut e,
@@ -254,7 +254,7 @@ fn tp13_split_cuts_between_two_points_of_one_polygon() {
     )
     .unwrap_err();
     assert!(err.contains("same polygon"), "{err}");
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }
 
 #[test]
@@ -276,7 +276,7 @@ fn tp11_duplicate_a_border_vertex_makes_a_triangle_on_the_background() {
     assert!(m.faces[1].vertices.contains(&2), "partner (1, 0)");
     assert!(m.vertices[4].y.abs() < 1e-9, "on the background");
     assert!(m.normal(1).y > 0., "faces like its neighbour");
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }
 
 #[test]
@@ -294,7 +294,7 @@ fn tp11_duplicate_refuses_an_interior_edge_and_pulls_border_loops() {
     )
     .unwrap_err();
     assert_eq!(err, "Duplicate needs a border edge");
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     // The whole border (six edges) comes out as one row.
     pen(
         &mut e,
@@ -312,7 +312,7 @@ fn tp11_duplicate_refuses_an_interior_edge_and_pulls_border_loops() {
     for v in 6..12 {
         assert!(m.vertices[v].y.abs() < 1e-9, "lands on the background");
     }
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }
 
 #[test]
@@ -357,13 +357,13 @@ fn tp16_fill_makes_a_quad_from_four_points_and_drops_their_single_point_polygons
             },
         )
     };
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     fill(&mut e, true).unwrap();
     let m = mesh(&e);
     assert_eq!(m.faces.len(), 1, "one quad, no one-point polygons left");
     assert_eq!(m.faces[0].vertices.len(), 4);
     assert!(m.normal(0).y > 0.9, "faces the viewer");
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     // Clicking on the new polygon fills nothing.
     assert!(fill(&mut e, true).is_err());
 }
@@ -494,7 +494,7 @@ fn tp30_weld_merges_and_drops_collapsed_polygons() {
     assert_eq!(m.vertices.len(), 6);
     assert_eq!(m.faces.len(), 2);
     assert_eq!(m.edges().len(), 7, "the seam is one shared edge");
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     // Welding two points of one quad: it becomes a triangle.
     pen(
         &mut e,
@@ -523,7 +523,7 @@ fn tp_move_points_is_one_step_and_skips_nothing_moved() {
     )
     .unwrap();
     assert_eq!(mesh(&e).vertices[0].x, -0.2);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     assert!(
         pen(
             &mut e,
@@ -535,7 +535,7 @@ fn tp_move_points_is_one_step_and_skips_nothing_moved() {
         )
         .is_err()
     );
-    assert_eq!(e.undo.len(), 1, "no change, no undo step");
+    assert_eq!(e.history.undo.len(), 1, "no change, no undo step");
 }
 
 #[test]

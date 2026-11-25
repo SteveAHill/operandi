@@ -324,10 +324,10 @@ fn mirror_drop_is_one_step_and_saves() {
     // MR-57 and criterion 6.
     let mut e = editor(half_cube(0.), Mode::Polygon);
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     run(&mut e, Tool::Mirror, |_| {});
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Mirror");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Mirror");
     let after = e.scene.clone();
     let dir = std::env::temp_dir().join(format!("op-dup-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();

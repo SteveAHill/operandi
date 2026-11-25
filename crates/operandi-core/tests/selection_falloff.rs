@@ -37,7 +37,7 @@ fn strip() -> Editor {
     .into();
     e.scene.selection.mode = Mode::Polygon;
     e.scene.selection.faces = (1..6).collect();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn points(e: &Editor) -> Vec<DVec3> {

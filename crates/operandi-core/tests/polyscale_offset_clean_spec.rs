@@ -62,5 +62,5 @@ fn zero_changes_nothing() {
     e.scene.selection.faces = vec![1];
     e.synchronize_identities().unwrap();
     e.dispatch(Command::ScaleOffsetPolygon(0.)).unwrap();
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }

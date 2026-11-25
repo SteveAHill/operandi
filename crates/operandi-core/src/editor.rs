@@ -38,7 +38,7 @@ pub struct Checkpoint {
     pub label: String,
     pub before: Scene,
     pub after: Scene,
-    /// The gesture this step belongs to (`Editor::undo_fold`).
+    /// The gesture this step belongs to (`History::undo_fold`).
     pub fold: Option<u64>,
     /// The command lines that made this step (UIC-226).
     pub records: crate::StepRecords,
@@ -63,16 +63,8 @@ impl PartialEq for FreeMemory {
 
 #[derive(Clone, Default, PartialEq)]
 pub struct Editor {
-    /// The undo memory budget in bytes; `None` is `UNDO_MEMORY_BUDGET`.
-    pub undo_memory_budget: Option<usize>,
-    /// Set while a multi-mesh command records one step per mesh that it
-    /// then joins into one (multi_tools.rs): trimming in between would
-    /// shift the steps it is about to join (Astra P9-001).
-    pub undo_trim_paused: bool,
-    /// While set, undo steps recorded under this gesture id fold into one
-    /// (a colour drag across several items and frames is one step). The
-    /// app sets it around a gesture's commands and clears it after.
-    pub undo_fold: Option<u64>,
+    /// Undo and redo steps, their marks and limits (undo_history.rs).
+    pub history: crate::History,
     /// Meshes a tool or command has just run on as one of several active
     /// meshes (multi_tools.rs): their components were written by that
     /// tool for the new geometry, so they survive the topology check in
@@ -211,16 +203,6 @@ pub struct Editor {
     /// RG-11/RG-30 Compensation: rig edits keep items where they are in
     /// world space (off by default; the app keeps it in its preferences).
     pub rig_compensation: bool,
-    /// Undo and redo steps, shared: the editor is copied for every command
-    /// (identity_editor.rs stages each one), and copying each step's two
-    /// scenes made a command in a 100,000-item scene take seconds. Change a
-    /// step with `Arc::make_mut` (scene-budget, 2026-11-20).
-    pub undo: Vec<std::sync::Arc<Checkpoint>>,
-    pub redo: Vec<std::sync::Arc<Checkpoint>>,
-    /// Steps recorded since the active tool was activated, for tools that
-    /// keep running through Undo/Redo (`mid_tool_undo.rs`). `None` when no
-    /// such tool is active or its activation isn't known (re-armed by Undo).
-    pub tool_steps: Option<usize>,
     /// The tool Undo just closed, which Redo opens again.
     pub tool_reopen: Option<crate::ToolReopen>,
     /// The active tool's own tweak history (`mid_tool_undo.rs`).
@@ -231,26 +213,6 @@ pub struct Editor {
     /// Set by the app while a drag or scrub is held, so its changes are one
     /// tweak; `end_tweak` clears it.
     pub tweak_held: bool,
-    /// Counts recorded document steps, to tell a tweak from an Apply.
-    pub history_serial: u64,
-    /// Counts every change recording makes to the undo history: a new
-    /// step, a later edit folded into the newest one, or a selection change
-    /// joining a selection group (`recorded_since`). Unlike `undo.len()`, it
-    /// still moves once Max Undo Level trims the oldest step.
-    pub history_mark: u64,
-    /// Redo depth when the active tool started; leaving the tool drops the
-    /// steps undone above it.
-    pub tool_redo_floor: Option<usize>,
-    /// Undo preferences (Max Undo Level, selection grouping); set by the app.
-    pub history: crate::HistorySettings,
-    /// Command records waiting for the next undo step (UIC-226): the app
-    /// adds a line before running it, and a tool session's lines (tool on,
-    /// `tool.attr`) wait here until its drop. The next recorded step takes
-    /// them all; the app drops them when no step came of them.
-    pub pending_records: crate::StepRecords,
-    /// Selection changes merged into the newest undo step so far; 0 when
-    /// that step is not a selection group.
-    pub selection_run: u32,
     pub revision: u64,
     pub next_item_id: u64,
     /// Boxed to keep `Editor` small: the app state is near the stack limit.

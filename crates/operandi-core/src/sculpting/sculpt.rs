@@ -3002,7 +3002,7 @@ mod tests {
     #[test]
     fn a_stroke_is_one_undo_step() {
         let (mut e, id) = editor_with_grid(20);
-        let steps = e.undo.len();
+        let steps = e.history.undo.len();
         let mut scene = e.scene.clone();
         let mut s = Stroke::begin(&scene, &[id], setup(SculptBrush::Push))
             .unwrap()
@@ -3014,8 +3014,8 @@ mod tests {
         let edit = s.edit();
         assert!(!edit.is_empty());
         e.dispatch(Command::SculptStroke(Box::new(edit))).unwrap();
-        assert_eq!(e.undo.len(), steps + 1);
-        assert_eq!(e.undo.last().unwrap().label, "Push Stroke");
+        assert_eq!(e.history.undo.len(), steps + 1);
+        assert_eq!(e.history.undo.last().unwrap().label, "Push Stroke");
         let mid = 10 * 21 + 10;
         let raised = z_at(&e.scene, id, mid);
         assert!(raised > 0.);
@@ -3029,7 +3029,7 @@ mod tests {
             items: vec![],
         })))
         .unwrap();
-        assert_eq!(e.undo.len(), steps + 1);
+        assert_eq!(e.history.undo.len(), steps + 1);
         // Bad points are refused and change nothing.
         let bad = SculptEdit {
             label: "Push Stroke".into(),
@@ -3039,7 +3039,7 @@ mod tests {
             }],
         };
         assert!(e.dispatch(Command::SculptStroke(Box::new(bad))).is_err());
-        assert_eq!(e.undo.len(), steps + 1);
+        assert_eq!(e.history.undo.len(), steps + 1);
     }
 
     #[test]

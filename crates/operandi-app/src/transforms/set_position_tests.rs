@@ -93,8 +93,8 @@ fn parked_extrude_cancel_and_modal_commit_or_direct_command() {
         let mut a = parked_app();
         let source = a.editor.scene.clone();
         let parked = a.editor.i2.selected.clone();
-        let undo = a.editor.undo.clone();
-        let redo = a.editor.redo.clone();
+        let undo = a.editor.history.undo.clone();
+        let redo = a.editor.history.redo.clone();
         let c = context();
         frame(&mut a, &c, vec![]);
         a.execute("vert.set");
@@ -102,7 +102,11 @@ fn parked_extrude_cancel_and_modal_commit_or_direct_command() {
         choose(&mut a, &c, Role::Button, "Cancel");
         assert_eq!(a.editor.scene, source);
         assert_eq!(a.editor.i2.selected, parked);
-        assert!(a.editor.undo == undo && a.editor.redo == redo && a.editor.i2_can_redo());
+        assert!(
+            a.editor.history.undo == undo
+                && a.editor.history.redo == redo
+                && a.editor.i2_can_redo()
+        );
         a.execute("vert.set z 1m false false");
         assert_eq!(a.editor.scene, source);
         assert_eq!(a.editor.i2.selected, parked);
@@ -151,13 +155,13 @@ fn pen_part_position_composition_and_active_pen_refusal() {
     }
     let draft = a.editor.pen_draft.clone();
     let scene = a.editor.scene.clone();
-    let undo = a.editor.undo.clone();
-    let redo = a.editor.redo.clone();
+    let undo = a.editor.history.undo.clone();
+    let redo = a.editor.history.redo.clone();
     a.execute("vert.set z 2m false false");
     assert_eq!(a.editor.pen_draft, draft);
     assert_eq!(a.editor.scene, scene);
-    assert!(a.editor.undo == undo);
-    assert!(a.editor.redo == redo);
+    assert!(a.editor.history.undo == undo);
+    assert!(a.editor.history.redo == redo);
     a.execute("tool.drop");
     a.editor.scene.selection.faces = vec![0];
     a.execute("poly.setPart {Original Part}");

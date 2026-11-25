@@ -79,7 +79,7 @@ fn tab_accepts_and_moves_to_next_field_shift_tab_back() {
     let second = keys[1].clone();
     click(&mut a, &ctx, &first);
     assert_eq!(focused_field(&a, &ctx).as_deref(), Some(first.as_str()));
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     a.fields.insert(first.clone(), "0.1 m".into());
     let _ = draw(&mut a, &ctx, SIZE, vec![tab(false)]);
     // The typed value is accepted, the same as clicking away.
@@ -88,7 +88,7 @@ fn tab_accepts_and_moves_to_next_field_shift_tab_back() {
     assert_eq!(focused_field(&a, &ctx).as_deref(), Some(second.as_str()));
     // The tool stays live: Tab is not a tool shortcut or a drop here.
     assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Bevel);
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     // The arriving field has its whole value selected, so typing replaces it.
     let _ = draw(&mut a, &ctx, SIZE, vec![]);
     let id = ctx.memory(|m| m.focused()).unwrap();

@@ -50,11 +50,11 @@ fn mv01_direct_equal_and_changed_mode_preserve_memory_and_branch_context() {
     assert_eq!(e.identities.publication, before.identities.publication + 1);
     assert_eq!(e.identities.request, before.identities.request + 1);
     for mode in [Mode::Vertex, Mode::Edge, Mode::Item, Mode::Polygon] {
-        let history = e.undo.len();
+        let history = e.history.undo.len();
         let mesh = e.scene.active().unwrap().mesh.clone();
         e.dispatch(Command::Mode(mode)).unwrap();
         assert!(e.i2.selected.is_none() && e.i2.prior.is_none());
-        assert_eq!(e.undo.len(), history);
+        assert_eq!(e.history.undo.len(), history);
         assert_eq!(e.scene.active().unwrap().mesh, mesh);
         assert_eq!(
             (
@@ -90,17 +90,20 @@ fn mv03_surface_drop_then_mode_matches_existing_nested_boundary() {
             manual.dispatch(Command::Mode(Mode::Edge)).unwrap();
             e.dispatch(Command::Mode(Mode::Edge)).unwrap();
             assert_eq!(e.scene, manual.scene);
-            assert!(e.undo == manual.undo);
-            assert!(e.redo == manual.redo);
+            assert!(e.history.undo == manual.history.undo);
+            assert!(e.history.redo == manual.history.redo);
             assert_eq!(e.smooth_shift_preset, manual.smooth_shift_preset);
             assert_eq!(e.thicken_preset, manual.thicken_preset);
             assert!(e.live.is_none());
             assert_eq!(e.revision, manual.revision);
             assert_eq!(e.identities.publication, manual.identities.publication + 1);
             assert_eq!(e.identities.request, manual.identities.request + 1);
-            assert_eq!(e.undo.len(), before.undo.len() + usize::from(substantive));
+            assert_eq!(
+                e.history.undo.len(),
+                before.history.undo.len() + usize::from(substantive)
+            );
             if substantive {
-                assert_eq!(e.undo.last().unwrap().label, tool.label());
+                assert_eq!(e.history.undo.last().unwrap().label, tool.label());
             }
         }
     }

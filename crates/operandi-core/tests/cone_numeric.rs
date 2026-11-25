@@ -21,7 +21,7 @@ fn uv_close(a: DVec2, b: [f64; 2]) {
 fn editor() -> Editor {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e.dispatch(Command::ArmCone).unwrap();
     e
 }
@@ -186,7 +186,7 @@ fn ca_d02_preview_retention_every_apply_route_recovery_cancel() {
     let p = params();
     e.dispatch(Command::ConfigureCone(p.clone())).unwrap();
     let last = e.cone.as_ref().unwrap().preview.clone();
-    let history = e.undo.clone();
+    let history = e.history.undo.clone();
     let invalid = ConeParameters {
         gaps: 50.,
         ..p.clone()
@@ -197,7 +197,7 @@ fn ca_d02_preview_retention_every_apply_route_recovery_cancel() {
     for _ in 0..2 {
         assert!(e.dispatch(Command::Apply).is_err());
         assert_eq!(e.scene, committed);
-        assert!(e.undo == history);
+        assert!(e.history.undo == history);
     }
     e.dispatch(Command::ConfigureCone(ConeParameters { gaps: 7., ..p }))
         .unwrap();

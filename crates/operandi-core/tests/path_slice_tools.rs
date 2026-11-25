@@ -143,7 +143,7 @@ fn no_path_changes_nothing_and_cancel_restores() {
 fn pen_slice_cuts_top_and_bottom_or_front_only_and_drop_is_one_step() {
     let mut e = editor(cube(), Mode::Polygon);
     let before = mesh(&e).clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::PenSlice)).unwrap();
     let mut p = params(&e);
     p.slice.pen_slice.points = square(2., 0.25);
@@ -162,8 +162,8 @@ fn pen_slice_cuts_top_and_bottom_or_front_only_and_drop_is_one_step() {
     assert_eq!(mesh(&e).faces.len(), 10);
     assert_eq!(e.live.as_ref().map(|l| l.tool), Some(Tool::PenSlice));
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Pen Slice");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Pen Slice");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(*mesh(&e), before);
     e.dispatch(Command::Redo).unwrap();
@@ -221,7 +221,7 @@ fn primitive_slice_cuts_the_face_along_its_normal_and_lazy_apply_waits() {
     gesture(&mut e, p);
     assert_eq!(mesh(&e).vertices.len(), 8 + 2 * 12);
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Primitive Slice");
+    assert_eq!(e.history.undo.last().unwrap().label, "Primitive Slice");
 }
 
 #[test]
@@ -282,7 +282,7 @@ fn curve_slice_cuts_the_sampled_curve_and_saves_and_reopens() {
     gesture(&mut e, p);
     assert!(mesh(&e).vertices.len() > eight.vertices.len());
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Curve Slice");
+    assert_eq!(e.history.undo.last().unwrap().label, "Curve Slice");
     let dir = std::env::temp_dir().join(format!("operandi-path-slice-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("curve.opscene");
@@ -298,7 +298,7 @@ fn axis_slice_cuts_the_selection_box_and_drop_is_one_step() {
     // The middle 2 x 2 polygons: x and z 1..3.
     e.scene.selection.faces = vec![5, 6, 9, 10];
     let before = mesh(&e).clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::AxisSlice)).unwrap();
     // Number X 1 at activation: the cut at x = 2 lies on existing points,
     // so nothing is split yet.
@@ -320,8 +320,8 @@ fn axis_slice_cuts_the_selection_box_and_drop_is_one_step() {
     p.slice.axis_slice.hold = false;
     gesture(&mut e, p);
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Polygon Axis Slice");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Polygon Axis Slice");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(*mesh(&e), before);
 }

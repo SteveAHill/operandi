@@ -43,7 +43,7 @@ fn a_typed_line_is_recorded_written_out_with_its_class_and_result() {
     let results = a.history.results.records.back().unwrap();
     assert_eq!(results.line, "poly.setPart name:Road");
     // UIC-226: the undo step keeps the line that made it.
-    let step = a.editor.undo.last().unwrap();
+    let step = a.editor.history.undo.last().unwrap();
     assert_eq!(step.records.0[0].line, "poly.setPart name:Road");
 }
 
@@ -118,6 +118,7 @@ fn every_registry_command_has_a_class() {
     assert_eq!(last(&a).class, CommandClass::Quiet);
     assert!(
         a.editor
+            .history
             .undo
             .last()
             .unwrap()
@@ -183,7 +184,7 @@ fn a_tool_session_records_tool_on_values_at_mouse_up_and_tool_off() {
         "one line per changed value: {attrs:?}"
     );
     a.execute("tool.drop");
-    let step = a.editor.undo.last().unwrap();
+    let step = a.editor.history.undo.last().unwrap();
     let recorded: Vec<&str> = step.records.0.iter().map(|r| r.line.as_str()).collect();
     assert_eq!(
         recorded.first(),
@@ -206,13 +207,13 @@ fn a_tool_session_records_tool_on_values_at_mouse_up_and_tool_off() {
 fn a_batch_is_one_undo_step_with_its_lines_as_sub_commands() {
     let mut a = polygon_app();
     let before = a.editor.scene.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute_from(
         Source::Typed,
         "cmds.batch label:\"Flip and part\" c1:poly.flip c2:\"poly.setPart Road\"",
     );
-    assert_eq!(a.editor.undo.len(), steps + 1, "{}", a.status);
-    let step = a.editor.undo.last().unwrap();
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "{}", a.status);
+    let step = a.editor.history.undo.last().unwrap();
     assert_eq!(step.label, "Flip and part");
     let record = &step.records.0[0];
     assert!(record.line.starts_with("cmds.batch"), "{}", record.line);
@@ -229,9 +230,9 @@ fn a_batch_is_one_undo_step_with_its_lines_as_sub_commands() {
 #[test]
 fn sub_commands_stop_at_max_sub_commands_recorded() {
     let mut a = polygon_app();
-    a.editor.history.max_sub_commands = 2;
+    a.editor.history.settings.max_sub_commands = 2;
     a.execute("cmds.batch c1:poly.flip c2:poly.flip c3:poly.flip");
-    let r = &a.editor.undo.last().unwrap().records.0[0];
+    let r = &a.editor.history.undo.last().unwrap().records.0[0];
     assert_eq!(r.sub.len(), 2);
     assert_eq!(r.sub_dropped, 1);
 }
@@ -254,8 +255,13 @@ fn undo_and_redo_behave_as_before() {
         b.run(command);
         assert!(a.editor.scene == b.editor.scene, "{line}");
     }
-    let labels =
-        |e: &operandi_core::Editor| e.undo.iter().map(|c| c.label.clone()).collect::<Vec<_>>();
+    let labels = |e: &operandi_core::Editor| {
+        e.history
+            .undo
+            .iter()
+            .map(|c| c.label.clone())
+            .collect::<Vec<_>>()
+    };
     assert_eq!(labels(&a.editor), labels(&b.editor));
     for _ in 0..2 {
         a.execute("Undo");
@@ -265,11 +271,12 @@ fn undo_and_redo_behave_as_before() {
     a.execute("Redo");
     b.run(Command::Redo);
     assert!(a.editor.scene == b.editor.scene);
-    assert_eq!(a.editor.undo.len(), b.editor.undo.len());
-    assert_eq!(a.editor.redo.len(), b.editor.redo.len());
+    assert_eq!(a.editor.history.undo.len(), b.editor.history.undo.len());
+    assert_eq!(a.editor.history.redo.len(), b.editor.history.redo.len());
     // Undo and Redo never become steps (CMD-02).
     assert!(
         a.editor
+            .history
             .undo
             .iter()
             .all(|c| c.records.0.iter().all(|r| r.line != "app.undo"))
@@ -279,7 +286,7 @@ fn undo_and_redo_behave_as_before() {
 #[test]
 fn undo_to_jumps_several_steps_and_back() {
     let mut a = polygon_app();
-    let start = a.editor.undo.len();
+    let start = a.editor.history.undo.len();
     let base = a.editor.scene.clone();
     for _ in 0..3 {
         a.execute("poly.flip");
@@ -288,7 +295,7 @@ fn undo_to_jumps_several_steps_and_back() {
     let top = a.editor.scene.clone();
     a.execute_from(Source::Typed, &format!("cmds.undoTo {start}"));
     assert!(a.editor.scene == base, "{}", a.status);
-    assert_eq!(a.editor.redo.len(), 4);
+    assert_eq!(a.editor.history.redo.len(), 4);
     a.execute(&format!("cmds.undoTo {}", start + 4));
     assert!(a.editor.scene == top);
 }
@@ -301,7 +308,7 @@ fn dragging_the_undos_row_up_undoes_several_steps() {
     for _ in 0..3 {
         a.execute("poly.flip");
     }
-    let done = a.editor.undo.len();
+    let done = a.editor.history.undo.len();
     a.history.open_height = 300.;
     draw(&mut a, &ctx, SIZE, vec![]);
     draw(&mut a, &ctx, SIZE, vec![]);
@@ -342,8 +349,8 @@ fn dragging_the_undos_row_up_undoes_several_steps() {
     }
     draw(&mut a, &ctx, SIZE, vec![press(target, false)]);
     draw(&mut a, &ctx, SIZE, vec![]);
-    assert_eq!(a.editor.undo.len(), done - 3, "{}", a.status);
-    assert_eq!(a.editor.redo.len(), 3);
+    assert_eq!(a.editor.history.undo.len(), done - 3, "{}", a.status);
+    assert_eq!(a.editor.history.redo.len(), 3);
     assert!(lines(&a).iter().any(|l| l.starts_with("cmds.undoTo")));
 }
 
@@ -353,12 +360,15 @@ fn history_keeps_undone_mistakes_and_undone_steps_stay_greyed() {
     a.execute("poly.flip");
     a.execute("Undo");
     assert_eq!(
-        a.editor.redo.len(),
+        a.editor.history.redo.len(),
         1,
         "HIS-14: the undone step stays, redoable"
     );
     a.execute("poly.setPart Road");
-    assert!(a.editor.redo.is_empty(), "a new edit throws it away");
+    assert!(
+        a.editor.history.redo.is_empty(),
+        "a new edit throws it away"
+    );
     let all = lines(&a);
     let flip = all
         .iter()

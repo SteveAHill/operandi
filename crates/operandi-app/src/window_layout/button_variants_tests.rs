@@ -506,7 +506,7 @@ fn mb_q8_shift_adds_an_item_and_ctrl_a_unit_in_this_mesh() {
         // Shift: a new mesh item.
         let (mut a, ctx) = create_panel();
         let items = a.editor.scene.items.len();
-        let undo = a.editor.undo.len();
+        let undo = a.editor.history.undo.len();
         click_cell(&mut a, &ctx, name, Modifiers::SHIFT);
         assert_eq!(
             a.editor.scene.items.len(),
@@ -514,7 +514,7 @@ fn mb_q8_shift_adds_an_item_and_ctrl_a_unit_in_this_mesh() {
             "{name}: {}",
             a.status
         );
-        assert_eq!(a.editor.undo.len(), undo + 1, "{name}");
+        assert_eq!(a.editor.history.undo.len(), undo + 1, "{name}");
         assert!(a.editor.live.is_none(), "{name}: no drag");
         // Ctrl: into the current mesh.
         let (mut a, ctx) = create_panel();

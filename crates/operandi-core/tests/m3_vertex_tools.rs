@@ -468,12 +468,12 @@ fn editor_rows_are_single_undo_steps_and_refusals_change_nothing() {
     let before = e.scene.clone();
     e.dispatch(Command::VertexCommand(VertexCommand::Remove))
         .unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Remove");
+    assert_eq!(e.history.undo.last().unwrap().label, "Remove");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, before);
     e.dispatch(Command::Redo).unwrap();
     e.dispatch(Command::Undo).unwrap();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     // Wrong mode, empty selection and an ineligible point are refused.
     e.scene.selection.mode = Mode::Edge;
     assert!(
@@ -495,7 +495,7 @@ fn editor_rows_are_single_undo_steps_and_refusals_change_nothing() {
     // selected it is still refused.
     e.scene.selection.vertices.clear();
     assert!(e.dispatch(Command::Activate(Tool::VertexBevel)).is_err());
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
     assert_eq!(
         e.scene.active().unwrap().mesh,
         before.active().unwrap().mesh
@@ -567,11 +567,15 @@ fn live_vertex_tools_preview_cancel_and_drop() {
         if tool == Tool::VertexMerge {
             e.scene.selection.vertices = vec![5, 6];
         }
-        let history = e.undo.len();
+        let history = e.history.undo.len();
         e.dispatch(Command::Activate(tool)).unwrap();
         e.dispatch(Command::Preview(p)).unwrap();
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.undo.len(), history + 1, "{tool:?} drop is one step");
+        assert_eq!(
+            e.history.undo.len(),
+            history + 1,
+            "{tool:?} drop is one step"
+        );
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(
             e.scene.active().unwrap().mesh,
@@ -594,7 +598,7 @@ fn create_tool_adds_clicked_points_and_selects_them_in_order() {
     // Make Polygon (P) from those points.
     e.dispatch(Command::MakePolygon).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Make Polygon");
+    assert_eq!(e.history.undo.last().unwrap().label, "Make Polygon");
 }
 
 enum Act {

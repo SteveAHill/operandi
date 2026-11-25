@@ -387,7 +387,7 @@ fn thicken_on_live_tool_state_save_recall_reset_then_cancel() {
     arm(&mut a);
     frame(&mut a, &ctx, vec![]);
     let source = a.editor.scene.clone();
-    let history = labels(&a.editor.undo);
+    let history = labels(&a.editor.history.undo);
     assert!(a.editor.surface_states.is_empty(), "isolated session store");
 
     // First ordinary viewport click starts the live stage.
@@ -444,7 +444,11 @@ fn thicken_on_live_tool_state_save_recall_reset_then_cancel() {
     assert_eq!(a.editor.surface_state.get("Thicken"), Some(&name));
     assert!(!a.editor.surface_states.contains_key("Smooth Shift"));
     assert_eq!(a.editor.scene, stage_a, "Save leaves geometry unchanged");
-    assert_eq!(labels(&a.editor.undo), history, "Save adds no history");
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Save adds no history"
+    );
     assert_shows(&mut a, &ctx, state_a(), &name, true);
 
     // Change to a distinct valid B through the Offset field and Both Sides.
@@ -475,8 +479,12 @@ fn thicken_on_live_tool_state_save_recall_reset_then_cancel() {
     );
     assert_eq!(faces(&a.editor.scene), faces(&stage_a));
     assert_shows(&mut a, &ctx, state_a(), &name, true);
-    assert_eq!(labels(&a.editor.undo), history, "recall adds no history");
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "recall adds no history"
+    );
+    assert!(a.editor.history.redo.is_empty());
 
     // Modify while the saved state stays selected; named Reset restores A,
     // not the shared all-off reset defaults.
@@ -492,15 +500,23 @@ fn thicken_on_live_tool_state_save_recall_reset_then_cancel() {
     assert_eq!(reset, stage_a);
     assert_ne!(params(&a), SmoothShiftParameters::default());
     assert_shows(&mut a, &ctx, state_a(), &name, true);
-    assert_eq!(labels(&a.editor.undo), history, "Reset adds no history");
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Reset adds no history"
+    );
+    assert!(a.editor.history.redo.is_empty());
 
     // Explicit Cancel restores the source of the current stage.
     click_button(&mut a, &ctx, "Cancel");
     assert_eq!(a.editor.scene, source, "Cancel: {}", a.status);
     assert_eq!(a.editor.scene.selection, source.selection);
-    assert_eq!(labels(&a.editor.undo), history, "Cancel adds no history");
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Cancel adds no history"
+    );
+    assert!(a.editor.history.redo.is_empty());
     assert!(a.editor.live.is_none(), "Cancel deactivates: {}", a.status);
     // Session-only recipe bookkeeping is separate from geometry and history:
     // Cancel keeps the saved state and its selection.
@@ -627,7 +643,7 @@ fn thicken_on_live_tool_state_rename_delete_then_default_reset_and_cancel() {
     arm(&mut a);
     frame(&mut a, &ctx, vec![]);
     let source = a.editor.scene.clone();
-    let history = labels(&a.editor.undo);
+    let history = labels(&a.editor.history.undo);
     assert!(a.editor.surface_states.is_empty(), "isolated session store");
 
     let p_a = state_a();
@@ -677,7 +693,7 @@ fn thicken_on_live_tool_state_rename_delete_then_default_reset_and_cancel() {
     assert!(stage_b != stage_a && stage_b != stage_c && stage_a != stage_c);
     assert_eq!(selected(&a), Some(name_a.clone()));
     assert_eq!(states(&a)[&name_a], p_a, "editing does not rewrite A");
-    assert_eq!(labels(&a.editor.undo), history);
+    assert_eq!(labels(&a.editor.history.undo), history);
 
     // Rename A → B through the State name field and Rename.
     assert!(!button_disabled(&mut a, &ctx, "Rename"));
@@ -700,8 +716,12 @@ fn thicken_on_live_tool_state_rename_delete_then_default_reset_and_cancel() {
     assert_eq!(params(&a), p_b, "current parameters unchanged");
     assert_eq!(a.editor.scene, stage_b, "Rename leaves geometry unchanged");
     assert_eq!(a.editor.scene.selection, selection);
-    assert_eq!(labels(&a.editor.undo), history, "Rename adds no history");
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Rename adds no history"
+    );
+    assert!(a.editor.history.redo.is_empty());
     assert_shows(&mut a, &ctx, p_b, &name_b, false);
 
     // (none) then B: B recalls the renamed recipe, still A's values.
@@ -736,8 +756,12 @@ fn thicken_on_live_tool_state_rename_delete_then_default_reset_and_cancel() {
     assert_eq!(a.editor.scene, stage_b, "Delete leaves geometry unchanged");
     assert_eq!(a.editor.scene.selection, selection);
     assert!(a.editor.live.as_ref().unwrap().applied);
-    assert_eq!(labels(&a.editor.undo), history, "Delete adds no history");
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Delete adds no history"
+    );
+    assert!(a.editor.history.redo.is_empty());
     assert_shows(&mut a, &ctx, p_b, "(none)", false);
     assert!(button_disabled(&mut a, &ctx, "Rename"));
     assert!(button_disabled(&mut a, &ctx, "Delete"));
@@ -759,8 +783,12 @@ fn thicken_on_live_tool_state_rename_delete_then_default_reset_and_cancel() {
     assert_ne!(params(&a), p_c);
     assert_ne!(reset, stage_b);
     assert_shows(&mut a, &ctx, defaults, "(none)", true);
-    assert_eq!(labels(&a.editor.undo), history, "Reset adds no history");
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Reset adds no history"
+    );
+    assert!(a.editor.history.redo.is_empty());
     assert_eq!(states(&a).len(), 1);
     assert_eq!(states(&a)[&name_c], p_c);
     assert_eq!(selected(&a), None);
@@ -769,8 +797,12 @@ fn thicken_on_live_tool_state_rename_delete_then_default_reset_and_cancel() {
     click_button(&mut a, &ctx, "Cancel");
     assert_eq!(a.editor.scene, source, "Cancel: {}", a.status);
     assert_eq!(a.editor.scene.selection, source.selection);
-    assert_eq!(labels(&a.editor.undo), history, "Cancel adds no history");
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Cancel adds no history"
+    );
+    assert!(a.editor.history.redo.is_empty());
     assert!(a.editor.live.is_none(), "Cancel deactivates: {}", a.status);
     // Session-only recipe bookkeeping survives Cancel: sentinel kept, unselected.
     assert_eq!(states(&a).len(), 1);
@@ -886,7 +918,7 @@ fn armed_identity_switches_keep_separate_retained_values_and_tool_states() {
     let mut a = cube();
     frame(&mut a, &ctx, vec![]);
     let source = a.editor.scene.clone();
-    let history = labels(&a.editor.undo);
+    let history = labels(&a.editor.history.undo);
     assert!(a.editor.live.is_none());
     assert!(a.editor.surface_states.is_empty(), "isolated session store");
     assert!(a.editor.surface_state.is_empty());
@@ -912,8 +944,12 @@ fn armed_identity_switches_keep_separate_retained_values_and_tool_states() {
     let unchanged = |a: &Operandi, step: &str| {
         assert_eq!(a.editor.scene, source, "{step}: scene unchanged");
         assert_eq!(a.editor.scene.selection, source.selection, "{step}");
-        assert_eq!(labels(&a.editor.undo), history, "{step}: no history");
-        assert!(a.editor.redo.is_empty(), "{step}: no redo");
+        assert_eq!(
+            labels(&a.editor.history.undo),
+            history,
+            "{step}: no history"
+        );
+        assert!(a.editor.history.redo.is_empty(), "{step}: no redo");
     };
     // Exact per-identity store contents and selections.
     let stores = |a: &Operandi,

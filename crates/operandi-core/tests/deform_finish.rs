@@ -562,7 +562,7 @@ fn grid_editor(n: u32) -> Editor {
     }
     e.scene.active_mut().unwrap().mesh = m.into();
     e.scene.selection.mode = Mode::Vertex;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn pts(e: &Editor) -> Vec<DVec3> {
@@ -586,8 +586,8 @@ fn jitter_tool_previews_commits_one_step_and_cancel_restores() {
     let jittered = pts(&e);
     assert_ne!(jittered, before);
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Jitter");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Jitter");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(pts(&e), before);
     e.dispatch(Command::Redo).unwrap();
@@ -646,7 +646,7 @@ fn radial_align_tool_makes_a_polygon_border_round_in_one_step() {
     e.scene.selection.faces = (0..16).collect();
     e.dispatch(Command::Activate(Tool::RadialAlign)).unwrap();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     let m = &e.scene.active().unwrap().mesh;
     let corner = m.vertices[0].length();
     let side = m.vertices[2].length();
@@ -666,8 +666,8 @@ fn relax_mesh_is_one_step_keeps_borders_and_refuses_item_mode() {
     .into();
     e.dispatch(Command::RelaxMesh(RelaxMeshOptions::default()))
         .unwrap();
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Relax Mesh");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Relax Mesh");
     let after = pts(&e);
     assert!(after[12].y < 0.5);
     assert_eq!(after[0], bumped[0]);

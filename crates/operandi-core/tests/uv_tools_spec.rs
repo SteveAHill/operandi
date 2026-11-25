@@ -243,10 +243,10 @@ fn uvw07_one_undo_step() {
     let mut e = Editor::default();
     add_box(&mut e);
     let before = e.scene.active().unwrap().mesh.uv_maps.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::UvUnwrap(UnwrapOptions::default()))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_ne!(e.scene.active().unwrap().mesh.uv_maps, before);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.uv_maps, before);

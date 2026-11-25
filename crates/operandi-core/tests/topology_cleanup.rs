@@ -20,7 +20,7 @@ fn editor(mesh: Mesh) -> Editor {
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = mesh.into();
     e.scene.selection.mode = Mode::Polygon;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -81,7 +81,7 @@ fn tf1_tf2_hexagon_fans_from_the_selected_corner() {
     );
     // TF2: nothing selected, one undo step.
     assert!(e.scene.selection.faces.is_empty() && e.scene.selection.vertices.is_empty());
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 1);
 }
@@ -94,7 +94,7 @@ fn tf3_no_vertex_or_a_vertex_off_the_selection_changes_nothing() {
     e.scene.selection.vertices = vec![24];
     assert!(e.dispatch(Command::TripleFan).is_err());
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 16);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     // Two polygons sharing point 6 both fan from it.
     e.scene.selection.faces = vec![0, 1];
     e.scene.selection.vertices = vec![6];
@@ -118,7 +118,7 @@ fn cs1_cs2_two_quads_collapse_to_a_fan_round_the_outline_centre() {
         assert_eq!(a, b);
     }
     assert!(e.scene.selection.faces.is_empty());
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     m.validate().unwrap();
 }
 
@@ -154,7 +154,7 @@ fn collapse_selection_refuses_item_mode_and_a_whole_closed_mesh() {
     assert!(e.dispatch(Command::CollapseSelection).is_err());
     e.scene.selection.mode = Mode::Item;
     assert!(e.dispatch(Command::CollapseSelection).is_err());
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 
 #[test]

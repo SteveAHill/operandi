@@ -301,7 +301,7 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     let source = a.editor.scene.clone();
     snapshot("source", &source);
     assert_eq!(counts(&source), (4, 1));
-    assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+    assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
 
     // 1. Extrude through menu activation and the actual panel widgets.
     a.menu_action(&ctx, app_menu::line_action(Tool::Extrude.label()));
@@ -335,7 +335,7 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
         );
     }
     assert_eq!(a.editor.scene, source, "configuration: source unchanged");
-    assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+    assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
 
     let apply = apply_button(&mut a, &ctx, "extrude_sides");
     assert!(!apply.is_disabled(), "Extrude Apply enabled");
@@ -344,14 +344,18 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     let first = a.editor.scene.clone();
     snapshot("first", &first);
     assert_eq!(counts(&first), (8, 5), "EX-012 first stage");
-    assert_eq!(labels(&a.editor.undo), ["Extrude"]);
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude"]);
+    assert!(a.editor.history.redo.is_empty());
 
     drop_with_q(&mut a, &ctx);
     assert!(a.editor.live.is_none(), "Q drops Extrude: {}", a.status);
     assert_eq!(a.editor.scene, first, "Drop keeps the first stage");
-    assert_eq!(labels(&a.editor.undo), ["Extrude"], "Drop adds no stage");
-    let first_history = a.editor.undo.clone();
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        ["Extrude"],
+        "Drop adds no stage"
+    );
+    let first_history = a.editor.history.undo.clone();
     assert!(first_history[0].before == source && first_history[0].after == first);
     assert_eq!(first, expected_first.scene, "first: whole scene");
 
@@ -397,8 +401,11 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     let unchanged = |a: &Operandi, step: &str| {
         assert_eq!(a.editor.scene, first, "{step}: full first scene");
         assert_eq!(a.editor.scene.selection, first.selection, "{step}");
-        assert!(a.editor.undo == first_history, "{step}: first checkpoint");
-        assert!(a.editor.redo.is_empty(), "{step}");
+        assert!(
+            a.editor.history.undo == first_history,
+            "{step}: first checkpoint"
+        );
+        assert!(a.editor.history.redo.is_empty(), "{step}");
     };
 
     type_field(&mut a, &ctx, "spi_strength", "0.25");
@@ -436,13 +443,13 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     let second = a.editor.scene.clone();
     snapshot("second", &second);
     assert_eq!(counts(&second), (9, 8), "SA-004: V+1, F-1+4");
-    assert_eq!(labels(&a.editor.undo), ["Extrude", "Spike Apply"]);
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude", "Spike Apply"]);
     assert!(
-        a.editor.undo[0] == first_history[0],
+        a.editor.history.undo[0] == first_history[0],
         "first stage preserved"
     );
-    assert!(a.editor.undo[1].before == first && a.editor.undo[1].after == second);
-    assert!(a.editor.redo.is_empty());
+    assert!(a.editor.history.undo[1].before == first && a.editor.history.undo[1].after == second);
+    assert!(a.editor.history.redo.is_empty());
     assert!(a.editor.spike.is_some(), "Spike stays armed after Apply");
 
     let m2 = mesh(&second);
@@ -495,12 +502,12 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     assert!(a.editor.spike.is_none(), "Q drops Spike: {}", a.status);
     assert_eq!(a.editor.scene, second, "Drop keeps the Spike stage");
     assert_eq!(
-        labels(&a.editor.undo),
+        labels(&a.editor.history.undo),
         ["Extrude", "Spike Apply"],
         "no third"
     );
     assert_eq!(second, expected_second.scene, "second: whole scene");
-    let both_stages = a.editor.undo.clone();
+    let both_stages = a.editor.history.undo.clone();
 
     // 4. Undo/Redo through the production Edit menu routing.
     for (action, want, undo, redo, step) in [
@@ -538,15 +545,18 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
         assert_eq!(a.status, "Ready", "{step}");
         assert_eq!(&a.editor.scene, want, "{step}: whole scene");
         assert_eq!(a.editor.scene.selection, want.selection, "{step}");
-        assert_eq!((a.editor.undo.len(), a.editor.redo.len()), (undo, redo));
+        assert_eq!(
+            (a.editor.history.undo.len(), a.editor.history.redo.len()),
+            (undo, redo)
+        );
         assert!(
             a.editor.live.is_none() && a.editor.spike.is_none(),
             "{step}"
         );
         frame(&mut a, &ctx, vec![]);
     }
-    assert_eq!(labels(&a.editor.undo), ["Extrude", "Spike Apply"]);
-    for (i, c) in a.editor.undo.iter().enumerate() {
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude", "Spike Apply"]);
+    for (i, c) in a.editor.history.undo.iter().enumerate() {
         assert!(
             c.before == both_stages[i].before && c.after == both_stages[i].after,
             "stage {i} payloads after Undo/Redo"

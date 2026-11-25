@@ -129,7 +129,7 @@ fn par_t14_combined_families_are_distinct_steps_and_shared_grid() {
         (a.toolbox_rects["Scale"].right() - a.toolbox_rects["Category Create"].right()).abs() <= 1.
     );
     a.activate(Tool::Transform);
-    let n = a.editor.undo.len();
+    let n = a.editor.history.undo.len();
     let r = a.viewport_rect;
     let mut families = vec![];
     let mut drags = vec![];
@@ -152,7 +152,7 @@ fn par_t14_combined_families_are_distinct_steps_and_shared_grid() {
     }
     // Each family's drag is its own tweak of the session (Jason,
     // 2026-11-04), and each changed the item differently.
-    assert_eq!(a.editor.undo.len(), n, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), n, "{}", a.status);
     // Move shifts the centroid; Rotate keeps it and the spread; Scale
     // keeps the centroid but changes the spread.
     let shape = |scene: &operandi_core::Scene| {
@@ -170,7 +170,7 @@ fn par_t14_combined_families_are_distinct_steps_and_shared_grid() {
     let changed = a.editor.scene.clone();
     // Drop records the session as one step.
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.len(), n + 1);
+    assert_eq!(a.editor.history.undo.len(), n + 1);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene, before);
     a.run(Command::Redo);
@@ -471,7 +471,7 @@ fn free_center_handle_and_click_away_center() {
     let (projected, _) = a.camera.project(center, r).unwrap();
     assert!(projected.distance(away) < 1., "{projected:?} vs {away:?}");
     assert!(a.editor.tweaks.can_undo(), "{}", a.status);
-    assert_ne!(a.editor.undo.last().unwrap().before, a.editor.scene);
+    assert_ne!(a.editor.history.undo.last().unwrap().before, a.editor.scene);
 }
 
 #[test]

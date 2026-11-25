@@ -243,8 +243,8 @@ fn actual_point_fields_refine_selected_point_and_cancel_invalid_text() {
         app.editor.dispatch(Command::PenCapture(point)).unwrap();
     }
     let original_scene = app.editor.scene.clone();
-    let original_undo = app.editor.undo.clone();
-    let original_redo = app.editor.redo.clone();
+    let original_undo = app.editor.history.undo.clone();
+    let original_redo = app.editor.history.redo.clone();
     let ctx = Context::default();
     theme::install(&ctx);
     let size = vec2(1440., 900.);
@@ -266,7 +266,7 @@ fn actual_point_fields_refine_selected_point_and_cancel_invalid_text() {
     app.execute("cancel");
     assert!(app.editor.pen_draft.is_none());
     assert_eq!(app.editor.scene, original_scene);
-    assert!(app.editor.undo == original_undo && app.editor.redo == original_redo);
+    assert!(app.editor.history.undo == original_undo && app.editor.history.redo == original_redo);
 }
 
 /// Pen panel options: Polyline clicked in the viewport keeps its click order

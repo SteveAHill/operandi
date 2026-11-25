@@ -634,7 +634,7 @@ fn cen_03_world_space_and_editor_step() {
         .map(|p| p.x)
         .collect();
     assert_eq!(xs, [-12., -8., -8.]);
-    assert_eq!(e.undo.last().unwrap().label, "Center");
+    assert_eq!(e.history.undo.last().unwrap().label, "Center");
     // CEN-04: Item mode does nothing.
     e.scene.selection.mode = Mode::Item;
     let before = e.scene.clone();
@@ -680,7 +680,7 @@ fn editor_subdivide_undo_selection_and_preset() {
     // SUB-06: two passes, one step.
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 96);
     assert!(e.scene.selection.faces.is_empty());
-    assert_eq!(e.undo.last().unwrap().label, "Subdivide Polygons");
+    assert_eq!(e.history.undo.last().unwrap().label, "Subdivide Polygons");
     assert_eq!(e.subdivide_preset, options);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 6);
@@ -699,7 +699,7 @@ fn editor_subdivide_undo_selection_and_preset() {
     e.dispatch(Command::UnsubdividePolygons(Default::default()))
         .unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 6);
-    assert_eq!(e.undo.last().unwrap().label, "UnSubdivide");
+    assert_eq!(e.history.undo.last().unwrap().label, "UnSubdivide");
     assert_eq!(e.scene.selection.faces.len(), 1);
 }
 
@@ -748,7 +748,7 @@ fn freeze_ignores_selections_remembered_from_other_modes() {
     ))
     .unwrap();
     e.dispatch(Command::Freeze(Default::default())).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Freeze");
+    assert_eq!(e.history.undo.last().unwrap().label, "Freeze");
     assert!(e.scene.selection.edges.is_empty());
 }
 
@@ -1027,7 +1027,7 @@ fn subdivide_refuses_a_result_bigger_than_free_memory() {
     assert_eq!(estimate.polygons, 1600);
     assert_eq!(estimate.bytes, 1600 * BYTES_PER_POLYGON);
     e.free_memory = FreeMemory(Some(|| 1_000_000));
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     let err = e
         .dispatch(Command::SubdividePolygons {
             options: options.clone(),
@@ -1040,7 +1040,7 @@ fn subdivide_refuses_a_result_bigger_than_free_memory() {
         "{err}"
     );
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 100);
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
     // Item mode checks too.
     e.scene.selection.mode = Mode::Item;
     assert!(

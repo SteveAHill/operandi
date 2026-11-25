@@ -178,12 +178,12 @@ mod tests {
         persistence::save(&file, &other).unwrap();
         let before = a.editor.scene.clone();
         let count = before.items.len();
-        let undo = a.editor.undo.len();
+        let undo = a.editor.history.undo.len();
         a.execute(&format!(
             "scene.importReference filename:\"{}\"",
             file.display()
         ));
-        assert_eq!(a.editor.undo.len(), undo + 1, "{}", a.status);
+        assert_eq!(a.editor.history.undo.len(), undo + 1, "{}", a.status);
         assert_eq!(a.editor.scene.items.len(), count + other.items.len());
         assert!(
             a.status.starts_with("Imported other.opscene"),

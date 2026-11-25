@@ -58,7 +58,7 @@ fn row_command_and_remap_share_literal_geometry_and_history() {
         probe.dispatch(Command::FlattenNgons).unwrap();
         let expected = probe.scene.clone();
         assert!(expected.selection.faces.is_empty() && expected.selection.vertices.is_empty());
-        let undo = a.editor.undo.len();
+        let undo = a.editor.history.undo.len();
         match route {
             0 => click_row(&mut a, &c),
             1 => a.execute(ACTION),
@@ -70,7 +70,7 @@ fn row_command_and_remap_share_literal_geometry_and_history() {
             }
         }
         assert_eq!(a.editor.scene, expected, "route {route}: {}", a.status);
-        assert_eq!(a.editor.undo.len(), undo + 1);
+        assert_eq!(a.editor.history.undo.len(), undo + 1);
         let after = a.editor.scene.clone();
         a.run(Command::Undo);
         assert_eq!(a.editor.scene, before);

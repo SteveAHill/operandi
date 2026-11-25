@@ -50,7 +50,7 @@ fn at(e: &Editor, id: u64, ch: &str, f: f64) -> f64 {
 /// export tests). Returns the editor and the ball's id.
 pub fn bouncing_ball() -> (Editor, u64) {
     let (mut e, id) = ball();
-    let undo_start = e.undo.len();
+    let undo_start = e.history.undo.len();
     // 2. Height and scale keys at 0, 12, 24, a squash at 12. Frame 0 keys
     // by hand; Auto Key Animated keys the edits at 12 and 24.
     ok(
@@ -157,7 +157,7 @@ fn ball_run_curves_and_loop() {
 #[test]
 fn ball_run_undo_walks_back_and_scrubs_never_appear() {
     let (mut e, id) = bouncing_ball();
-    let labels: Vec<String> = e.undo.iter().map(|c| c.label.clone()).collect();
+    let labels: Vec<String> = e.history.undo.iter().map(|c| c.label.clone()).collect();
     assert!(
         !labels
             .iter()
@@ -165,11 +165,11 @@ fn ball_run_undo_walks_back_and_scrubs_never_appear() {
         "{labels:?}"
     );
     // Undo the marker label, the marker, settings, range, paste, slopes...
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     for _ in 0..6 {
         e.dispatch(Command::Undo).unwrap();
     }
-    assert_eq!(e.undo.len(), steps - 6);
+    assert_eq!(e.history.undo.len(), steps - 6);
     // The f12 keys are Smooth Flat again (the slope step was undone).
     assert_eq!(curve(&e, id, "pos.Y").keys[1].slope_in, Slope::SmoothFlat);
 }
@@ -272,10 +272,14 @@ fn tl47_keys_paste_into_another_document() {
     );
     ok(&mut a, "operandi.key.copy");
     let (mut b, other) = ball();
-    let steps = b.undo.len();
+    let steps = b.history.undo.len();
     ok(&mut b, "operandi.time.set frame:7");
     ok(&mut b, "operandi.key.paste");
-    assert_eq!(b.undo.len(), steps + 1, "one step, in this document only");
+    assert_eq!(
+        b.history.undo.len(),
+        steps + 1,
+        "one step, in this document only"
+    );
     assert!(
         b.scene
             .animation

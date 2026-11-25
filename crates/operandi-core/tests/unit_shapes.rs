@@ -19,7 +19,7 @@ fn unit_shapes_fit_a_metre_and_are_one_undo_step() {
     ] {
         let mut e = Editor::default();
         e.dispatch(Command::NewMesh).unwrap();
-        let steps = e.undo.len();
+        let steps = e.history.undo.len();
         e.dispatch(Command::InsertShapeUnit(
             shape,
             UnitDestination::ExistingMesh,
@@ -41,7 +41,7 @@ fn unit_shapes_fit_a_metre_and_are_one_undo_step() {
         };
         assert!((size - want).length() < 1e-6, "{shape:?} {size}");
         assert!(((lo + hi) / 2.).length() < 1e-6, "{shape:?} centred");
-        assert_eq!(e.undo.len(), steps + 1);
+        assert_eq!(e.history.undo.len(), steps + 1);
         e.dispatch(Command::Undo).unwrap();
         assert!(e.scene.active().unwrap().mesh.faces.is_empty());
     }

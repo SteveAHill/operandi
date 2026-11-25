@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(restarted.editor.bevel_state, app.editor.bevel_state);
         assert_eq!(restarted.editor.bevel_profile, None);
         assert_eq!(restarted.editor.scene, scene);
-        assert!(restarted.editor.undo.is_empty());
+        assert!(restarted.editor.history.undo.is_empty());
         // A stale staging file fails safely; it cannot truncate a valid library.
         let temp = path.with_extension(format!("tmp-{}", std::process::id()));
         std::fs::write(&temp, b"occupied").unwrap();

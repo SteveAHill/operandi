@@ -196,7 +196,7 @@ fn group_rig() -> (Operandi, egui::Context, u64, u64) {
         .shader_tree
         .add(NewLayer::ImageMap, Some(group))
         .unwrap();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     for _ in 0..2 {
         super::tests::draw(&mut a, &ctx, SIZE, vec![]);
     }
@@ -246,7 +246,7 @@ fn dropping_on_a_group_row_replaces_its_contents_in_one_step() {
     let entry = material_entry(&a);
     let before = a.editor.scene.clone();
     assert!(a.browser_load_into_group(&entry, group), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     let tree = &a.editor.scene.shader_tree;
     assert!(tree.get(inside).is_none(), "the old contents went");
     let kids: Vec<_> = tree.children(Some(group)).collect();

@@ -80,10 +80,10 @@ fn armed_cone_drop_records_no_step_and_apply_is_a_plain_step() {
     // Drop with no preview is neutral and Apply is a plain "Cone" step,
     // both like Ellipsoid.
     let mut e = fixture();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::ArmCone).unwrap();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     e.dispatch(Command::ArmCone).unwrap();
     e.dispatch(Command::ConfigureCone(ConeParameters::default()))
         .unwrap();
@@ -213,8 +213,8 @@ fn refusal_is_typed_at_the_guard_and_final_publication_failure_is_not_success() 
     // Scene, stage and history do not publish. Allocation banks are not rewound.
     assert_eq!(e.scene, before.scene);
     assert!(e.i2 == before.i2);
-    assert!(e.undo == before.undo);
-    assert!(e.redo == before.redo);
+    assert!(e.history.undo == before.history.undo);
+    assert!(e.history.redo == before.history.redo);
     assert_eq!(e.revision, before.revision);
     assert!(e.live.as_ref().unwrap().preview_error.is_none());
 }

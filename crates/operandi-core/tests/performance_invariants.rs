@@ -157,7 +157,7 @@ fn dense_edge_preview_cancel_history_and_roundtrip_preserve_attributes() {
     assert_eq!(editor.scene, before.scene);
     editor.dispatch(Command::Cancel).unwrap();
     assert_eq!(editor.scene, original);
-    assert!(editor.undo.is_empty());
+    assert!(editor.history.undo.is_empty());
     editor.dispatch(Command::Activate(Tool::Move)).unwrap();
     editor
         .dispatch(Command::Preview(Parameters {
@@ -166,7 +166,7 @@ fn dense_edge_preview_cancel_history_and_roundtrip_preserve_attributes() {
         }))
         .unwrap();
     editor.dispatch(Command::Drop).unwrap();
-    assert_eq!(editor.undo.len(), 1);
+    assert_eq!(editor.history.undo.len(), 1);
     let committed = editor.scene.clone();
     editor.dispatch(Command::Undo).unwrap();
     assert_eq!(editor.scene, original);

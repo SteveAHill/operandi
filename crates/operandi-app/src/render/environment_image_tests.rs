@@ -21,7 +21,7 @@ fn top_env(a: &Operandi) -> u64 {
 fn load_image_command_fills_the_top_environment_in_one_step() {
     let mut a = Operandi::empty();
     let path = picture("load-sky.png");
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.run_command_line(&format!(
         "operandi.environment.loadImage filename:{{{}}}",
         path.display()
@@ -30,13 +30,13 @@ fn load_image_command_fills_the_top_environment_in_one_step() {
     let image = a.editor.scene.environment_image(env).expect("an image");
     assert_eq!((image.width, image.height), (8, 4));
     // An empty scene's default environment is made first, then one step.
-    assert!(a.editor.undo.len() <= undo + 2);
-    let steps = a.editor.undo.len();
+    assert!(a.editor.history.undo.len() <= undo + 2);
+    let steps = a.editor.history.undo.len();
     // Clear Image runs texture.delete on the image layer: one step.
     let layer = a.editor.scene.environment_image_layer(env).unwrap().id;
     a.run_command_line(&format!("texture.delete item:{layer}"));
     assert!(a.editor.scene.environment_image_layer(env).is_none());
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     a.run(Command::Undo);
     assert!(a.editor.scene.environment_image(env).is_some());
 }
@@ -73,11 +73,11 @@ fn rotation_is_the_locator_heading_through_transform_channel() {
     let env = top_env(&a);
     let (locator, heading) = a.editor.scene.environment_image_heading(env).unwrap();
     assert_eq!(heading, 0.0);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.run_command_line(&format!("transform.channel rot.Y 30deg item:{locator}"));
     let (_, heading) = a.editor.scene.environment_image_heading(env).unwrap();
     assert!((heading - 30f64.to_radians()).abs() < 1e-9, "{heading}");
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
 }
 
 #[test]
@@ -120,7 +120,7 @@ fn hdr_dropped_on_empty_view_space_becomes_the_environment() {
     a.viewport_rect = view;
     a.camera.view = View::Top;
     let hdr = hdr_file("drop-sky.hdr");
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.file_dropped(hdr.clone(), Some(pos2(10., 10.)));
     let env = top_env(&a);
     assert!(
@@ -132,7 +132,7 @@ fn hdr_dropped_on_empty_view_space_becomes_the_environment() {
         a.status
     );
     assert!(a.editor.scene.items.iter().all(|i| i.backdrop.is_none()));
-    assert!(a.editor.undo.len() <= steps + 2);
+    assert!(a.editor.history.undo.len() <= steps + 2);
     // A PNG on empty space: a Backdrop, as before.
     a.file_dropped(picture("drop-plain.png"), Some(pos2(10., 10.)));
     assert!(a.editor.scene.items.iter().any(|i| i.backdrop.is_some()));

@@ -459,11 +459,11 @@ mod tests {
     fn typed_command_and_dialog_give_the_same_mesh_in_one_step() {
         // Typed, through the worker.
         let mut a = app();
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         a.execute("sculpt.remesh density:0.3");
         finish(&mut a);
-        assert_eq!(a.editor.undo.len(), steps + 1, "{}", a.status);
-        assert_eq!(a.editor.undo.last().unwrap().label, "Voxel Remesh");
+        assert_eq!(a.editor.history.undo.len(), steps + 1, "{}", a.status);
+        assert_eq!(a.editor.history.undo.last().unwrap().label, "Voxel Remesh");
         let typed = (*a.editor.scene.active().unwrap().mesh).clone();
         assert!(typed.faces.len() > 100);
         // Left-out arguments keep the last values.

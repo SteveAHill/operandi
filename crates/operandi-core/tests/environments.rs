@@ -373,7 +373,7 @@ fn edits_are_named_undo_steps() {
     let mut e = new_scene();
     let id = envs(&e)[0].id;
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let edits = [
         EnvironmentEdit::Intensity(2.0),
         EnvironmentEdit::Visible(RayKind::Refraction, false),
@@ -388,9 +388,9 @@ fn edits_are_named_undo_steps() {
         let label = edit.label();
         e.dispatch(Command::EditEnvironment { item: id, edit })
             .unwrap();
-        assert_eq!(e.undo.last().unwrap().label, label);
+        assert_eq!(e.history.undo.last().unwrap().label, label);
     }
-    assert_eq!(e.undo.len(), steps + edits.len());
+    assert_eq!(e.history.undo.len(), steps + edits.len());
     for bad in [
         EnvironmentEdit::Opacity(2.0),
         EnvironmentEdit::Intensity(f64::NAN),
@@ -464,9 +464,9 @@ fn channels_set_and_read_back() {
         (material, "fogEnd", "20m", "20"),
         (material, "fogFalloff", "0.25", "0.25"),
     ] {
-        let steps = e.undo.len();
+        let steps = e.history.undo.len();
         set(&mut e, target, name, value).unwrap_or_else(|err| panic!("{name}: {err}"));
-        assert_eq!(e.undo.len(), steps + 1, "{name}: one undo step");
+        assert_eq!(e.history.undo.len(), steps + 1, "{name}: one undo step");
         assert_eq!(get(&e.scene, target, name).unwrap(), back, "{name}");
     }
     layer_edit(
@@ -514,9 +514,9 @@ fn create_duplicate_delete() {
     })
     .unwrap();
     e.scene.select_item(Some(id));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::DuplicateItem).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let copy = e.scene.selection.item.unwrap();
     assert_ne!(copy, id);
     let (a, b) = (env(&e, id), env(&e, copy));
@@ -638,7 +638,7 @@ fn layers_blend_over_the_environment_material() {
         edit: EnvironmentEdit::Color(GradientColor::Zenith, [1.0, 0.0, 0.0]),
     })
     .unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     layer_edit(
         &mut e,
         id,
@@ -648,7 +648,7 @@ fn layers_blend_over_the_environment_material() {
         },
     )
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let mut node = env(&e, id).layers[0].clone();
     assert_eq!(node.name, "Constant");
     let NodeKind::Texture(t) = &mut node.kind else {

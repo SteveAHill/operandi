@@ -88,7 +88,7 @@ fn m16_replacement_history_attributes_cancel_and_committed_save_reopen() {
         ));
         e.save_committed(&path).unwrap();
         assert!(e.live.is_none());
-        assert_eq!(e.undo.last().unwrap().label, tool.label());
+        assert_eq!(e.history.undo.last().unwrap().label, tool.label());
         assert_eq!(persistence::load(&path).unwrap(), preview);
         std::fs::remove_file(path).unwrap();
         e.dispatch(Command::Undo).unwrap();

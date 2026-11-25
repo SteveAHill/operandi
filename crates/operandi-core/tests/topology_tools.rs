@@ -33,7 +33,7 @@ fn scene_with(active: Mesh) -> (Editor, u64, DVec3) {
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = active.into();
     let id = e.scene.active().unwrap().id;
-    e.undo.clear();
+    e.history.undo.clear();
     (e, id, normal)
 }
 
@@ -77,8 +77,8 @@ fn tc22_tack_lays_the_selected_face_flat_on_the_target_centre() {
     }
     // The bottom face now faces into the square.
     assert!(m.normal(bottom as usize).dot(normal) < -0.999);
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Tack");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Tack");
 }
 
 #[test]
@@ -153,7 +153,7 @@ fn tc45_shift_drag_duplicates_an_edge_onto_the_background() {
     assert!((plane_height(m.vertices[2], normal) - 0.1).abs() < 1e-9);
     // Both polygons face the same side.
     assert!(m.normal(0).dot(m.normal(1)) > 0.5);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 1);
     // A ray finds the background from the front, not from behind.
@@ -189,7 +189,7 @@ fn tc22_copy_geometry_leaves_the_original_and_tacks_a_copy() {
         let h = plane_height(*p, normal);
         assert!(h.abs() < 1e-9 || (h - 0.2).abs() < 1e-9, "{h}");
     }
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }
 
 #[test]

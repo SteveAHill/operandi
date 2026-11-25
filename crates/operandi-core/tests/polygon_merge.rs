@@ -56,7 +56,7 @@ fn editor(mesh: Mesh, selected: &[u32]) -> Editor {
     e.scene.selection.mode = Mode::Polygon;
     e.scene.selection.faces = selected.to_vec();
     e.scene.validate().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -97,7 +97,7 @@ fn mer_004_separate_regions_merge_in_one_edit() {
     out.validate().unwrap();
     let sizes: Vec<usize> = out.faces.iter().map(|f| f.vertices.len()).collect();
     assert_eq!(sizes, [6, 4, 6]);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(mesh(&e).faces.len(), 5);
 }

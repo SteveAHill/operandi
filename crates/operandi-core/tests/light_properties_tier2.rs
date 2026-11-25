@@ -64,7 +64,7 @@ fn forward(e: &Editor, id: u64) -> DVec3 {
 }
 
 fn last_label(e: &Editor) -> &str {
-    &e.undo.last().unwrap().label
+    &e.history.undo.last().unwrap().label
 }
 
 fn round_trip(scene: &Scene) -> Scene {
@@ -101,10 +101,10 @@ fn a_targeted_light_keeps_aiming_at_its_target() {
     let mesh = e.scene.items[0].id;
     let spot = new_light(&mut e, LightKind::Spot);
     place(&mut e, spot, DVec3::new(3.0, 4.0, 0.0));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     common(&mut e, spot, ItemCommonEdit::Target(Some(mesh))).unwrap();
     assert_eq!(last_label(&e), "Set Target");
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let want = (DVec3::ZERO - DVec3::new(3.0, 4.0, 0.0)).normalize();
     assert!((forward(&e, spot) - want).length() < 1e-9);
     assert!(e.scene.rotation_driven(spot));
@@ -325,7 +325,7 @@ fn photometric_defaults_and_loading_a_file() {
     assert!(text.contains("operandi-downlight.ies") && !text.contains("LM-63"));
     assert_eq!(round_trip(&e.scene), e.scene);
     // A bad path changes nothing and adds no step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert!(
         e.dispatch(Command::LoadPhotometry {
             item: id,
@@ -333,7 +333,7 @@ fn photometric_defaults_and_loading_a_file() {
         })
         .is_err()
     );
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(light(&e, id), &LightSettings::new(LightKind::Photometric));
     // Only photometric lights take a file.

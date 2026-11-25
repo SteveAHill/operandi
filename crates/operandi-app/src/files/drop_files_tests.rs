@@ -60,7 +60,7 @@ fn a_picture_on_a_mesh_textures_that_material_in_one_step() {
             .material
             .clone()
     };
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.file_dropped(picture("brick.png"), Some(centre));
     assert!(
         a.editor.scene.items.iter().all(|i| i.backdrop.is_none()),
@@ -79,7 +79,7 @@ fn a_picture_on_a_mesh_textures_that_material_in_one_step() {
             operandi_core::shader_tree::TagMask::Name(tag.clone())
         );
     }
-    assert_eq!(a.editor.undo.len(), undo + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), undo + 1, "one undo step");
     a.run(Command::Undo);
     assert!(image_layers(&a, "brick.png").is_empty());
 }
@@ -143,7 +143,7 @@ fn items_dragged_from_the_view_join_a_group() {
         .project(glam::DVec3::new(0., 1., 0.), a.viewport_rect)
         .unwrap()
         .0;
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     draw(&mut a, &ctx, SIZE, vec![Event::PointerMoved(on_box)]);
     draw(
         &mut a,
@@ -166,5 +166,5 @@ fn items_dragged_from_the_view_join_a_group() {
         vec![pointer(row, false, Modifiers::NONE)],
     );
     assert_eq!(a.editor.scene.group_members(group), [mesh], "{}", a.status);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
 }

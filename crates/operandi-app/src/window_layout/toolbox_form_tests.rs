@@ -218,13 +218,13 @@ fn unknown_line_shows_red_and_does_nothing() {
     a.forms.save(form).unwrap();
     draw(&mut a, &ctx, SIZE, vec![]);
     assert!(a.line_state("no.such.command now").is_none());
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let status = a.status.clone();
     let out = {
         click_line(&mut a, &ctx, "no.such.command now", Modifiers::NONE);
         draw(&mut a, &ctx, SIZE, vec![])
     };
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     assert_eq!(a.status, status, "a click runs nothing");
     // Drawn in the error colour.
     let rect = button_by_line(&a, "no.such.command now");
@@ -380,7 +380,7 @@ fn uv_tab_buttons_run_their_lines() {
     let before = a.editor.scene.active().unwrap().mesh.uv_maps["Texture"][0][0].unwrap();
     click_line(&mut a, &ctx, UV, Modifiers::NONE);
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Flip U",
         "{}",
         a.status
@@ -420,10 +420,10 @@ fn uv_tab_buttons_run_their_lines() {
     // and a click does nothing.
     let why = a.line_state(UV).unwrap().unavailable;
     assert_eq!(why.as_deref(), Some(crate::unavailable::TOOL_ACTIVE));
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     draw(&mut a, &ctx, SIZE, vec![]);
     click_line(&mut a, &ctx, UV, Modifiers::NONE);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
 }
 
 #[test]
@@ -859,7 +859,7 @@ fn edit_tab_slide_follows_the_mode_and_rows_wait_for_the_tool() {
     // Typed, the new SDS Subdivide 2X subdivides twice in one step.
     a.run(Command::Mode(Mode::Polygon));
     a.editor.scene.selection.faces.clear();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute("SDS Subdivide 2X");
     assert_eq!(
         a.editor.scene.active().unwrap().mesh.faces.len(),
@@ -867,7 +867,7 @@ fn edit_tab_slide_follows_the_mode_and_rows_wait_for_the_tool() {
         "{}",
         a.status
     );
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     // The Dicer placeholder still explains why the action is unavailable.
     let why = a
         .line_state("operandi.notBuilt \"Dicer\"")
@@ -1052,9 +1052,9 @@ fn create_tab_cells_light_and_merge_explains() {
         a.drop_utility();
         a.drop_draw();
     }
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     click_line(&mut a, &ctx, "Item Merge", Modifiers::NONE);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     assert!(
         a.status.starts_with("Merge: select two or more meshes"),
         "{}",

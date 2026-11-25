@@ -10,7 +10,7 @@ fn polygon_app() -> Operandi {
     let mut a = box_app();
     a.run(Command::Mode(Mode::Polygon));
     a.editor.scene.selection.faces = vec![0];
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a
 }
 
@@ -149,7 +149,7 @@ fn ctrl_d_resets_while_a_tool_is_active_and_does_nothing_otherwise() {
     let mut a = polygon_app();
     draw(&mut a, &ctx, size, vec![]);
     let scene = a.editor.scene.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     let status = a.status.clone();
     let release = Event::Key {
         key: egui::Key::D,
@@ -160,7 +160,7 @@ fn ctrl_d_resets_while_a_tool_is_active_and_does_nothing_otherwise() {
     };
     draw(&mut a, &ctx, size, vec![press.clone(), release]);
     assert_eq!(a.editor.scene, scene);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     assert!(!a.editor.has_active_task());
     assert_eq!(a.status, status, "no tool: the key does nothing");
 

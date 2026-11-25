@@ -305,7 +305,7 @@ fn uniform_on_a_flat_axis_refuses() {
     let c = case("AS-34");
     let (mut e, names) = setup(&c);
     let before = points_of(&e, names[0].1);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     let scale = AbsoluteScale {
         mode: AbsoluteMode::Uniform,
         fields: AbsoluteFields {
@@ -317,7 +317,7 @@ fn uniform_on_a_flat_axis_refuses() {
     let error = e.dispatch(Command::AbsoluteScale(scale)).unwrap_err();
     assert!(error.contains("no size along Y Axis"), "{error}");
     assert_eq!(points_of(&e, names[0].1), before);
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
 }
 
 /// AS-18 (Q4, provisional): Orient fits the flat diamond's own square, so
@@ -348,11 +348,11 @@ fn one_press_is_one_undo_step() {
     let c = case("AS-30");
     let (mut e, names) = setup(&c);
     let before = points_of(&e, names[0].1);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     press(&mut e, &c);
     let after = points_of(&e, names[0].1);
     assert_ne!(after, before);
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(points_of(&e, names[0].1), before);
     e.dispatch(Command::Redo).unwrap();
@@ -361,9 +361,9 @@ fn one_press_is_one_undo_step() {
         mode: AbsoluteMode::Grab,
         fields: AbsoluteFields::default(),
     };
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::AbsoluteScale(grab)).unwrap();
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 /// Explicit sizes equal to the current ones record no step.
@@ -371,7 +371,7 @@ fn one_press_is_one_undo_step() {
 fn nothing_to_move_is_no_edit() {
     let c = case("AS-15");
     let (mut e, _) = setup(&c);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     let scale = AbsoluteScale {
         mode: AbsoluteMode::Explicit,
         fields: AbsoluteFields {
@@ -380,7 +380,7 @@ fn nothing_to_move_is_no_edit() {
         },
     };
     e.dispatch(Command::AbsoluteScale(scale)).unwrap();
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
 }
 
 /// Nothing to measure (no mesh) is an error, not a panic; so are

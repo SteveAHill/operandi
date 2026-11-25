@@ -37,7 +37,7 @@ fn extras(e: &Editor, id: u64) -> &ItemExtras {
 }
 
 fn last_label(e: &Editor) -> &str {
-    &e.undo.last().unwrap().label
+    &e.history.undo.last().unwrap().label
 }
 
 fn round_trip(scene: &Scene) -> Scene {

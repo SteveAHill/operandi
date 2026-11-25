@@ -12,7 +12,7 @@ fn fixture() -> Editor {
     e.scene.selection.mode = Mode::Vertex;
     e.scene.selection.vertices = vec![0];
     // Start from an empty history (New Mesh is a step of its own).
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn point(e: &Editor) -> DVec3 {
@@ -42,7 +42,7 @@ fn each_drag_is_one_step_and_undo_keeps_the_tool() {
     assert_eq!(point(&e), start + DVec3::new(1., 1., 0.));
     // Each drag is a tweak of the Move session, not a document step yet
     // (Jason, 2026-11-04); Drop records the session as one step.
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     assert!(e.tweaks.can_undo());
     // The next drag starts from zero, with the handle on the moved point.
     let live = e.live.as_ref().unwrap();
@@ -70,7 +70,7 @@ fn each_drag_is_one_step_and_undo_keeps_the_tool() {
     // Dragging again after Redo continues from the redone scene.
     drag(&mut e, DVec3::Z);
     assert_eq!(point(&e), start + DVec3::new(1., 0., 1.));
-    assert!(e.redo.is_empty());
+    assert!(e.history.redo.is_empty());
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn empty_history_undo_closes_the_tool_and_keeps_the_scene() {
     let before = e.scene.clone();
     // A click without movement records nothing.
     e.dispatch(Command::CommitTransformStep).unwrap();
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     // Undo undoes the activation (MU-MID-03): Move closes, nothing moves.
     assert!(e.history_eligibility(HistoryAction::Undo).is_available());
     e.dispatch(Command::Undo).unwrap();
@@ -119,7 +119,7 @@ fn drop_after_drags_adds_no_extra_step() {
     drag(&mut e, DVec3::X);
     e.dispatch(Command::Drop).unwrap();
     assert!(e.live.is_none());
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     // Ordinary Undo after Drop still works and leaves no tool behind.
     e.dispatch(Command::Undo).unwrap();
     assert!(e.live.is_none());
@@ -139,7 +139,7 @@ fn cancel_discards_the_whole_session() {
     e.dispatch(Command::Cancel).unwrap();
     // Cancel takes back the whole Move session, drags included.
     assert_eq!(point(&e), start);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 
 #[test]
@@ -151,8 +151,8 @@ fn drop_records_all_drags_as_one_step() {
     drag(&mut e, DVec3::Y);
     let moved = e.scene.clone();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo[0].label, "Move");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo[0].label, "Move");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, start);
     e.dispatch(Command::Redo).unwrap();

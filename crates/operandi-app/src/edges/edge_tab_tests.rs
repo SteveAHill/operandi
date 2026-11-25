@@ -75,7 +75,7 @@ fn edge_tab_add_loop_click_and_commands() {
     );
     let m = &a.editor.scene.active().unwrap().mesh;
     assert_eq!(m.faces.len(), 10, "{}", a.status);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Add Loop");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Add Loop");
     // Drop (Q) disarms the click tool; the next click selects instead.
     let faces = a.editor.scene.active().unwrap().mesh.faces.len();
     draw(&mut a, &ctx, size, vec![key(Key::Q)]);
@@ -207,7 +207,7 @@ fn edge_extend_handle_drag_and_edge_extrude_fields() {
     let m = &a.editor.scene.active().unwrap().mesh;
     m.validate().unwrap();
     assert_eq!(m.faces.len(), 2);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Extend");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Extend");
     assert_eq!(
         a.editor.scene.selection.edges.len(),
         1,
@@ -237,7 +237,7 @@ fn edge_extend_handle_drag_and_edge_extrude_fields() {
     let m = &b.editor.scene.active().unwrap().mesh;
     m.validate().unwrap();
     assert_eq!(m.faces.len(), 10, "{}", b.status);
-    assert_eq!(b.editor.undo.last().unwrap().label, "Edge Extrude");
+    assert_eq!(b.editor.history.undo.last().unwrap().label, "Edge Extrude");
     b.run(Command::Undo);
     assert_eq!(b.editor.scene.active().unwrap().mesh.faces.len(), 6);
 }
@@ -350,7 +350,7 @@ fn slide_shortcut_and_handle_drag() {
     let shift = a.editor.live.as_ref().unwrap().params.shift;
     assert!(shift > 0. && shift <= 1., "{shift} {}", a.status);
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Slide");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Slide");
 }
 #[test]
 fn edge_weight_tool_starts_at_current_weight_and_records_once() {
@@ -376,7 +376,7 @@ fn edge_weight_tool_starts_at_current_weight_and_records_once() {
     let creases = &a.editor.scene.active().unwrap().mesh.attributes.creases;
     assert_eq!(creases.len(), 1);
     assert!((creases[0].weight - 0.6).abs() < 1e-12);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Edge Weight");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Edge Weight");
     // Re-activating starts at the stored weight, so no accidental reset.
     a.execute("tool.set edge.crease on");
     assert!((a.editor.live.as_ref().unwrap().params.shift - 0.6).abs() < 1e-12);
@@ -410,7 +410,7 @@ fn edge_command_rows_shortcuts_and_verbs_share_one_operation() {
         a.run(Command::Mode(Mode::Edge));
         let e = a.editor.scene.active().unwrap().mesh.edges()[0];
         a.editor.scene.selection.edges = vec![e];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         a
     };
     // Panel row.
@@ -446,7 +446,10 @@ fn edge_command_rows_shortcuts_and_verbs_share_one_operation() {
     );
     let by_row = a.editor.scene.active().unwrap().mesh.clone();
     assert_eq!(by_row.vertices.len(), 9, "{}", a.status);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Edge Subdivide");
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Edge Subdivide"
+    );
     // Shortcut D (Edge mode) and the command verb give the same result.
     let mut b = cube();
     draw(&mut b, &ctx, size, vec![]);
@@ -508,7 +511,7 @@ fn edge_bevel_chamfer_relax_rows_shortcut_handle_and_bridge() {
             })
             .unwrap();
         a.editor.scene.selection.edges = vec![e];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         a
     };
     // KEY-02: B starts Edge Bevel in Edge mode.
@@ -614,7 +617,7 @@ fn edge_bevel_chamfer_relax_rows_shortcut_handle_and_bridge() {
         "{}",
         c.status
     );
-    assert_eq!(c.editor.undo.last().unwrap().label, "Bridge Apply");
+    assert_eq!(c.editor.history.undo.last().unwrap().label, "Bridge Apply");
 }
 #[test]
 fn every_m2_edge_row_is_callable_from_the_command_line() {
@@ -789,7 +792,7 @@ fn edge_extrude_handle_drag_from_fresh_tool_extrudes() {
     );
     // One press-to-release is one undo step.
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Edge Extrude");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Edge Extrude");
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 6);
 }
@@ -811,7 +814,10 @@ fn vertex_extrude_starts_with_a_width() {
     a.fields.insert("shift".into(), "0.3 m".into());
     assert!(a.confirm_fields(), "{}", a.status);
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Vertex Extrude");
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Vertex Extrude"
+    );
 }
 
 #[test]

@@ -100,10 +100,10 @@ fn double_click_replaces_and_preset_do_mode_add_adds() {
         operandi_core::item_list::AddItemKind::Environment,
     ));
     let own = a.editor.scene.environments().next().unwrap().id;
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     // Double-click: Replace, one step, the new top environment selected.
     assert!(a.browser_load(&entry(&path), Target::Default));
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert!(a.editor.scene.items.iter().all(|i| i.id != own));
     let top = a.editor.scene.environments().next().unwrap().id;
     assert_eq!(

@@ -8,7 +8,7 @@
 //!
 //! - Activating a tool keeps Redo, as before (not observed; MTU-Q12): Redo
 //!   then redoes the undone work with the tool still active.
-//! - `Editor::tool_steps` counts the steps recorded since activation. With
+//! - `History::tool_steps` counts the steps recorded since activation. With
 //!   none left, the next Undo closes the tool and changes no geometry
 //!   (MU-MID-02, MU-MID-03). A drawn primitive's unfinished preview is part
 //!   of that activation step, so one Undo removes it and closes the tool
@@ -137,13 +137,15 @@ impl Editor {
     /// With no step of its own left, Undo closes the active tool: it would
     /// undo the tool's activation (MU-MID-02/03).
     pub(crate) fn undo_closes_tool(&self) -> bool {
-        self.tool_steps == Some(0) && self.tweak_session().is_some()
+        self.history.tool_steps == Some(0) && self.tweak_session().is_some()
     }
 
     /// Redo would open again the tool that Undo just closed.
     pub(crate) fn redo_reopens_tool(&self) -> Option<&'static str> {
         let r = self.tool_reopen.as_ref()?;
-        (self.active_task().is_none() && self.redo.len() == r.redo_len && self.scene == r.closed)
+        (self.active_task().is_none()
+            && self.history.redo.len() == r.redo_len
+            && self.scene == r.closed)
             .then(|| r.session.label())
     }
 
@@ -152,7 +154,7 @@ impl Editor {
     pub(crate) fn track_tool_activation(&mut self, before: Option<ActiveTask>, history: bool) {
         let after = self.mid_undo_task();
         if after.is_none() {
-            self.tool_steps = None;
+            self.history.tool_steps = None;
         }
         if history {
             return;
@@ -163,13 +165,13 @@ impl Editor {
                 // Leaving drops the steps undone while the tool was active
                 // (MU-MID-04: Redo is off after Escape or Q); older undone
                 // work stays redoable.
-                if let Some(floor) = self.tool_redo_floor.take() {
-                    self.redo.truncate(floor);
+                if let Some(floor) = self.history.tool_redo_floor.take() {
+                    self.history.redo.truncate(floor);
                 }
             }
             if after.is_some() {
-                self.tool_steps = Some(0);
-                self.tool_redo_floor = Some(self.redo.len());
+                self.history.tool_steps = Some(0);
+                self.history.tool_redo_floor = Some(self.history.redo.len());
             }
         }
     }
@@ -203,14 +205,14 @@ impl Editor {
             return Ok(None);
         };
         let label = session.label();
-        self.tool_steps = None;
+        self.history.tool_steps = None;
         let tweaks = std::mem::take(&mut self.tweaks);
         self.tool_reopen = Some(ToolReopen {
             session,
             shown,
             shown_identities,
             closed: self.scene.clone(),
-            redo_len: self.redo.len(),
+            redo_len: self.history.redo.len(),
             tweaks,
         });
         Ok(Some(label))
@@ -238,8 +240,8 @@ impl Editor {
             ReopenSession::Spike(s) => self.spike = Some(s),
             ReopenSession::Bridge(s) => self.bridge = Some(s),
         }
-        self.tool_steps = Some(0);
-        self.tool_redo_floor = Some(self.redo.len());
+        self.history.tool_steps = Some(0);
+        self.history.tool_redo_floor = Some(self.history.redo.len());
         self.tweaks = r.tweaks;
         Ok(Some(label))
     }
@@ -290,11 +292,11 @@ impl Editor {
             session,
             scene: self.scene.clone(),
             identities: self.identities.current.clone(),
-            records: self.pending_records.clone(),
+            records: self.history.pending_records.clone(),
         })
     }
     fn restore_snapshot(&mut self, state: TweakState) -> Result<()> {
-        self.pending_records = state.records;
+        self.history.pending_records = state.records;
         self.scene = state.scene;
         self.identities.current = state.identities;
         self.identities.observe(&self.scene)?;
@@ -348,7 +350,7 @@ impl Editor {
             return;
         }
         let task = self.tweak_session();
-        if task.is_none() || task != before_task || self.history_serial != serial_before {
+        if task.is_none() || task != before_task || self.history.history_serial != serial_before {
             // Closed, switched, or recorded a step (Apply): the tweaks are
             // in that step now.
             self.tweaks = ToolTweaks::default();
@@ -482,7 +484,7 @@ impl Editor {
             self.identities.record_before = ids;
             self.record(label.clone(), before);
             if after_ids.is_some()
-                && let Some(step) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+                && let Some(step) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
             {
                 step.identity_after = after_ids;
             }

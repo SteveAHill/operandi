@@ -214,10 +214,10 @@ fn edge_loop_and_ring_add_the_mirror_side() {
 fn loop_with_symmetry_is_one_undo_step() {
     let (mut e, _) = two_top_polygons(Symmetry::x());
     let picks = e.scene.selection.faces.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Selection(SelectionOperation::Loop))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.selection.faces, picks);
 }

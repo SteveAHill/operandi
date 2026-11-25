@@ -27,7 +27,7 @@ impl Rig {
         let mut a = box_app();
         a.run(Command::Mode(Mode::Polygon));
         a.editor.scene.selection.faces = vec![0];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         let mut rig = Self { a, ctx };
         rig.frame(vec![]);
         rig.frame(vec![]);
@@ -89,7 +89,7 @@ fn hold_drag_release_uses_the_tool_once_and_drops_it() {
     assert_eq!(r.tool(), None, "released: back to selecting");
     assert_eq!(r.mesh(), moved, "the edit stays");
     // One undo step, named after the tool.
-    assert_eq!(r.a.editor.undo.len(), 1);
+    assert_eq!(r.a.editor.history.undo.len(), 1);
     let undo = r.a.line_state("app.undo").unwrap().title.unwrap();
     assert!(undo.contains("Move"), "{undo}");
     r.a.run(Command::Undo);
@@ -116,7 +116,7 @@ fn releasing_mid_drag_drops_once_the_drag_ends() {
     assert_eq!(r.tool(), Some(Tool::Move), "the drag is still going");
     r.drag_release();
     assert_eq!(r.tool(), None);
-    assert_eq!(r.a.editor.undo.len(), 1);
+    assert_eq!(r.a.editor.history.undo.len(), 1);
 }
 
 #[test]

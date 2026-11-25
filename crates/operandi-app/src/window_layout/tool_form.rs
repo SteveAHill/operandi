@@ -1562,7 +1562,7 @@ mod tests {
             ..Default::default()
         }
         .into();
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         a.execute(tool);
         a
     }

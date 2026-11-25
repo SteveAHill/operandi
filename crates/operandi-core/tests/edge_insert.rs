@@ -49,7 +49,7 @@ fn add_point_splits_the_edge_in_every_polygon() {
     assert!(p.distance(want) < 1e-12);
     let users = m.faces.iter().filter(|f| f.vertices.contains(&8)).count();
     assert_eq!(users, 2, "no T-junction");
-    assert_eq!(e.undo.last().unwrap().label, "Add Point");
+    assert_eq!(e.history.undo.last().unwrap().label, "Add Point");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.vertices.len(), 8);
     // Refusals.

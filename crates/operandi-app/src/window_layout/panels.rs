@@ -1336,7 +1336,7 @@ mod history_widget_tests {
         // The label carries the input-map chord (Cmd+Z by default).
         let label = format!("Undo Rename Mesh{}", a.shortcut("Undo"));
         assert!(ordinary.iter().any(|(t, _)| t == &label));
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         assert!(
             hovered_text(&a)
                 .iter()

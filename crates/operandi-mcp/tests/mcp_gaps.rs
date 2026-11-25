@@ -32,7 +32,7 @@ fn faces(b: &mut Bridge) -> usize {
 }
 
 fn undo_depth(b: &Bridge) -> usize {
-    b.editor.undo.len()
+    b.editor.history.undo.len()
 }
 
 fn temp(name: &str) -> std::path::PathBuf {

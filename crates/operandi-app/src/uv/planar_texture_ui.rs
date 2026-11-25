@@ -39,7 +39,7 @@ impl Operandi {
         let key = (
             locator,
             self.editor.revision,
-            self.editor.undo.len(),
+            self.editor.history.undo.len(),
             self.editor.scene.items.len(),
         );
         if let Some((k, host)) = *self.planar_host.borrow()

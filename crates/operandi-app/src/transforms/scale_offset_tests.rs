@@ -270,7 +270,7 @@ fn row_dialog_and_command_entry_apply_literal_square_results() {
     let c = context();
     let before = a.editor.scene.clone();
     let ids = a.editor.identities.current.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     click_row(&mut a, &c);
     assert!(a.scale_offset.is_some(), "{}", a.status);
     let nodes = frame(&mut a, &c, vec![]);
@@ -287,7 +287,7 @@ fn row_dialog_and_command_entry_apply_literal_square_results() {
     assert_eq!(a.status, "Scale Offset applied");
     let expected = literal(&before, &square_inset(0.25, 1., 1.));
     assert_scene(&a.editor.scene, &expected, 0.);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert_eq!(a.editor.identities.current, ids);
     a.execute("undo");
     assert_eq!(a.editor.scene, before);
@@ -310,10 +310,10 @@ fn row_dialog_and_command_entry_apply_literal_square_results() {
         &literal(&before, &square_inset(-0.25, 1., 1.)),
         0.,
     );
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     frame(&mut a, &c, vec![key(Key::Enter)]);
     assert_eq!(
-        a.editor.undo.len(),
+        a.editor.history.undo.len(),
         undo + 1,
         "Return after closing must not repeat"
     );
@@ -424,7 +424,7 @@ fn zero_cancel_escape_and_dismissal_keep_redo_and_scene() {
     type_inset(&mut a, &c, "0.25 m");
     button(&mut a, &c, "OK");
     a.execute("undo");
-    assert_eq!(a.editor.redo.len(), 1);
+    assert_eq!(a.editor.history.redo.len(), 1);
     let before = a.editor.clone();
 
     a.execute(ACTION);
@@ -643,7 +643,7 @@ fn open_dialog_owns_input_and_stale_targets_are_refused() {
     button(&mut a, &c, "OK");
     assert!(a.scale_offset.is_some());
     assert_eq!(a.editor.scene, source);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }
 
 #[test]
@@ -801,7 +801,7 @@ fn ineligible_app(points: Vec<DVec3>, extra: Option<(Vec<DVec3>, Vec<u32>)>) -> 
     let selection = a.editor.scene.selection.clone();
     a.run(Command::NewMesh);
     a.run(Command::Undo);
-    assert_eq!(a.editor.redo.len(), 1, "{}", a.status);
+    assert_eq!(a.editor.history.redo.len(), 1, "{}", a.status);
     assert_eq!(a.editor.scene.selection, selection);
     a.bindings.insert("Scale Offset".into(), "C".into());
     a
@@ -912,7 +912,7 @@ fn scale_offset_shrinks_connected_polygons_in_place() {
         **mesh,
         operandi_core::Mesh::box_mesh(DVec3::ZERO, DVec3::ONE * 2., 1).unwrap()
     );
-    assert_eq!(a.editor.undo.last().unwrap().label, "Scale Offset");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Scale Offset");
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 6);
 }

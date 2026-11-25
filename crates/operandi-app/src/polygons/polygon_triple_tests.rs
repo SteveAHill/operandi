@@ -158,14 +158,14 @@ fn tri_001_panel_row_command_and_shift_t_give_equal_complete_results() {
     let row = triple_button(&mut panel, &ctx);
     click(&mut panel, &ctx, row.center());
     assert_eq!(panel.editor.scene, want, "{}", panel.status);
-    assert_eq!(panel.editor.undo.len(), 1);
-    assert_eq!(panel.editor.undo[0].label, "Triple");
+    assert_eq!(panel.editor.history.undo.len(), 1);
+    assert_eq!(panel.editor.history.undo[0].label, "Triple");
     assert!(panel.status.contains("Triple"), "{}", panel.status);
 
     let mut command = app(&source);
     command.execute("poly.triple");
     assert_eq!(command.editor.scene, want, "{}", command.status);
-    assert_eq!(command.editor.undo.len(), 1);
+    assert_eq!(command.editor.history.undo.len(), 1);
     let mut upper = app(&source);
     upper.execute("POLY.TRIPLE");
     assert_eq!(upper.editor.scene, want);
@@ -174,7 +174,7 @@ fn tri_001_panel_row_command_and_shift_t_give_equal_complete_results() {
     let mut shortcut = app(&source);
     chord(&mut shortcut, &ctx, Key::T, Modifiers::SHIFT);
     assert_eq!(shortcut.editor.scene, want, "{}", shortcut.status);
-    assert_eq!(shortcut.editor.undo.len(), 1);
+    assert_eq!(shortcut.editor.history.undo.len(), 1);
 }
 
 #[test]
@@ -185,7 +185,7 @@ fn tri_001_user_remap_moves_the_shortcut_and_its_labels() {
     a.bindings.insert("Triple".into(), "Alt+Shift+Y".into());
     chord(&mut a, &ctx, Key::T, Modifiers::SHIFT);
     assert_eq!(a.editor.scene, source.scene, "old default no longer bound");
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     assert!(a.shortcut("Triple").contains("Alt+Shift+Y"));
     chord(
         &mut a,
@@ -249,7 +249,7 @@ fn tri_001_text_field_focus_suppresses_shift_t() {
         ],
     );
     assert_eq!(a.editor.scene, source.scene, "typing does not triple");
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     assert!(a.command.ends_with('T'), "{:?}", a.command);
 }
 
@@ -308,7 +308,10 @@ fn tri_002_all_triangle_selection_is_neutral_from_the_panel() {
     let row = triple_button(&mut a, &ctx);
     click(&mut a, &ctx, row.center());
     assert_eq!(a.editor.scene, triangles.scene);
-    assert!(a.editor.undo == triangles.undo && a.editor.redo == triangles.redo);
+    assert!(
+        a.editor.history.undo == triangles.history.undo
+            && a.editor.history.redo == triangles.history.redo
+    );
     assert!(a.status.contains("already triangles"), "{}", a.status);
 }
 

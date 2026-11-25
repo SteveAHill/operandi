@@ -40,11 +40,11 @@ fn short_invalid_and_active_task_refusals_are_atomic() {
 fn dropping_a_one_point_pen_draft_discards_it() {
     let mut e = editor();
     let scene = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::PenStart).unwrap();
     e.dispatch(Command::PenCapture(DVec3::ZERO)).unwrap();
     e.dispatch(Command::Drop).unwrap();
-    assert!(e.pen_draft.is_none() && e.scene == scene && e.undo.len() == undo);
+    assert!(e.pen_draft.is_none() && e.scene == scene && e.history.undo.len() == undo);
 }
 
 #[test]

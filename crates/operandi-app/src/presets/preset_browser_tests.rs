@@ -176,9 +176,9 @@ fn pb_t13_a_material_preset_needs_a_group_and_is_one_undo_step() {
     let target = add_layer(&mut a, NewLayer::Group, None);
     a.shading.selected = vec![target];
     let before = a.editor.scene.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.browser_load(&entry, Target::Default);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert!(
         a.editor
             .scene
@@ -636,7 +636,7 @@ fn f1_two_installed_versions_note_the_newer_one() {
 #[test]
 fn f1_library_commands_follow_the_registry_ruling() {
     let mut a = app();
-    let undo_before = a.editor.undo.len();
+    let undo_before = a.editor.history.undo.len();
     a.execute("operandi.pbview.libraryGet url:https://example.com/lib");
     assert!(a.status.contains("https://example.com/lib"), "{}", a.status);
     a.execute("operandi.pbview.libraryGet");
@@ -645,7 +645,7 @@ fn f1_library_commands_follow_the_registry_ruling() {
         "{}",
         a.status
     );
-    assert_eq!(a.editor.undo.len(), undo_before, "not undoable");
+    assert_eq!(a.editor.history.undo.len(), undo_before, "not undoable");
     a.execute("help operandi.pbview.libraryGet");
     assert!(a.status.contains("url:"), "{}", a.status);
     a.execute("operandi.pbview.libraryLocate");
@@ -755,7 +755,7 @@ fn mc_double_click_uses_the_matcap_in_the_active_view() {
         .expect("listed");
     assert_eq!(jade.kind, EntryKind::Matcap);
     let before = a.editor.scene.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     assert!(a.browser_load(&jade, Target::Default));
     assert_eq!(a.display.settings.active.style, Style::Reflection);
     assert_eq!(
@@ -764,7 +764,7 @@ fn mc_double_click_uses_the_matcap_in_the_active_view() {
     );
     assert_eq!(a.status, "Matcap: Jade");
     assert_eq!(a.editor.scene, before);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     // The tile is round: its corners are see-through, its middle isn't.
     let tile = crate::preset_thumbs::matcap_picture(&jade.path).unwrap();
     assert_eq!(tile.pixels[0].a(), 0);
@@ -927,9 +927,9 @@ fn pg_06_models_land_at_the_origin_or_on_the_surface_with_shift() {
     assert_eq!(entry.kind, EntryKind::Model);
     assert!(entry.kind.has_picture(), "PG-05: models get a thumbnail");
     let n = a.editor.scene.items.len();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     assert!(a.browser_load(&entry, Target::Default), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert_eq!(a.editor.scene.items.len(), n + 1);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.items.len(), n);

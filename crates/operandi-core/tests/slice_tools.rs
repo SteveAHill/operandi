@@ -110,7 +110,7 @@ fn loop_slice_cuts_the_selected_edges_ring_and_drop_is_one_step() {
     let mut e = editor(grid(3), Mode::Edge);
     e.scene.selection.edges = vec![(0, 1)];
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::LoopSlice)).unwrap();
     assert_eq!(params(&e).slice.loop_slice.rings, vec![(0, 1)]);
     // The slice shows at once, at 50 %.
@@ -134,8 +134,8 @@ fn loop_slice_cuts_the_selected_edges_ring_and_drop_is_one_step() {
     assert_eq!(mesh(&e).faces.len(), 12);
     assert_eq!(e.live.as_ref().map(|l| l.tool), Some(Tool::LoopSlice));
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Loop Slice");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Loop Slice");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(
         e.scene.active().unwrap().mesh,
@@ -313,7 +313,7 @@ fn edge_slice_cuts_from_edge_to_edge_and_closes() {
     preview(&mut e, p);
     assert_eq!(mesh(&e).faces.len(), 8);
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Edge Slice");
+    assert_eq!(e.history.undo.last().unwrap().label, "Edge Slice");
 }
 
 #[test]
@@ -400,7 +400,7 @@ fn edge_slice_closes_on_a_point_and_undoes_in_one_step() {
     assert_eq!(mesh(&e).faces.len(), 8);
     assert_eq!(mesh(&e).vertices.len(), 9);
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Edge Slice");
+    assert_eq!(e.history.undo.last().unwrap().label, "Edge Slice");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.items, before.items);
 }
@@ -554,7 +554,7 @@ fn polygon_slice_cuts_with_a_plane_and_infinite_off_keeps_to_the_line() {
     gesture(&mut e, p);
     assert_eq!(mesh(&e).faces.len(), 20);
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Polygon Slice");
+    assert_eq!(e.history.undo.last().unwrap().label, "Polygon Slice");
 }
 
 #[test]

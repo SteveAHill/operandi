@@ -228,13 +228,17 @@ fn sel_bt03_three_picks_connect_the_last_pair() {
 fn sel_bt04_points_off_a_row_add_nothing() {
     let mut e = grid4();
     points(&mut e, &[0, 12]);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     run(&mut e, SelectionOperation::Between);
     assert_eq!(
         e.scene.selection.vertices,
         list(&oracle("SEL-O-grid_verts_0_12")["expected"]["selected_vertices"])
     );
-    assert_eq!(e.undo.len(), undo, "an unchanged selection records no step");
+    assert_eq!(
+        e.history.undo.len(),
+        undo,
+        "an unchanged selection records no step"
+    );
 }
 
 /// Select Between is one undo step.

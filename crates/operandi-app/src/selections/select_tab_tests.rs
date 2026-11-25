@@ -92,10 +92,10 @@ fn selection_tool_rows_run_their_commands() {
         .filter(|&v| a.editor.scene.active().unwrap().mesh.vertices[v as usize].y > 0.)
         .collect();
     a.editor.scene.selection.vertices = vec![top[0], *top.last().unwrap()];
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     click(&mut a, &ctx, size, "Shortest Path");
     assert!(a.editor.scene.selection.vertices.len() >= 3, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     // Sharp... opens its dialog; OK selects the box's twelve edges.
     a.editor.scene.selection.mode = Mode::Edge;
     click(&mut a, &ctx, size, "Sharp...");

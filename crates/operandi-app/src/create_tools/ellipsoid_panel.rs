@@ -252,9 +252,9 @@ mod tests {
         let expected = a.editor.ellipsoid_preview_scene().unwrap().unwrap();
         a.execute("Ellipsoid Apply");
         assert_eq!(a.editor.scene, expected);
-        let checkpoints = a.editor.undo.len();
+        let checkpoints = a.editor.history.undo.len();
         a.execute("Drop");
-        assert_eq!(a.editor.undo.len(), checkpoints);
+        assert_eq!(a.editor.history.undo.len(), checkpoints);
         a.execute("Undo");
         assert_eq!(a.editor.scene, base);
         a.execute("Redo");

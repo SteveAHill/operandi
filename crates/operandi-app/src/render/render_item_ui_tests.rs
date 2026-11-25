@@ -137,7 +137,7 @@ fn a_field_drag_is_one_undo_step() {
     let rects = field_rects(&mut a, &ctx);
     let at = rects["Diffuse Depth"].center();
     let before = a.editor.scene.render.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let mut events = vec![Event::PointerMoved(at), pointer(at, true, Modifiers::NONE)];
     for k in 1..=6 {
         events.push(Event::PointerMoved(at + vec2(10. * k as f32, 0.)));
@@ -160,8 +160,15 @@ fn a_field_drag_is_one_undo_step() {
         before.diffuse_depth,
         after.diffuse_depth
     );
-    assert_eq!(a.editor.undo.len(), steps + 1, "one step for the drag");
-    assert_eq!(a.editor.undo.last().unwrap().label, "Render Settings");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        steps + 1,
+        "one step for the drag"
+    );
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Render Settings"
+    );
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.render, before);
 }
@@ -233,11 +240,11 @@ fn global_illumination_tab_turns_direct_caustics_on() {
         );
     }
     assert!(!a.editor.scene.render.direct_caustics.enabled);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let at = rects["Direct Caustics"].center();
     click(&mut a, &ctx, at);
     assert!(a.editor.scene.render.direct_caustics.enabled);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     a.run(Command::Undo);
     assert!(!a.editor.scene.render.direct_caustics.enabled);
 }

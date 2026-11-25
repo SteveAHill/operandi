@@ -106,7 +106,7 @@ fn component_selection_clears_redo() {
     app.run(Command::Rename("A".into()));
     app.run(Command::Rename("B".into()));
     app.run(Command::Undo);
-    let redo = |app: &Operandi| app.editor.redo.len();
+    let redo = |app: &Operandi| app.editor.history.redo.len();
     assert_eq!(redo(&app), 1);
     let item = app.editor.scene.active().unwrap().id;
     app.run(Command::SelectItem(Some(item)));

@@ -101,7 +101,7 @@ fn navigating_moves_the_light_once_per_press_and_undoes() {
     a.enter_light_view(Some(id));
     a.sync_camera_view(r);
     let before = light(&a, id);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     // A drag in progress: the view moves, the light waits.
     a.pointer_held = true;
     for _ in 0..3 {
@@ -114,7 +114,7 @@ fn navigating_moves_the_light_once_per_press_and_undoes() {
     // Release: one undo step puts the light where the view is.
     a.pointer_held = false;
     a.sync_camera_view(r);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert_eq!(a.status, "Light moved");
     let f = item_frame(&a.editor.scene, id).unwrap();
     assert!((f.position - eye).length() < 1e-9);
@@ -159,7 +159,7 @@ fn a_locked_light_stays_and_the_view_snaps_back() {
     a.enter_light_view(Some(id));
     a.sync_camera_view(r);
     let before = light(&a, id);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.camera.yaw += 0.3;
     a.sync_camera_view(r);
     // A move with nothing held is written once the view holds still.
@@ -170,7 +170,7 @@ fn a_locked_light_stays_and_the_view_snaps_back() {
     ));
     a.sync_camera_view(r);
     assert_eq!(light(&a, id), before);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     assert!(a.status.contains("locked"), "{}", a.status);
     let (eye, ..) = a.camera.basis();
     assert!((eye - DVec3::new(0., 1., 5.)).length() < 1e-9);

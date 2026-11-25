@@ -360,7 +360,7 @@ fn m16_draft_plane_capture_numeric_solid_and_off_handle_refusal() {
             let dragged = a.editor.scene.clone();
             assert!(!a.handles(r).is_empty(), "approved explicit side handles");
             a.run(Command::Drop);
-            assert_eq!(a.editor.undo.last().unwrap().label, tool.label());
+            assert_eq!(a.editor.history.undo.last().unwrap().label, tool.label());
             a.run(Command::Undo);
             assert_eq!(a.editor.scene, base);
             a.run(Command::Redo);
@@ -413,7 +413,7 @@ fn par_t01_t02_pointer_only_depth_resize_history_persistence_and_prior_mesh() {
             a.editor.scene.workplane.fixed = true;
             a.editor.scene.workplane.plane = plane;
             let before = a.editor.scene.clone();
-            let history = a.editor.undo.len();
+            let history = a.editor.history.undo.len();
             a.activate(tool);
             let ctx = Context::default();
             theme::install(&ctx);
@@ -498,7 +498,7 @@ fn par_t01_t02_pointer_only_depth_resize_history_persistence_and_prior_mesh() {
             );
             let committed = a.editor.scene.clone();
             a.run(Command::Drop);
-            assert_eq!(a.editor.undo.len(), history + 1);
+            assert_eq!(a.editor.history.undo.len(), history + 1);
             a.run(Command::Undo);
             assert_eq!(a.editor.scene, before);
             a.run(Command::Redo);
@@ -604,7 +604,7 @@ fn vp2_flat_cube_center_square_grows_depth_instead_of_crossing_the_minimum_bound
         ] {
             let mut a = box_app();
             let before = a.editor.scene.clone();
-            let history = a.editor.undo.len();
+            let history = a.editor.history.undo.len();
             a.camera.view = View::Perspective;
             a.camera.target = DVec3::new(3., 2., 1.);
             a.camera.distance = 8.;
@@ -698,7 +698,7 @@ fn vp2_flat_cube_center_square_grows_depth_instead_of_crossing_the_minimum_bound
             );
             let changed = a.editor.scene.clone();
             a.run(Command::Drop);
-            assert_eq!(a.editor.undo.len(), history + 1);
+            assert_eq!(a.editor.history.undo.len(), history + 1);
             a.run(Command::Undo);
             assert_eq!(a.editor.scene, before);
             a.run(Command::Redo);

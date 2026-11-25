@@ -28,7 +28,7 @@ fn replica_app() -> Operandi {
         .expect("an Instancer")
         .id;
     a.editor.scene.select_item(Some(rep));
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a
 }
 
@@ -66,7 +66,7 @@ fn check(line: &str) -> std::result::Result<(), String> {
     let mut a = ran.map_err(|_| "panics".to_string())?;
     sound(&a)?;
     let after = a.editor.scene.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     if steps > 1 {
         return Err(format!("records {steps} undo steps"));
     }
@@ -157,7 +157,7 @@ fn random_sessions_on_a_replicator_keep_the_scene_sound() {
             }
         }
         let mut guard = 0;
-        while !a.editor.undo.is_empty() && guard < 100 {
+        while !a.editor.history.undo.is_empty() && guard < 100 {
             a.execute("Undo");
             guard += 1;
         }

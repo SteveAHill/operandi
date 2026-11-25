@@ -30,7 +30,7 @@ fn new_light(e: &mut Editor, kind: LightKind) -> u64 {
 }
 
 fn last_label(e: &Editor) -> &str {
-    &e.undo.last().unwrap().label
+    &e.history.undo.last().unwrap().label
 }
 
 fn round_trip(scene: &Scene) -> Scene {
@@ -55,7 +55,7 @@ fn render_rule_default_yes_no() {
 fn each_light_edit_is_one_undo_step_named_after_its_row() {
     let mut e = new_scene();
     let id = new_light(&mut e, LightKind::Spot);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     for (edit, name) in [
         (LightEdit::Render(LightRender::Off), "Render"),
         (LightEdit::Dissolve(0.25), "Dissolve"),
@@ -75,7 +75,7 @@ fn each_light_edit_is_one_undo_step_named_after_its_row() {
         e.dispatch(Command::EditLight { item: id, edit }).unwrap();
         assert_eq!(last_label(&e), name);
     }
-    assert_eq!(e.undo.len(), steps + 8);
+    assert_eq!(e.history.undo.len(), steps + 8);
     let l = light(&e, id);
     assert!(l.stored.visible_to_reflection && l.stored.visible_to_refraction);
     assert_eq!((l.affect_diffuse, l.affect_specular), (0.0, 0.0));
@@ -91,7 +91,7 @@ fn each_light_edit_is_one_undo_step_named_after_its_row() {
         })
         .is_err()
     );
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]
@@ -104,13 +104,13 @@ fn light_edits_apply_to_every_selected_light() {
     e.dispatch(Command::SelectItem(Some(a))).unwrap();
     e.dispatch(Command::ToggleItemSelection(b)).unwrap();
     e.dispatch(Command::ToggleItemSelection(mesh)).unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::EditLight {
         item: a,
         edit: LightEdit::Dissolve(0.5),
     })
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(light(&e, a).dissolve, 0.5);
     assert_eq!(light(&e, b).dissolve, 0.5);
     // The other default light wasn't selected.
@@ -262,13 +262,13 @@ fn common_edits_are_named_steps_over_every_selected_item() {
     // IC-1, IC-2: one step named after the property; all selected items.
     let mut e = new_scene();
     let ids: Vec<u64> = e.scene.items.iter().map(|i| i.id).collect();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::EditItemCommon {
         items: ids.clone(),
         edit: ItemCommonEdit::Visible(DisplayVisible::Yes),
     })
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(last_label(&e), "Visible");
     assert!(
         e.scene
@@ -296,7 +296,7 @@ fn common_edits_are_named_steps_over_every_selected_item() {
     }
     assert!(e.scene.items.iter().all(|i| i.common.is_default()));
     // Invalid values: nothing changes, no step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert!(
         e.dispatch(Command::EditItemCommon {
             items: ids.clone(),
@@ -311,7 +311,7 @@ fn common_edits_are_named_steps_over_every_selected_item() {
         })
         .is_err()
     );
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]

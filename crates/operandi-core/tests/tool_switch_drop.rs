@@ -173,7 +173,7 @@ fn draw(e: &mut Editor, t: T) {
 fn cone_drop_keeps_the_drawn_cone_and_one_undo_removes_it() {
     let mut e = editor();
     let base = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::ArmCone).unwrap();
     // The viewport draw sends ConfigureCone frames during a held drag.
     e.tweak_held = true;
@@ -190,8 +190,8 @@ fn cone_drop_keeps_the_drawn_cone_and_one_undo_removes_it() {
     assert!(e.cone.is_none());
     assert_eq!(e.scene, shown);
     assert!(faces(&e) > faces_of(&base));
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Cone");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Cone");
     // The preset keeps the dropped values.
     assert_eq!(e.cone_preset.size, DVec3::new(0.6, 1., 0.6));
 
@@ -206,11 +206,11 @@ fn cone_drop_keeps_the_drawn_cone_and_one_undo_removes_it() {
 #[test]
 fn armed_cone_drop_with_no_preview_is_neutral() {
     let mut e = editor();
-    let before = (e.scene.clone(), e.undo.len());
+    let before = (e.scene.clone(), e.history.undo.len());
     e.dispatch(Command::ArmCone).unwrap();
     e.dispatch(Command::Drop).unwrap();
     assert!(e.cone.is_none());
-    assert_eq!((e.scene.clone(), e.undo.len()), before);
+    assert_eq!((e.scene.clone(), e.history.undo.len()), before);
 }
 
 #[test]
@@ -233,13 +233,13 @@ fn every_primitive_drop_keeps_its_preview_as_one_step() {
     for t in PRIMITIVES {
         let mut e = editor();
         let base = e.scene.clone();
-        let steps = e.undo.len();
+        let steps = e.history.undo.len();
         e.dispatch(start(t)).unwrap();
         draw(&mut e, t);
         e.dispatch(Command::Drop).unwrap();
         assert_eq!(e.active_task(), None, "{t:?}");
         assert!(faces(&e) > faces_of(&base), "{t:?} kept nothing");
-        assert_eq!(e.undo.len(), steps + 1, "{t:?}");
+        assert_eq!(e.history.undo.len(), steps + 1, "{t:?}");
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, base, "{t:?}");
         assert_eq!(e.active_task(), None, "{t:?} reopened on Undo");
@@ -254,7 +254,7 @@ fn faces_of(scene: &Scene) -> usize {
 fn check_switch(a: T, b: T) {
     let mut e = editor();
     let base = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(start(a)).unwrap();
     draw(&mut e, a);
     let draws = !matches!(a, T::Spike | T::Reduction);
@@ -262,12 +262,12 @@ fn check_switch(a: T, b: T) {
         .unwrap_or_else(|err| panic!("{a:?} -> {b:?}: {err}"));
     assert_eq!(e.active_task(), Some(task(b)), "{a:?} -> {b:?}");
     if draws {
-        assert_eq!(e.undo.len(), steps + 1, "{a:?} -> {b:?}");
-        let step = e.undo.last().unwrap();
+        assert_eq!(e.history.undo.len(), steps + 1, "{a:?} -> {b:?}");
+        let step = e.history.undo.last().unwrap();
         assert_eq!(step.before, base, "{a:?} -> {b:?}");
         assert_ne!(step.after, base, "{a:?} -> {b:?}: geometry lost");
     } else {
-        assert_eq!(e.undo.len(), steps, "{a:?} -> {b:?}");
+        assert_eq!(e.history.undo.len(), steps, "{a:?} -> {b:?}");
     }
     if draws && !matches!(b, T::Pen | T::Reduction) {
         // Undo closes b (a shape armed with its preview shown discards
@@ -278,7 +278,7 @@ fn check_switch(a: T, b: T) {
             }
         }
         assert_eq!(e.active_task(), None, "{a:?} -> {b:?}");
-        assert_eq!(e.undo.len(), steps + 1, "{a:?} -> {b:?}");
+        assert_eq!(e.history.undo.len(), steps + 1, "{a:?} -> {b:?}");
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, base, "{a:?} -> {b:?}");
     }
@@ -318,21 +318,24 @@ fn switching_between_primitives_and_component_tools_drops_the_open_one() {
 fn the_open_tools_own_button_drops_it() {
     for t in PRIMITIVES.into_iter().chain([T::Move, T::Bevel, T::Spike]) {
         let mut e = editor();
-        let steps = e.undo.len();
+        let steps = e.history.undo.len();
         e.dispatch(start(t)).unwrap();
         draw(&mut e, t);
         e.dispatch(start(t)).unwrap();
         assert_eq!(e.active_task(), None, "{t:?}");
         let expected = steps + usize::from(t != T::Spike);
-        assert_eq!(e.undo.len(), expected, "{t:?}");
+        assert_eq!(e.history.undo.len(), expected, "{t:?}");
     }
     // Pen Start with a draft open keeps drawing.
     let mut e = editor();
     e.dispatch(Command::PenStart).unwrap();
     draw(&mut e, T::Pen);
-    let before = (e.pen_draft.clone(), e.scene.clone(), e.undo.len());
+    let before = (e.pen_draft.clone(), e.scene.clone(), e.history.undo.len());
     e.dispatch(Command::PenStart).unwrap();
-    assert_eq!((e.pen_draft.clone(), e.scene.clone(), e.undo.len()), before);
+    assert_eq!(
+        (e.pen_draft.clone(), e.scene.clone(), e.history.undo.len()),
+        before
+    );
 }
 
 #[test]
@@ -399,7 +402,7 @@ fn unit_insertion_drops_the_open_tool_first() {
             for destination in [UnitDestination::ExistingMesh, UnitDestination::NewMesh] {
                 let mut e = editor();
                 let base = e.scene.clone();
-                let steps = e.undo.len();
+                let steps = e.history.undo.len();
                 e.dispatch(start(a)).unwrap();
                 draw(&mut e, a);
                 let cmd = unit(destination);
@@ -407,15 +410,19 @@ fn unit_insertion_drops_the_open_tool_first() {
                     .unwrap_or_else(|err| panic!("{a:?} unit {u} {destination:?}: {err}"));
                 assert_eq!(e.active_task(), None, "{a:?} unit {u} {destination:?}");
                 // The tool's work, then the unit: two steps.
-                assert_eq!(e.undo.len(), steps + 2, "{a:?} unit {u} {destination:?}");
-                let tool_step = &e.undo[steps];
+                assert_eq!(
+                    e.history.undo.len(),
+                    steps + 2,
+                    "{a:?} unit {u} {destination:?}"
+                );
+                let tool_step = &e.history.undo[steps];
                 assert_eq!(tool_step.before, base, "{a:?} unit {u} {destination:?}");
                 assert_ne!(tool_step.after, base, "{a:?} unit {u} {destination:?}");
                 let items = usize::from(destination == UnitDestination::NewMesh);
                 assert_eq!(e.scene.items.len(), base.items.len() + items);
                 e.dispatch(Command::Undo).unwrap();
                 assert_eq!(
-                    e.scene, e.undo[steps].after,
+                    e.scene, e.history.undo[steps].after,
                     "{a:?} unit {u} {destination:?}"
                 );
                 e.dispatch(Command::Undo).unwrap();
@@ -470,7 +477,7 @@ fn cone_apply_is_a_plain_step_and_undo_never_reopens_cone() {
     draw(&mut e, T::Cone);
     e.dispatch(Command::Apply).unwrap();
     let applied = e.scene.clone();
-    assert_eq!(e.undo.last().unwrap().label, "Cone");
+    assert_eq!(e.history.undo.last().unwrap().label, "Cone");
     e.dispatch(Command::Drop).unwrap();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, base);
@@ -501,7 +508,7 @@ fn changing_mode_drops_the_open_tool_first() {
         for mode in [Mode::Edge, Mode::Vertex, Mode::Item, Mode::Polygon] {
             let mut e = editor();
             let base = e.scene.clone();
-            let steps = e.undo.len();
+            let steps = e.history.undo.len();
             e.dispatch(start(t)).unwrap();
             draw(&mut e, t);
             e.dispatch(Command::Mode(mode))
@@ -510,11 +517,11 @@ fn changing_mode_drops_the_open_tool_first() {
             assert!(!e.i2_active(), "{t:?} -> {mode:?}");
             assert_eq!(e.scene.selection.mode, mode, "{t:?} -> {mode:?}");
             if matches!(t, T::Spike | T::Reduction) {
-                assert_eq!(e.undo.len(), steps, "{t:?} -> {mode:?}");
+                assert_eq!(e.history.undo.len(), steps, "{t:?} -> {mode:?}");
             } else {
                 // The tool's work is kept as one undo step.
-                assert_eq!(e.undo.len(), steps + 1, "{t:?} -> {mode:?}");
-                let step = e.undo.last().unwrap();
+                assert_eq!(e.history.undo.len(), steps + 1, "{t:?} -> {mode:?}");
+                let step = e.history.undo.last().unwrap();
                 assert_eq!(step.before.items, base.items, "{t:?} -> {mode:?}");
                 assert_ne!(step.after.items, base.items, "{t:?} -> {mode:?}");
             }

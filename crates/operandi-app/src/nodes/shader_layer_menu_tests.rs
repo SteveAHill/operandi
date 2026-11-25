@@ -177,9 +177,9 @@ fn menu_entries_follow_the_spec_order_and_hide_what_does_not_apply() {
 fn duplicate_copy_paste_and_editor_color_from_the_menu() {
     let (mut a, ctx) = shading_app();
     let material = add(&mut a, NewLayer::Material);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     choose(&mut a, &ctx, material, "Duplicate");
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     let copy = a.shading.selected.clone();
     assert_eq!(copy.len(), 1);
     assert_ne!(copy[0], material);

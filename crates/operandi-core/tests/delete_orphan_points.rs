@@ -62,10 +62,14 @@ fn unused(m: &Mesh) -> usize {
 /// Run `command` as one undo step; undo puts the scene back exactly.
 fn run_one_step(e: &mut Editor, command: &str, label: &str) {
     let start = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     command_exec::run(e, command, &Map::new()).unwrap();
-    assert_eq!(e.undo.len(), steps + 1, "{command} is one undo step");
-    assert_eq!(e.undo.last().unwrap().label, label);
+    assert_eq!(
+        e.history.undo.len(),
+        steps + 1,
+        "{command} is one undo step"
+    );
+    assert_eq!(e.history.undo.last().unwrap().label, label);
     let after = e.scene.clone();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, start);

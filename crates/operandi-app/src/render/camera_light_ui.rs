@@ -2297,7 +2297,7 @@ mod tests {
         a.enter_camera_view();
         a.sync_camera_view(r);
         let before = camera_item(&a);
-        let undo = a.editor.undo.len();
+        let undo = a.editor.history.undo.len();
         // A drag in progress: the view moves, the item waits.
         a.pointer_held = true;
         for _ in 0..3 {
@@ -2315,7 +2315,7 @@ mod tests {
         let (eye2, _, _, forward2) = a.camera.basis();
         assert!((eye2 - eye).length() < 1e-6);
         assert!((forward2 - forward).length() < 1e-6);
-        assert_eq!(a.editor.undo.len(), undo + 1);
+        assert_eq!(a.editor.history.undo.len(), undo + 1);
         let after = camera_item(&a);
         let frame = item_frame(&a.editor.scene, after.id).unwrap();
         assert!((frame.position - eye).length() < 1e-9);

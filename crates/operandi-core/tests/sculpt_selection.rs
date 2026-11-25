@@ -116,9 +116,9 @@ fn vertex_selection_limits_the_brush() {
     assert_eq!(z(&scene, id, at(10, 11)), 0.);
     let edit = s.edit();
     assert_eq!(edit.items[0].points.len(), 2);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::SculptStroke(Box::new(edit))).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(z(&e.scene, id, mid) > 0.001);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(z(&e.scene, id, mid), 0.);

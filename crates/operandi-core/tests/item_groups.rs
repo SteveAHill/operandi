@@ -15,7 +15,7 @@ fn ids(e: &Editor) -> Vec<u64> {
 }
 
 fn last_label(e: &Editor) -> &str {
-    &e.undo.last().unwrap().label
+    &e.history.undo.last().unwrap().label
 }
 
 fn new_group(e: &mut Editor, name: Option<&str>, members: Vec<u64>) -> u64 {
@@ -39,7 +39,7 @@ fn groups_are_named_ordered_and_one_step_each() {
     let [mesh, camera, light, ..] = ids(&e)[..] else {
         panic!()
     };
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let a = new_group(&mut e, None, vec![light, mesh, light, 999]);
     assert_eq!(last_label(&e), "New Group");
     let g = e.scene.group(a).unwrap();
@@ -96,7 +96,7 @@ fn groups_are_named_ordered_and_one_step_each() {
     assert_eq!(last_label(&e), "Remove from Group");
     assert_eq!(e.scene.group_members(b), [camera]);
     // The rename to a taken name changed nothing, so it added no step.
-    assert_eq!(e.undo.len(), steps + 5);
+    assert_eq!(e.history.undo.len(), steps + 5);
     for _ in 0..5 {
         e.dispatch(Command::Undo).unwrap();
     }
@@ -132,11 +132,11 @@ fn select_group_selects_its_members() {
         panic!()
     };
     let g = new_group(&mut e, None, vec![light, mesh]);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::SelectGroup(g)).unwrap();
     assert_eq!(e.scene.selection.item, Some(light));
     assert_eq!(e.scene.selection.also, [mesh]);
-    assert_eq!(e.undo.len(), steps, "selecting isn't an undo step");
+    assert_eq!(e.history.undo.len(), steps, "selecting isn't an undo step");
     assert!(e.dispatch(Command::SelectGroup(12345)).is_err());
 }
 

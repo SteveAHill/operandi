@@ -62,7 +62,7 @@ fn no_mesh_layer_refuses_with_the_message() {
 fn clicks_build_a_chain_live_and_drop_is_one_step() {
     let mut e = editor();
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     start(&mut e);
     assert_eq!(e.active_task(), Some(ActiveTask::SolidSketch));
     assert_eq!(session(&e).options().subdiv, SubdivMode::Level1);
@@ -82,8 +82,8 @@ fn clicks_build_a_chain_live_and_drop_is_one_step() {
     );
     e.dispatch(Command::Drop).unwrap();
     assert!(e.solid_sketch.is_none());
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Solid Sketch");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Solid Sketch");
     assert_eq!(faces(&e), 22);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, before);
@@ -343,7 +343,7 @@ fn strip_removes_the_data_as_one_step() {
     start(&mut e);
     add(&mut e, 0.);
     e.dispatch(Command::Drop).unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::SolidSketchStrip).unwrap();
     assert!(
         e.scene
@@ -355,7 +355,7 @@ fn strip_removes_the_data_as_one_step() {
             .is_none()
     );
     assert_eq!(faces(&e), 6);
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(e.dispatch(Command::SolidSketchStrip).is_err());
     e.dispatch(Command::Undo).unwrap();
     assert!(
@@ -401,10 +401,10 @@ fn another_tool_drops_the_sketch_first() {
     let mut e = editor();
     start(&mut e);
     add(&mut e, 0.);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     assert!(e.solid_sketch.is_none());
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(faces(&e), 6);
 }
 

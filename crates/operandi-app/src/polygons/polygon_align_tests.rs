@@ -261,14 +261,17 @@ fn refusal_keeps_scene_history_redo_and_shows_no_acknowledgment() {
     a.execute("poly.align");
     acknowledge(&mut a, &c);
     a.execute("undo");
-    assert!(!a.editor.redo.is_empty());
+    assert!(!a.editor.history.redo.is_empty());
     a.editor.scene.selection.faces = vec![];
     let scene = a.editor.scene.clone();
-    let (undo, redo) = (a.editor.undo.len(), a.editor.redo.len());
+    let (undo, redo) = (a.editor.history.undo.len(), a.editor.history.redo.len());
     let p = button_by_line(&a, "Polygon Align").center();
     click(&mut a, &c, p);
     assert_eq!(a.editor.scene, scene);
-    assert_eq!((a.editor.undo.len(), a.editor.redo.len()), (undo, redo));
+    assert_eq!(
+        (a.editor.history.undo.len(), a.editor.history.redo.len()),
+        (undo, redo)
+    );
     assert!(a.align_notice.is_none());
     assert!(a.status.contains("Select polygons"), "{}", a.status);
     // An active tool is not dropped or confirmed by Align.

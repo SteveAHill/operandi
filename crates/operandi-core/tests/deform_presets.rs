@@ -12,7 +12,7 @@ fn column() -> Editor {
             .unwrap()
             .into();
     e.scene.selection.mode = Mode::Vertex;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn points(e: &Editor) -> Vec<DVec3> {
@@ -92,8 +92,8 @@ fn drop_names_the_step_after_the_preset_and_gives_back_the_users_falloff() {
     assert_eq!(points(&e), after_two);
     e.dispatch(Command::Drop).unwrap();
     assert!(e.live.is_none());
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Taper");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Taper");
     assert_eq!(e.spatial_falloff, Some(mine.into()));
     assert_eq!(e.linear_falloff_preset, linear_before);
     assert!(e.preset.is_none());
@@ -163,7 +163,7 @@ fn shear_soft_move_swirl_and_bulge_use_their_falloffs() {
         }
         e.dispatch(Command::Cancel).unwrap();
         assert_eq!(e.spatial_falloff, None, "{preset:?}");
-        assert!(e.undo.is_empty());
+        assert!(e.history.undo.is_empty());
     }
     // Shear: the top moves fully, the bottom stays.
     let mut e = column();
@@ -229,7 +229,7 @@ fn push_moves_the_selection_along_its_normals_and_is_one_step() {
         .unwrap()
         .into();
     e.scene.selection.mode = Mode::Polygon;
-    e.undo.clear();
+    e.history.undo.clear();
     let before = points(&e);
     e.dispatch(Command::Activate(Tool::Push)).unwrap();
     assert_eq!(live(&e).shift, 0.);
@@ -246,8 +246,8 @@ fn push_moves_the_selection_along_its_normals_and_is_one_step() {
         assert!(moved.normalize().dot(a.normalize()) > 1. - 1e-9);
     }
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Push");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Push");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(points(&e), before);
 }
@@ -286,7 +286,7 @@ fn smooth_works_on_activation_and_its_fields_rework_one_result() {
         .unwrap()
         .into();
     e.scene.selection.mode = Mode::Vertex;
-    e.undo.clear();
+    e.history.undo.clear();
     let before = points(&e);
     e.dispatch(Command::Activate(Tool::Smooth)).unwrap();
     let p = live(&e);
@@ -324,8 +324,8 @@ fn smooth_works_on_activation_and_its_fields_rework_one_result() {
     assert_eq!(points(&e), before);
     e.dispatch(Command::Redo).unwrap();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Smooth");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Smooth");
     // Cancel puts the mesh back.
     e.dispatch(Command::Activate(Tool::Smooth)).unwrap();
     e.dispatch(Command::Cancel).unwrap();

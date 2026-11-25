@@ -730,9 +730,9 @@ fn a_converted_preset_loads_into_a_material_group_as_one_step() {
         .iter()
         .find(|n: &&Node| matches!(n.kind, NodeKind::Group(_)))
         .map(|n| n.id);
-    let undo_before = e.undo.len();
+    let undo_before = e.history.undo.len();
     e.load_preset(c.preset, group).unwrap();
-    assert_eq!(e.undo.len(), undo_before + 1);
+    assert_eq!(e.history.undo.len(), undo_before + 1);
     let tree = e.scene.render_shader_tree();
     let textures = tree
         .nodes

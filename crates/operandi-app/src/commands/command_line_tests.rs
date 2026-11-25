@@ -37,7 +37,7 @@ fn command_catalog_activation_query_and_targeted_off() {
             a.status
         );
         assert_eq!(a.command_active(), b.command_active(), "{canonical}");
-        assert_eq!(a.editor.undo.len(), b.editor.undo.len());
+        assert_eq!(a.editor.history.undo.len(), b.editor.history.undo.len());
         assert_eq!(a.status, b.status);
         a.execute(&format!("tool.set {canonical} on"));
         b.execute(alias);
@@ -95,9 +95,9 @@ fn command_surface_units_and_readonly_errors() {
         assert_eq!(a.command_active(), active);
     }
     // tool.doApply is Modo's Apply Tool: the same as tool.apply (UIC-165).
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.execute("tool.doApply");
-    assert!(a.editor.undo.len() > undo, "{}", a.status);
+    assert!(a.editor.history.undo.len() > undo, "{}", a.status);
     assert_eq!(a.command_active(), active, "the tool stays active");
 }
 #[test]
@@ -186,7 +186,7 @@ fn review_pen_aliases_and_help_topics() {
         b.execute(&legacy.replacen("pen ", "OPERANDI.PEN.CREATE\t", 1));
         assert_eq!(a.status, "Ready");
         assert_eq!(a.editor.scene, b.editor.scene);
-        assert_eq!(a.editor.undo.len(), b.editor.undo.len());
+        assert_eq!(a.editor.history.undo.len(), b.editor.history.undo.len());
     }
     let mut a = Operandi::empty();
     for (topic, expected) in [
@@ -251,7 +251,7 @@ fn review_parser_drafts_and_lifecycle() {
     a.confirmed_fields.insert("sst_offset".into(), "0".into());
     a.name = "Pending Name".into();
     let before = a.editor.scene.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     for cmd in [
         "tool.set mode:? preset:poly.smshift",
         "tool.set {poly.smshift} ?",
@@ -265,7 +265,7 @@ fn review_parser_drafts_and_lifecycle() {
     ] {
         a.execute(cmd);
         assert_eq!(a.editor.scene, before);
-        assert_eq!(a.editor.undo.len(), undo);
+        assert_eq!(a.editor.history.undo.len(), undo);
         assert_eq!(a.fields["sst_offset"], "invalid");
         assert_eq!(a.name, "Pending Name");
     }
@@ -280,11 +280,11 @@ fn review_parser_drafts_and_lifecycle() {
     a.execute("tool.apply");
     b.execute("apply");
     assert_eq!(a.editor.scene, b.editor.scene);
-    assert_eq!(a.editor.undo.len(), b.editor.undo.len());
+    assert_eq!(a.editor.history.undo.len(), b.editor.history.undo.len());
     a.execute("tool.drop");
     b.execute("drop");
     assert_eq!(a.editor.scene, b.editor.scene);
-    assert_eq!(a.editor.undo.len(), b.editor.undo.len());
+    assert_eq!(a.editor.history.undo.len(), b.editor.history.undo.len());
     a.execute("undo");
     b.execute("undo");
     assert_eq!(a.editor.scene, b.editor.scene);
@@ -565,8 +565,8 @@ fn acceptance_reset_and_lifecycle_shared_routes() {
             b.execute(text);
             c.run(typed);
             assert_eq!(b.editor.scene, c.editor.scene, "phase {phase} {text}");
-            assert_eq!(b.editor.undo.len(), c.editor.undo.len());
-            assert_eq!(b.editor.redo.len(), c.editor.redo.len());
+            assert_eq!(b.editor.history.undo.len(), c.editor.history.undo.len());
+            assert_eq!(b.editor.history.redo.len(), c.editor.history.redo.len());
             assert_eq!(b.command_active(), c.command_active());
             assert_eq!(b.status, c.status);
             for action in [HistoryAction::Undo, HistoryAction::Redo] {

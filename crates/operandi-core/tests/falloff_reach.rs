@@ -50,7 +50,7 @@ fn strip(fold: bool, second: bool) -> Editor {
     .into();
     e.scene.selection.mode = Mode::Vertex;
     e.scene.selection.vertices = vec![0, 7];
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn points(e: &Editor) -> Vec<DVec3> {

@@ -164,7 +164,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            e.undo.last().unwrap().label,
+            e.history.undo.last().unwrap().label,
             "Connect Noise > Diffuse Color"
         );
         run(

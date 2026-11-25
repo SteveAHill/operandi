@@ -150,7 +150,10 @@ fn viewport_key(a: &mut Operandi, ctx: &Context, k: Key) {
 
 fn history(a: &Operandi) -> (Vec<String>, Vec<String>) {
     let labels = |h: &[std::sync::Arc<Checkpoint>]| h.iter().map(|c| c.label.clone()).collect();
-    (labels(&a.editor.undo), labels(&a.editor.redo))
+    (
+        labels(&a.editor.history.undo),
+        labels(&a.editor.history.redo),
+    )
 }
 
 /// User-visible outcome. Independently built apps carry distinct session
@@ -231,7 +234,7 @@ fn field_then_viewport_escape(tool: Tool) {
     // SS-U03: viewport Escape drops the valid preview and deactivates.
     viewport_key(&mut a, &ctx, Key::Escape);
     assert_dropped_like_q(&a, &q, tool, "live stage");
-    assert_eq!(a.editor.undo.last().unwrap().label, tool.label());
+    assert_eq!(a.editor.history.undo.last().unwrap().label, tool.label());
     let committed = a.editor.scene.clone();
     a.run(Command::Undo);
     assert_eq!(a.editor.scene, source, "{tool:?}");

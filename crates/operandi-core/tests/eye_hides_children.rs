@@ -62,9 +62,9 @@ fn show(e: &mut Editor, id: u64) {
 #[test]
 fn gv01_hiding_a_parent_hides_its_subtree_and_keeps_the_childrens_eyes() {
     let (mut e, parent, child) = family();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     hide(&mut e, parent, true);
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(item(&e, child).visible, "the child's own eye is untouched");
     assert!(!e.scene.shows(item(&e, child)));
     assert!(e.scene.hidden_by_parent_eye(item(&e, child)));

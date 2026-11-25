@@ -7,7 +7,7 @@ fn cube_editor() -> Editor {
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = Mesh::box_mesh(DVec3::ZERO, DVec3::ONE, 0).unwrap().into();
     e.synchronize_identities().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 fn mesh(e: &Editor) -> &Mesh {
@@ -19,9 +19,9 @@ fn copy_then_paste_adds_a_selected_copy_in_place_as_one_step() {
     let mut e = cube_editor();
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
     e.scene.selection.faces = vec![0];
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.copy_selection().unwrap();
-    assert_eq!(e.undo.len(), undo, "Copy isn't an undo step");
+    assert_eq!(e.history.undo.len(), undo, "Copy isn't an undo step");
     e.dispatch(Command::PasteSelection).unwrap();
     let m = mesh(&e);
     assert_eq!((m.vertices.len(), m.faces.len()), (12, 7), "not welded");

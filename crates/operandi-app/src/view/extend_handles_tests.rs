@@ -50,7 +50,7 @@ impl Rig {
         a.camera.distance = 8.;
         a.run(Command::Mode(Mode::Edge));
         a.editor.scene.selection.edges = vec![(12, 13), (13, 14), (14, 15)];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         let mut rig = Self { a, ctx, size };
         rig.frame(vec![]);
         rig.a.activate(Tool::EdgeExtend);

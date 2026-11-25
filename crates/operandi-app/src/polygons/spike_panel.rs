@@ -89,7 +89,7 @@ mod tests {
             ..Default::default()
         }
         .into();
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         a.execute("Spike");
         a
     }
@@ -113,7 +113,7 @@ mod tests {
         assert!(a.confirm_fields());
         let reshaped = a.editor.scene.clone();
         assert_ne!(reshaped, before);
-        assert_eq!(a.editor.undo.len(), 1);
+        assert_eq!(a.editor.history.undo.len(), 1);
         a.execute("Spike Apply");
         assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 12);
         a.execute("Undo");

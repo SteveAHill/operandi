@@ -40,7 +40,7 @@ fn arming_previews_and_drop_appends_one_undo_step() {
     e.dispatch(Command::Drop).unwrap();
     assert!(e.shape.is_none());
     assert_eq!(counts(&e), (288, 288));
-    assert_eq!(e.undo.last().unwrap().label, "Torus");
+    assert_eq!(e.history.undo.last().unwrap().label, "Torus");
     // Nothing is selected afterwards (every NPR oracle).
     let s = &e.scene.selection;
     assert!(s.vertices.is_empty() && s.edges.is_empty() && s.faces.is_empty());
@@ -54,11 +54,11 @@ fn arming_previews_and_drop_appends_one_undo_step() {
 fn cancel_leaves_the_scene_as_it_was() {
     let mut e = editor();
     let base = e.scene.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::ArmShape(ShapeKind::Capsule)).unwrap();
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, base);
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
     assert!(!e.has_active_task());
 }
 
@@ -109,7 +109,10 @@ fn apply_keeps_the_tool_for_another_shape() {
         .unwrap();
     e.dispatch(Command::Apply).unwrap();
     assert_eq!(counts(&e), (34, 2));
-    assert_eq!(e.undo.iter().filter(|c| c.label == "Arc").count(), 2);
+    assert_eq!(
+        e.history.undo.iter().filter(|c| c.label == "Arc").count(),
+        2
+    );
     // Drop after Apply with nothing new previewed adds nothing.
     e.dispatch(Command::Drop).unwrap();
     assert_eq!(counts(&e), (34, 2));

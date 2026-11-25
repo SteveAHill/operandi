@@ -404,12 +404,12 @@ fn typed_normal_selected_refuses_without_history_changes() {
             },
         );
     let before = e.scene.clone();
-    let undo = e.undo.clone();
-    let redo = e.redo.clone();
+    let undo = e.history.undo.clone();
+    let redo = e.history.redo.clone();
     assert!(e.dispatch(Command::FlipPolygons).is_err());
     assert_eq!(e.scene, before);
-    assert!(e.undo == undo);
-    assert!(e.redo == redo);
+    assert!(e.history.undo == undo);
+    assert!(e.history.redo == redo);
 }
 
 #[test]
@@ -882,7 +882,7 @@ fn touching_exception_refusal_preserves_editor_history_and_redo() {
         e.dispatch(Command::FlipPolygons).unwrap();
         e.dispatch(Command::FlipPolygons).unwrap();
         e.dispatch(Command::Undo).unwrap();
-        assert!(!e.redo.is_empty());
+        assert!(!e.history.redo.is_empty());
         e.dispatch(Command::Activate(tool)).unwrap();
         let mut before = e.clone();
         let p = Parameters {
@@ -922,7 +922,7 @@ fn touching_exception_refusal_preserves_editor_history_and_redo() {
         let before = e.clone();
         assert!(e.dispatch(Command::Apply).is_err());
         assert!(e == before);
-        assert!(!e.redo.is_empty());
+        assert!(!e.history.redo.is_empty());
     }
 }
 

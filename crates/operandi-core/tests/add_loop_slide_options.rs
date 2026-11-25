@@ -88,7 +88,7 @@ fn both_sides_cuts_two_mirrored_loops_in_one_undo_step() {
     assert!(m.faces.iter().all(|f| f.vertices.len() == 4));
     assert_eq!(xs_of_new_points(&g3(), &m), vec![1.25, 1.75]);
     assert_eq!(e.scene.selection.edges.len(), 6, "both loops selected");
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert!(e.scene.active().unwrap().mesh == g3());
 }

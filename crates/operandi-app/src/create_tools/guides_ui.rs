@@ -358,13 +358,13 @@ mod tests {
         else {
             panic!("a guide drag starts");
         };
-        let steps = a.editor.undo.len();
+        let steps = a.editor.history.undo.len();
         a.guide_drag(start, to, r);
         a.guide_release();
         let g = a.editor.scene.guides.guides[0];
         assert!(g.enabled && g.show);
         assert!((g.end - g.position).length() > 3.);
-        assert_eq!(a.editor.undo.len(), steps + 1);
+        assert_eq!(a.editor.history.undo.len(), steps + 1);
         a.run(Command::Undo);
         assert!(!a.editor.scene.guides.guides[0].enabled);
         // Locked: refused.

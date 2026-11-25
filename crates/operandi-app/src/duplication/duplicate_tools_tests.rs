@@ -159,7 +159,7 @@ fn mirror_click_mirrors_and_the_centre_grip_slides_the_plane() {
         "{centre}"
     );
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Mirror");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Mirror");
 }
 
 #[test]
@@ -224,13 +224,13 @@ fn radial_array_click_sets_the_centre() {
     );
     assert_eq!(mesh(&a).faces.len(), 4 * 8);
     // A second click away moves the axis; it doesn't copy the copies.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let at = screen(&a, DVec3::new(-0.5, 0., 2.));
     click(&mut a, &ctx, size, at);
     let c = live_params(&a).duplicate.radial.circle.center;
     assert!((c - DVec3::new(-0.5, 0., 2.)).length() < 0.05, "{c}");
     assert_eq!(mesh(&a).faces.len(), 4 * 8);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
 }
 
 #[test]
@@ -317,15 +317,15 @@ fn detriangulate_opens_its_dialog_and_ok_is_one_step() {
     draw(&mut a, &ctx, size, vec![]);
     assert!(a.detriangulate.as_ref().unwrap().preview.is_empty());
     a.detriangulate = None;
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     // Closed: no preview is drawn (it lives in the dialog).
     assert!(a.detriangulate.is_none());
     a.run_detriangulate();
     assert_eq!(mesh(&a).faces.len(), 4, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Detriangulate");
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Detriangulate");
     // Nothing left to join: nothing changes, and the status says so.
     a.run_detriangulate();
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert!(a.status.contains("No triangle pairs"), "{}", a.status);
 }

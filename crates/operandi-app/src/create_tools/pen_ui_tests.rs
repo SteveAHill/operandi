@@ -18,12 +18,12 @@ fn pen_s1_command_text_correction_cancel_repeat_history_and_save() {
     draw(&mut a, &ctx, size, vec![key(Key::Enter)]);
     assert!(a.status.contains("wall"), "{}", a.status);
     assert_eq!(a.command, bad);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     a.command = pen_command("vertices", false);
     ctx.memory_mut(|m| m.request_focus(Id::new("command-entry")));
     draw(&mut a, &ctx, size, vec![key(Key::Escape)]);
     assert!(a.editor.scene.active().unwrap().mesh.vertices.is_empty());
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     for _ in 0..2 {
         ctx.memory_mut(|m| m.request_focus(Id::new("command-entry")));
         draw(&mut a, &ctx, size, vec![key(Key::Enter)]);

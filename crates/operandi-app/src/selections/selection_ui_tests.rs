@@ -88,7 +88,7 @@ fn m15_paint_is_continuous_idempotent_and_one_history_checkpoint() {
     let r = a.viewport_rect;
     let p = a.camera.project(DVec3::new(0., 1., 0.), r).unwrap().0;
     let original = a.editor.scene.clone();
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     draw(
         &mut a,
         &ctx,
@@ -99,14 +99,14 @@ fn m15_paint_is_continuous_idempotent_and_one_history_checkpoint() {
         ],
     );
     assert_eq!(a.editor.scene.selection.faces.len(), 1);
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     draw(
         &mut a,
         &ctx,
         vec2(1440., 900.),
         vec![Event::PointerMoved(p), pointer(p, false, Modifiers::NONE)],
     );
-    assert_eq!(a.editor.undo.len(), history + 1);
+    assert_eq!(a.editor.history.undo.len(), history + 1);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene, original);
     draw(
@@ -132,7 +132,7 @@ fn ecs_empty_click_clears_only_active_components_with_exact_history() {
             let original = a.editor.scene.clone();
             let mut cleared = original.clone();
             cleared.clear_components();
-            let history = a.editor.undo.len();
+            let history = a.editor.history.undo.len();
             let ctx = Context::default();
             ctx.data_mut(|d| d.insert_temp(Id::new("simulation-scale"), scale));
             let size = vec2(1440., 900.);
@@ -148,14 +148,14 @@ fn ecs_empty_click_clears_only_active_components_with_exact_history() {
                     vec![pointer(p, true, mods), pointer(p, false, mods)],
                 );
                 assert_eq!(a.editor.scene, original);
-                assert_eq!(a.editor.undo.len(), history);
+                assert_eq!(a.editor.history.undo.len(), history);
             }
             // A clear belongs to the existing press/release transaction.
             draw(&mut a, &ctx, size, vec![pointer(p, true, Modifiers::NONE)]);
             assert_eq!(a.editor.scene, cleared);
-            assert_eq!(a.editor.undo.len(), history);
+            assert_eq!(a.editor.history.undo.len(), history);
             draw(&mut a, &ctx, size, vec![pointer(p, false, Modifiers::NONE)]);
-            assert_eq!(a.editor.undo.len(), history + 1);
+            assert_eq!(a.editor.history.undo.len(), history + 1);
             assert!(a.editor.selection_start.is_none());
             draw(
                 &mut a,
@@ -166,7 +166,11 @@ fn ecs_empty_click_clears_only_active_components_with_exact_history() {
                     pointer(p, false, Modifiers::NONE),
                 ],
             );
-            assert_eq!(a.editor.undo.len(), history + 1, "no empty checkpoint");
+            assert_eq!(
+                a.editor.history.undo.len(),
+                history + 1,
+                "no empty checkpoint"
+            );
             a.run(Command::Undo);
             assert_eq!(a.editor.scene, original);
             a.run(Command::Redo);
@@ -183,7 +187,7 @@ fn ecs_empty_press_cancel_and_navigation_preserve_selection() {
     let mut a = box_app();
     a.editor.scene.selection.faces = vec![5];
     let original = a.editor.scene.clone();
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let ctx = Context::default();
     let size = vec2(1440., 900.);
     draw(&mut a, &ctx, size, vec![]);
@@ -200,7 +204,7 @@ fn ecs_empty_press_cancel_and_navigation_preserve_selection() {
         ],
     );
     assert_eq!(a.editor.scene, original);
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     draw(
         &mut a,
         &ctx,
@@ -211,7 +215,7 @@ fn ecs_empty_press_cancel_and_navigation_preserve_selection() {
         ],
     );
     assert_eq!(a.editor.scene, original);
-    assert_eq!(a.editor.undo.len(), history);
+    assert_eq!(a.editor.history.undo.len(), history);
     assert!(a.editor.selection_start.is_none());
 }
 // Jason decision 2026-11-01: a lasso polygon is eligible unless a surface
@@ -277,7 +281,7 @@ fn m15_lasso_selects_unobstructed_polygons_whichever_way_they_face() {
             pressed,
             modifiers: Modifiers::NONE,
         };
-        let checkpoints = a.editor.undo.len();
+        let checkpoints = a.editor.history.undo.len();
         draw(
             &mut a,
             &ctx,
@@ -295,7 +299,7 @@ fn m15_lasso_selects_unobstructed_polygons_whichever_way_they_face() {
             a.status
         );
         assert_eq!(a.editor.scene.active().unwrap().mesh, original);
-        assert_eq!(a.editor.undo.len(), checkpoints + 1);
+        assert_eq!(a.editor.history.undo.len(), checkpoints + 1);
         a.run(Command::Undo);
         assert!(a.editor.scene.selection.faces.is_empty());
     }
@@ -398,7 +402,7 @@ fn m15_up_arrow_selects_more_and_shift_cmd_click_fills() {
         .filter(|&f| mesh.normal(f as usize).y.abs() < 0.5)
         .collect();
     a.editor.scene.selection.faces = band.clone();
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     let p = a.viewport_rect.center();
     // Jason decision 2026-11-01 (SEL-Q-M3): one Shift+Cmd click fills.
     let mods = Modifiers::MAC_CMD | Modifiers::SHIFT;
@@ -411,7 +415,7 @@ fn m15_up_arrow_selects_more_and_shift_cmd_click_fills() {
     assert_eq!(a.editor.scene.selection.faces.len(), 5, "{}", a.status);
     assert!(a.editor.scene.selection.faces.contains(&top));
     assert_eq!(&a.editor.scene.selection.faces[..4], &band[..]);
-    assert!(a.editor.undo.len() > history);
+    assert!(a.editor.history.undo.len() > history);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.selection.faces, band);
 }
@@ -713,7 +717,7 @@ fn edge_double_click_selects_and_shift_adds_the_loop() {
     }
     a.editor.scene.selection.mode = Mode::Edge;
     let row = edge_point(&a, (6, 7));
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     click(&mut a, &ctx, row, Modifiers::NONE);
     assert_eq!(a.editor.scene.selection.edges, vec![(6, 7)], "{}", a.status);
     click(&mut a, &ctx, row, Modifiers::NONE);
@@ -724,7 +728,7 @@ fn edge_double_click_selects_and_shift_adds_the_loop() {
         a.status
     );
     assert_eq!(a.status, "Select Loop: 4 selected Edge");
-    assert_eq!(a.editor.undo.len(), history + 2);
+    assert_eq!(a.editor.history.undo.len(), history + 2);
 
     // A third press is an ordinary click again.
     click(&mut a, &ctx, row, Modifiers::NONE);
@@ -802,7 +806,7 @@ fn polygon_double_click_selects_the_connected_piece() {
     // The center of the polygon on points 6, 7, 11, 12.
     let at = a.camera.project(DVec3::new(-0.5, 0., -0.5), r).unwrap().0;
     let all = a.editor.scene.active().unwrap().mesh.faces.len();
-    let history = a.editor.undo.len();
+    let history = a.editor.history.undo.len();
     click(&mut a, &ctx, at, Modifiers::NONE);
     assert_eq!(a.editor.scene.selection.faces.len(), 1, "{}", a.status);
     let clicked = a.editor.scene.selection.faces[0];
@@ -814,7 +818,7 @@ fn polygon_double_click_selects_the_connected_piece() {
         a.status,
         format!("Select Connected: {all} selected Polygons")
     );
-    assert_eq!(a.editor.undo.len(), history + 2);
+    assert_eq!(a.editor.history.undo.len(), history + 2);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.selection.faces, vec![clicked]);
 

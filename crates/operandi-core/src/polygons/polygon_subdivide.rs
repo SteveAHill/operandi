@@ -1886,7 +1886,7 @@ impl crate::Editor {
         let seed = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_nanos() as u64)
-            ^ self.history_serial.rotate_left(17);
+            ^ self.history.history_serial.rotate_left(17);
         for pass in 0..times {
             let outcome =
                 subdivide_polygons(&mesh, &selected, &options, seed.wrapping_add(pass as u64))?;
@@ -1978,7 +1978,7 @@ impl crate::Editor {
         let seed = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_nanos() as u64)
-            ^ self.history_serial.rotate_left(17);
+            ^ self.history.history_serial.rotate_left(17);
         let before = self.scene.clone();
         let ids_before = self.identities.current.clone();
         let result = (|| -> Result<()> {

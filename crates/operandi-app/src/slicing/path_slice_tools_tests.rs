@@ -124,7 +124,7 @@ fn pen_slice_clicks_draw_a_closed_path_that_cuts_and_drop_is_one_step() {
     a.run(Command::Redo);
     assert_eq!(faces(&a), 8);
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Pen Slice");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Pen Slice");
     a.run(Command::Undo);
     assert_eq!(faces(&a), 4);
 }
@@ -200,7 +200,10 @@ fn primitive_slice_drag_sizes_on_the_face_and_lazy_apply_cuts_on_release() {
     assert!((place.center - DVec3::new(1., 0., 1.)).length() < 0.05);
     assert!((o.half_x - 0.5).abs() < 0.05 && (o.half_y - 0.5).abs() < 0.05);
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Primitive Slice");
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Primitive Slice"
+    );
 }
 
 #[test]

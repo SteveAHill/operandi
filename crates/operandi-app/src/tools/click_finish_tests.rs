@@ -37,7 +37,7 @@ fn bridge_app(ctx: &Context) -> Operandi {
     a.editor.scene.selection.mode = Mode::Polygon;
     a.editor.scene.selection.faces = vec![0, 1];
     a.camera.view = View::Front;
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.execute("Bridge");
     assert!(a.editor.bridge.is_some(), "{}", a.status);
     for _ in 0..3 {
@@ -82,13 +82,13 @@ fn a_click_applies_bridge_and_keeps_it_live() {
     assert!(a.editor.bridge_result_live(), "{}", a.status);
     assert_ne!(a.editor.scene, before, "{}", a.status);
     assert!(faces(&a) > 2);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     assert_eq!(a.status, "Bridge applied · change a value to reshape it");
     // A second click makes no second bridge.
     let applied = a.editor.scene.clone();
     click(&mut a, &ctx);
     assert_eq!(a.editor.scene, applied);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 /// After the click, a drag and a typed value reshape the same bridge in
@@ -106,7 +106,7 @@ fn values_reshape_the_live_bridge_in_one_step() {
     assert_eq!(faces(&a), 12, "{}", a.status);
     a.execute("bridge segments 1");
     assert_eq!(faces(&a), 4, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     assert!(a.editor.bridge_result_live());
     a.execute("undo");
     assert_eq!(
@@ -127,10 +127,10 @@ fn a_drag_before_the_click_only_sets_segments() {
     drag(&mut a, &ctx, at, vec2(40., 0.), Modifiers::NONE);
     assert_eq!(a.editor.bridge.as_ref().unwrap().requested.segments, 3);
     assert_eq!(a.editor.scene, before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     click(&mut a, &ctx);
     assert_eq!(faces(&a), 12);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 /// Q keeps the live bridge and ends the tool; Cancel takes the live
@@ -145,14 +145,14 @@ fn drop_keeps_and_cancel_removes_the_live_bridge() {
     a.execute("tool.drop");
     assert!(a.editor.bridge.is_none());
     assert_eq!(a.editor.scene, applied);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 
     let mut b = bridge_app(&ctx);
     click(&mut b, &ctx);
     b.run(Command::Cancel);
     assert!(b.editor.bridge.is_none());
     assert_eq!(b.editor.scene, before);
-    assert!(b.editor.undo.is_empty());
+    assert!(b.editor.history.undo.is_empty());
 }
 
 /// With only one polygon selected the click changes nothing; Bridge stays
@@ -166,7 +166,7 @@ fn a_click_that_cannot_bridge_keeps_the_tool() {
     click(&mut a, &ctx);
     assert!(a.editor.bridge.is_some());
     assert_eq!(a.editor.scene, before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     assert!(a.status.starts_with("Bridge: "), "{}", a.status);
 }
 
@@ -180,7 +180,7 @@ fn a_modified_click_does_not_apply() {
     drag(&mut a, &ctx, at, Vec2::ZERO, Modifiers::SHIFT);
     assert!(a.editor.bridge.is_some());
     assert_eq!(a.editor.scene, before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }
 
 /// One quad facing the front view, Spike picked.
@@ -208,7 +208,7 @@ fn spike_app(ctx: &Context) -> Operandi {
     }
     .into();
     a.camera.view = View::Front;
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.execute("Spike");
     assert!(a.editor.spike.is_some(), "{}", a.status);
     for _ in 0..3 {
@@ -232,18 +232,18 @@ fn spike_click_applies_and_strength_reshapes_it() {
     click(&mut a, &ctx);
     assert!(a.editor.spike.is_some());
     assert_eq!(faces(&a), 4, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     assert!(a.editor.spike_result_live());
     let first = tip(&a);
     let at = a.viewport_rect.center();
     drag(&mut a, &ctx, at, vec2(0., -100.), Modifiers::NONE);
     assert_eq!(faces(&a), 4);
     assert!(tip(&a) > first + 0.1, "{} -> {}", first, tip(&a));
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     // The whole mesh was the target, so all four triangles spike again.
     click(&mut a, &ctx);
     assert_eq!(faces(&a), 12, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 2);
+    assert_eq!(a.editor.history.undo.len(), 2);
     a.run(Command::Cancel);
     assert_eq!(faces(&a), 4, "Cancel takes back only the live spike");
     a.execute("undo");
@@ -279,7 +279,7 @@ fn reduction_click_after_a_drag_applies() {
     item.mesh = mesh.into();
     a.camera.view = View::Front;
     a.run(Command::Mode(Mode::Polygon));
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.execute("tool.set poly.reduct on");
     assert!(a.editor.reduction.is_some(), "{}", a.status);
     for _ in 0..3 {
@@ -293,13 +293,13 @@ fn reduction_click_after_a_drag_applies() {
         a.status
     );
     assert_eq!(a.editor.scene, before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     let at = a.viewport_rect.center();
     drag(&mut a, &ctx, at, vec2(-120., 0.), Modifiers::NONE);
     assert_ne!(a.editor.scene, before, "{}", a.status);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     click(&mut a, &ctx);
-    assert_eq!(a.editor.undo.len(), 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), 1, "{}", a.status);
     assert!(a.editor.reduction.is_some());
     assert_ne!(a.editor.scene, before);
 }

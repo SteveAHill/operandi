@@ -11,7 +11,7 @@ fn app() -> Operandi {
         operandi_core::Mesh::box_mesh(DVec3::ZERO, DVec3::splat(2.), 1)
             .unwrap()
             .into();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a
 }
 
@@ -67,7 +67,7 @@ fn command_line_and_menu_reach_the_same_commands() {
     assert_eq!(kinds(&a), vec![PolygonRepresentation::Subdivs; 6]);
     a.execute("freeze");
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 96);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Freeze");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Freeze");
     let ctx = Context::default();
     let titles: Vec<String> = a
         .menu_model(&ctx)

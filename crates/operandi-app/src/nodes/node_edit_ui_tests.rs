@@ -78,7 +78,7 @@ fn ne_t3_mixing_nodes_refuse_deletion_and_edit_their_layer() {
     assert_eq!(app.editor.scene, before);
     assert!(app.status.contains("locked"), "{}", app.status);
     // The mixing node's opacity is the layer's (one undo step).
-    let steps = app.editor.undo.len();
+    let steps = app.editor.history.undo.len();
     let mut node = app.editor.scene.shader_tree.get(MATERIAL).unwrap().clone();
     node.layer.opacity = 0.4;
     app.apply_board_actions(group, vec![BoardAction::Layer(Box::new(node), false)]);
@@ -92,7 +92,7 @@ fn ne_t3_mixing_nodes_refuse_deletion_and_edit_their_layer() {
             .opacity,
         0.4
     );
-    assert_eq!(app.editor.undo.len(), steps + 1);
+    assert_eq!(app.editor.history.undo.len(), steps + 1);
     let board = app.editor.scene.shader_tree.board(group).unwrap();
     let mix = board.get(&mix_name(MATERIAL)).unwrap();
     assert_eq!(
@@ -381,7 +381,7 @@ fn ne_01_dragging_a_value_on_a_layer_box_is_its_properties_edit_in_one_step() {
         .min_by(|a, b| a.1.x.total_cmp(&b.1.x))
         .expect("an editable value on the box")
         .clone();
-    let before = app.editor.undo.len();
+    let before = app.editor.history.undo.len();
     let rough = |a: &crate::Operandi| match &a.editor.scene.shader_tree.get(MATERIAL).unwrap().kind
     {
         operandi_core::shader_tree::NodeKind::Material(m) => m.roughness,
@@ -411,13 +411,13 @@ fn ne_01_dragging_a_value_on_a_layer_box_is_its_properties_edit_in_one_step() {
     // The headless test window is embedded over the viewport, which also
     // sees the release as a click (a Selection step); in the app the node
     // view is its own window. The drag itself is one step.
-    let edits: Vec<String> = app.editor.undo[before..]
+    let edits: Vec<String> = app.editor.history.undo[before..]
         .iter()
         .map(|u| u.label.clone())
         .filter(|l| l != "Selection")
         .collect();
     assert_eq!(edits, ["Edit Base Material"], "one step for the drag");
-    while app.editor.undo.len() > before + 1 {
+    while app.editor.history.undo.len() > before + 1 {
         app.editor.dispatch(operandi_core::Command::Undo).unwrap();
     }
     app.editor.dispatch(operandi_core::Command::Undo).unwrap();

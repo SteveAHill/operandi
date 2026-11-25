@@ -228,7 +228,7 @@ pub(super) fn judge(
 pub(super) fn check(line: &str, setup: Setup) -> std::result::Result<bool, Failure> {
     let mut a = setup.app();
     let before = a.editor.scene.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let ran = catch_unwind(AssertUnwindSafe(|| {
         a.execute(line);
         close_result_windows(&mut a);
@@ -247,7 +247,7 @@ pub(super) fn check(line: &str, setup: Setup) -> std::result::Result<bool, Failu
         }
     }
     let after = a.editor.scene.clone();
-    let added = a.editor.undo.len().saturating_sub(steps);
+    let added = a.editor.history.undo.len().saturating_sub(steps);
     if added > 1 {
         return Err(Failure::new(
             Broken::ExtraSteps,

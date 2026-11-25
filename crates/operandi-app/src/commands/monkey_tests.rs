@@ -153,7 +153,7 @@ pub(super) fn session_in(
     let mut a = setup.app();
     let start = a.editor.scene.clone();
     // Making the box left undo steps of its own; undo back to here only.
-    let depth = a.editor.undo.len();
+    let depth = a.editor.history.undo.len();
     let mut steps = vec![format!("start: box, {setup:?}")];
     let fail = |steps: &[String], what: String| {
         Err(format!(
@@ -164,7 +164,7 @@ pub(super) fn session_in(
     for _ in 0..count {
         let roll = rng.below(100);
         // Never undo past the box: its own steps aren't the session's.
-        let can_undo = a.editor.undo.len() > depth;
+        let can_undo = a.editor.history.undo.len() > depth;
         let step = if can_undo && (polygons(&a) > MAX_POLYGONS || roll < 10) {
             "Undo".to_owned()
         } else if roll < 15 {
@@ -215,7 +215,7 @@ pub(super) fn session_in(
     }
     // Undo everything: the geometry must be the box we started with.
     let mut guard = 0;
-    while a.editor.undo.len() > depth && guard < STEPS * 2 {
+    while a.editor.history.undo.len() > depth && guard < STEPS * 2 {
         a.execute("Undo");
         guard += 1;
     }

@@ -358,7 +358,7 @@ fn edge_commands_through_the_editor_are_single_undo_steps() {
     let before = e.scene.clone();
     e.dispatch(Command::EdgeCommand(EdgeCommand::Subdivide))
         .unwrap();
-    assert_eq!(e.undo.last().unwrap().label, "Edge Subdivide");
+    assert_eq!(e.history.undo.last().unwrap().label, "Edge Subdivide");
     assert_eq!(e.scene.active().unwrap().mesh.vertices.len(), 7);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, before);

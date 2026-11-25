@@ -70,7 +70,7 @@ fn scene(target: Mesh, drivers: Vec<Mesh>) -> (Editor, u64) {
     }
     e.dispatch(Command::SelectItem(Some(ids[0]))).unwrap();
     e.synchronize_identities().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     (e, ids[0])
 }
 
@@ -180,10 +180,10 @@ fn dr_d_grid_cases_match_the_observed_counts() {
         if op == DrillOp::Slice {
             // DRILL-17: the outline is on grid lines, so nothing changes.
             assert!(result.is_err(), "Slice along existing edges is a no-op");
-            assert!(e.undo.is_empty());
+            assert!(e.history.undo.is_empty());
         } else {
             result.unwrap();
-            assert_eq!(e.undo.len(), 1, "{op:?}");
+            assert_eq!(e.history.undo.len(), 1, "{op:?}");
         }
         assert_eq!(m.faces.len(), polygons, "{op:?}");
         assert_eq!(m.vertices.len(), points, "{op:?}");
@@ -220,7 +220,7 @@ fn dr_d2_stencil_creates_its_material_in_one_undo_step() {
         4
     );
     assert!(e.scene.shader_tree.material_for_tag("stencilMat").is_some());
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.items, before.items);
     assert!(e.scene.shader_tree.material_for_tag("stencilMat").is_none());
@@ -361,7 +361,7 @@ fn refuses_unchanged(e: &mut Editor, cmd: Command, needle: &str) {
     let err = e.dispatch(cmd).unwrap_err();
     assert!(err.contains(needle), "{err}");
     assert_eq!(e.scene.items, before.items, "DRILL-21: scene unchanged");
-    assert!(e.undo.is_empty(), "no undo step");
+    assert!(e.history.undo.is_empty(), "no undo step");
 }
 
 #[test]
@@ -415,8 +415,8 @@ fn undo_and_redo_are_one_step_with_the_tool_label() {
     let before = e.scene.clone();
     solid(&mut e, DrillOp::Tunnel).unwrap();
     let after = mesh(&e, id).clone();
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Solid Drill Tunnel");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Solid Drill Tunnel");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.items, before.items);
     e.dispatch(Command::Redo).unwrap();
@@ -628,7 +628,7 @@ fn random_drills_are_exact_or_refused() {
                 }
                 Err(_) => {
                     assert_eq!(e.scene.items, before.items);
-                    assert!(e.undo.is_empty());
+                    assert!(e.history.undo.is_empty());
                     areas.push(None);
                 }
             }

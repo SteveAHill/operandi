@@ -244,8 +244,8 @@ impl Operandi {
     fn untouched(&self) -> bool {
         self.path.is_none()
             && !self.dirty()
-            && self.editor.undo.is_empty()
-            && self.editor.redo.is_empty()
+            && self.editor.history.undo.is_empty()
+            && self.editor.history.redo.is_empty()
             && !self.scene_busy()
     }
 

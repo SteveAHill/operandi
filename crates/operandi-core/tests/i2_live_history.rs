@@ -87,7 +87,7 @@ fn exact_local_states_signed_zero_and_resume() {
         begin(&mut e);
         check(&e, zero, ii, 1);
         assert_eq!(e.live.as_ref().unwrap().params.extent, DVec3::ZERO);
-        assert!(e.undo.is_empty());
+        assert!(e.history.undo.is_empty());
         mov(&mut e, 0.5);
         check(&e, moved, ii, 2);
         let old = e.identity_ticket().unwrap();
@@ -164,7 +164,7 @@ fn completed_history_anchor_and_capacity() {
             } else {
                 scene(&format!("Xminus{}", index - 1))
             };
-            e.undo.push(std::sync::Arc::new(Checkpoint {
+            e.history.undo.push(std::sync::Arc::new(Checkpoint {
                 label: format!("H{}", n - index + 1),
                 before,
                 after,
@@ -178,8 +178,8 @@ fn completed_history_anchor_and_capacity() {
         arm(&mut e, 0.);
         begin(&mut e);
         mov(&mut e, 0.5);
-        assert_eq!(e.undo.len(), n);
-        assert_eq!(e.redo.len(), 0);
+        assert_eq!(e.history.undo.len(), n);
+        assert_eq!(e.history.redo.len(), 0);
         park(&mut e);
         for k in 1..=3 {
             e.dispatch(Command::Undo).unwrap();
@@ -193,7 +193,7 @@ fn completed_history_anchor_and_capacity() {
         e.dispatch(Command::Redo).unwrap();
         check(&e, "G2", "I1", 2);
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.undo.len(), (n + 1).min(100));
+        assert_eq!(e.history.undo.len(), (n + 1).min(100));
         assert!(e.i2.selected.is_none());
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, scene("G0"));
@@ -208,19 +208,19 @@ fn untouched_old_redo_until_first_park_or_finish() {
     e.dispatch(Command::SelectPolygonSet("bottom".into()))
         .unwrap();
     e.dispatch(Command::Undo).unwrap();
-    let old = e.redo.clone();
+    let old = e.history.redo.clone();
     arm(&mut e, 0.);
     begin(&mut e);
     mov(&mut e, 0.5);
-    assert!(e.redo == old);
+    assert!(e.history.redo == old);
     e.dispatch(Command::Cancel).unwrap();
-    assert!(e.redo == old);
+    assert!(e.history.redo == old);
     begin(&mut e);
     mov(&mut e, 0.5);
     park(&mut e);
-    assert!(e.redo.is_empty());
+    assert!(e.history.redo.is_empty());
     e.dispatch(Command::Cancel).unwrap();
-    assert!(e.redo.is_empty());
+    assert!(e.history.redo.is_empty());
 }
 #[test]
 fn two_completed_stages_and_numeric_apply_unchanged() {
@@ -233,7 +233,7 @@ fn two_completed_stages_and_numeric_apply_unchanged() {
         begin(&mut e);
         mov(&mut e, z);
         e.dispatch(Command::Continue).unwrap();
-        assert_eq!(e.undo.len(), 1);
+        assert_eq!(e.history.undo.len(), 1);
         assert!(!e.live.as_ref().unwrap().applied);
         begin(&mut e);
         assert_eq!(e.scene, scene(b1));
@@ -241,7 +241,7 @@ fn two_completed_stages_and_numeric_apply_unchanged() {
         assert_eq!(e.scene, scene(b2));
         ids(&e, ii);
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.undo.len(), 2);
+        assert_eq!(e.history.undo.len(), 2);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, scene(if z == 0. { "G1" } else { "G2" }));
         e.dispatch(Command::Redo).unwrap();
@@ -253,7 +253,7 @@ fn two_completed_stages_and_numeric_apply_unchanged() {
     e.dispatch(Command::Apply).unwrap();
     assert_eq!(e.scene, scene("G2"));
     assert!(e.i2.selected.is_none());
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }
 #[test]
 fn routing_changed_noop_refusal_cone_metadata_and_other_owner() {
@@ -333,11 +333,16 @@ fn routing_changed_noop_refusal_cone_metadata_and_other_owner() {
             "{id} request"
         );
         assert_eq!(
-            e.undo.len(),
+            e.history.undo.len(),
             row["document_cursor"].as_u64().unwrap() as usize
         );
-        assert!(e.redo.is_empty());
-        for (c, d) in e.undo.iter().zip(row["document"].as_array().unwrap()) {
+        assert!(e.history.redo.is_empty());
+        for (c, d) in e
+            .history
+            .undo
+            .iter()
+            .zip(row["document"].as_array().unwrap())
+        {
             assert_eq!(c.label, d["label"].as_str().unwrap());
             assert_eq!(
                 c.before,
@@ -369,11 +374,11 @@ fn routing_changed_noop_refusal_cone_metadata_and_other_owner() {
             })
         };
         assert_eq!(actual_owner, row["tool_owner"].as_str());
-        for c in &e.undo {
+        for c in &e.history.undo {
             assert_eq!(c.identity_before.as_ref(), Some(&e.identities.current));
             assert_eq!(c.identity_after.as_ref(), Some(&e.identities.current));
         }
-        let roots = 2 * e.undo.len()
+        let roots = 2 * e.history.undo.len()
             + 1
             + e.i2
                 .selected
@@ -466,7 +471,7 @@ fn successful_active_and_parked_save_preserve_exact_authored_bytes() {
     mov(&mut e, 0.5);
     e.save_committed(&path).unwrap();
     assert!(e.i2.selected.is_none());
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     assert_eq!(persistence::load(&path).unwrap(), scene("G2"));
     e.dispatch(Command::Undo).unwrap();
     arm(&mut e, 0.);
@@ -852,17 +857,18 @@ mod frozen_traces {
             s["document"].as_str().unwrap()
         ));
         let cursor = doc["cursor"].as_u64().unwrap() as usize;
-        assert_eq!(e.undo.len(), cursor, "{name} cursor");
+        assert_eq!(e.history.undo.len(), cursor, "{name} cursor");
         assert_eq!(
-            e.undo.len() + e.redo.len(),
+            e.history.undo.len() + e.history.redo.len(),
             doc["entries"].as_array().unwrap().len(),
             "{name} completed entries"
         );
         let a = actions();
         for (c, n) in e
+            .history
             .undo
             .iter()
-            .chain(e.redo.iter().rev())
+            .chain(e.history.redo.iter().rev())
             .zip(doc["entries"].as_array().unwrap())
         {
             let expected = &a[n.as_str().unwrap()];
@@ -948,11 +954,11 @@ mod frozen_traces {
             .iter()
             .map(|r| 1 + roots(&r.selected))
             .sum::<usize>();
-        let document = 2 * (e.undo.len() + e.redo.len());
+        let document = 2 * (e.history.undo.len() + e.history.redo.len());
         let selected = roots(&e.i2.selected);
         let prior = roots(&e.i2.prior);
         let live = usize::from(e.live.is_some());
-        let inventory = json!({"completed_entries":e.undo.len()+e.redo.len(),"completed_applied":e.undo.len(),"completed_redo":e.redo.len(),"selected_stage_objects":usize::from(e.i2.selected.is_some()),"saved_prior_stage_objects":usize::from(e.i2.prior.is_some()),"external_reader_stage_objects":readers.iter().filter(|r|r.selected.is_some()).count(),"retained_stage_objects_total":usize::from(e.i2.selected.is_some())+usize::from(e.i2.prior.is_some())+readers.iter().filter(|r|r.selected.is_some()).count(),"selected_local_entries":entries(&e.i2.selected),"selected_local_cursor":e.i2.selected.as_ref().map(|s|s.cursor),"prior_local_entries":entries(&e.i2.prior),"document_snapshot_pairs":document,"current_visible_snapshot_pairs":1,"selected_stage_snapshot_pairs":selected,"prior_stage_snapshot_pairs":prior,"legacy_live_base_pairs":live,"external_reader_snapshot_pairs":external,"full_snapshot_control_pairs_total":document+1+selected+prior+live+external});
+        let inventory = json!({"completed_entries":e.history.undo.len()+e.history.redo.len(),"completed_applied":e.history.undo.len(),"completed_redo":e.history.redo.len(),"selected_stage_objects":usize::from(e.i2.selected.is_some()),"saved_prior_stage_objects":usize::from(e.i2.prior.is_some()),"external_reader_stage_objects":readers.iter().filter(|r|r.selected.is_some()).count(),"retained_stage_objects_total":usize::from(e.i2.selected.is_some())+usize::from(e.i2.prior.is_some())+readers.iter().filter(|r|r.selected.is_some()).count(),"selected_local_entries":entries(&e.i2.selected),"selected_local_cursor":e.i2.selected.as_ref().map(|s|s.cursor),"prior_local_entries":entries(&e.i2.prior),"document_snapshot_pairs":document,"current_visible_snapshot_pairs":1,"selected_stage_snapshot_pairs":selected,"prior_stage_snapshot_pairs":prior,"legacy_live_base_pairs":live,"external_reader_snapshot_pairs":external,"full_snapshot_control_pairs_total":document+1+selected+prior+live+external});
         assert_eq!(&inventory, count, "{name} complete logical root inventory");
         let definitions = data("docs/i2-simple/expectations/READERS.json");
         let anchors = data("docs/i2-simple/expectations/READER_ANCHOR_BINDINGS.json");
@@ -1000,8 +1006,8 @@ mod frozen_traces {
             })
             .collect::<Vec<_>>();
         let c = d["cursor"].as_u64().unwrap() as usize;
-        e.undo = all[..c].to_vec();
-        e.redo = all[c..].iter().rev().cloned().collect();
+        e.history.undo = all[..c].to_vec();
+        e.history.redo = all[c..].iter().rev().cloned().collect();
     }
     fn start(name: &str, depth: usize) -> (Editor, Vec<ReaderSnapshot>) {
         assert!(depth < 40, "fixture path cycle {name}");
@@ -1258,7 +1264,7 @@ fn malformed_101_completed_entries_refuse_without_eviction_or_partial_begin() {
         records: Default::default(),
         mark: 0,
     };
-    e.undo = (0..101).map(|_| std::sync::Arc::new(c.clone())).collect();
+    e.history.undo = (0..101).map(|_| std::sync::Arc::new(c.clone())).collect();
     let before = e.clone();
     assert!(e.dispatch(Command::BeginExtrude).is_err());
     assert!(e == before);
@@ -1277,8 +1283,8 @@ fn continue_at_local_undo_s1_discards_movement_redo_and_arms_without_new_topolog
     assert!(e.i2.selected.as_ref().unwrap().movement.is_some());
     e.dispatch(Command::Continue).unwrap();
     assert_eq!(e.scene, scene("G1"));
-    assert_eq!(e.undo.len(), 1);
-    assert!(e.redo.is_empty());
+    assert_eq!(e.history.undo.len(), 1);
+    assert!(e.history.redo.is_empty());
     assert!(e.i2.selected.is_none());
     assert!(!e.live.as_ref().unwrap().applied);
     assert_eq!(e.live.as_ref().unwrap().params.extent, DVec3::ZERO);
@@ -1291,5 +1297,5 @@ fn continue_at_local_undo_s1_discards_movement_redo_and_arms_without_new_topolog
     ids(&e, "AZ_B2I");
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, scene("G1"));
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
 }

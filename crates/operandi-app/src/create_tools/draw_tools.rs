@@ -1270,7 +1270,7 @@ impl Operandi {
                         spacing,
                         normal,
                         mark: self.editor.history_mark(),
-                        step_mark: self.editor.undo.last().map(|s| s.mark),
+                        step_mark: self.editor.history.undo.last().map(|s| s.mark),
                     });
                 }
             }
@@ -1290,6 +1290,7 @@ impl Operandi {
         if self.editor.recorded_since(last.mark)
             || self
                 .editor
+                .history
                 .undo
                 .last()
                 .is_none_or(|s| Some(s.mark) != last.step_mark || s.label != "Sketch")
@@ -1300,7 +1301,7 @@ impl Operandi {
             return;
         }
         self.run(Command::Undo);
-        self.editor.redo.clear();
+        self.editor.history.redo.clear();
         self.add_sketch(last.samples, last.spacing, last.normal, &tool.sketch);
     }
 
@@ -1436,7 +1437,7 @@ impl Operandi {
                     t.last_patch = Some(LastPatch {
                         picks,
                         mark: self.editor.history_mark(),
-                        step_mark: self.editor.undo.last().map(|s| s.mark),
+                        step_mark: self.editor.history.undo.last().map(|s| s.mark),
                     });
                 }
             }
@@ -1587,6 +1588,7 @@ impl Operandi {
         if self.editor.recorded_since(last.mark)
             || self
                 .editor
+                .history
                 .undo
                 .last()
                 .is_none_or(|s| Some(s.mark) != last.step_mark || s.label != "Draw Patch")
@@ -1597,14 +1599,14 @@ impl Operandi {
             return;
         }
         self.run(Command::Undo);
-        self.editor.redo.clear();
+        self.editor.history.redo.clear();
         let candidates = self.patch_candidates();
         let ok = self.add_patch(&candidates, &last.picks, &tool.patch);
         if let Some(t) = self.draw.as_mut() {
             t.last_patch = ok.then_some(LastPatch {
                 picks: last.picks,
                 mark: self.editor.history_mark(),
-                step_mark: self.editor.undo.last().map(|s| s.mark),
+                step_mark: self.editor.history.undo.last().map(|s| s.mark),
             });
         }
     }

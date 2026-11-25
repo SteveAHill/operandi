@@ -703,9 +703,9 @@ fn rg11_12_parent_unparent_insert_extract_with_and_without_compensation() {
     assert_eq!(e.scene.item(m).unwrap().parent, None);
     near(shown(&e, a), DVec3::new(1., 0., 0.));
     // Each was one undo step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Undo).unwrap();
-    assert_eq!(e.undo.len(), steps - 1);
+    assert_eq!(e.history.undo.len(), steps - 1);
     assert_eq!(e.scene.item(m).unwrap().parent, Some(p));
 }
 
@@ -796,7 +796,7 @@ fn every_rig_edit_is_one_undo_step_and_piece_channels_key() {
     let mut e = Editor::default();
     let c = item(&mut e, DVec3::ZERO);
     let a = item(&mut e, DVec3::new(2., 0., 0.));
-    let start = e.undo.len();
+    let start = e.history.undo.len();
     ok(
         &mut e,
         &format!("operandi.rig.constrain kind:position items:{c} targets:{a}"),
@@ -806,7 +806,7 @@ fn every_rig_edit_is_one_undo_step_and_piece_channels_key() {
         &mut e,
         &format!("operandi.rig.set piece:{p} channel:influence value:0.5"),
     );
-    assert_eq!(e.undo.len(), start + 2);
+    assert_eq!(e.history.undo.len(), start + 2);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.animation.rig.piece(p).unwrap().num("influence"), 1.);
     e.dispatch(Command::Undo).unwrap();

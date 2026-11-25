@@ -17,7 +17,7 @@ fn moved_cube() -> (Editor, u64) {
     let n = e.scene.active().unwrap().mesh.vertices.len() as u32;
     e.scene.selection.vertices = (0..n).collect();
     let id = e.scene.active().unwrap().id;
-    e.undo.clear();
+    e.history.undo.clear();
     (e, id)
 }
 

@@ -40,40 +40,44 @@ fn wait_out(a: &mut Operandi) {
 fn a_wheel_gesture_moves_the_camera_once_it_holds_still() {
     let (mut a, id) = app();
     let before = camera_position(&a, id);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     for _ in 0..5 {
         wheel_frame(&mut a);
     }
     // Still moving (and then just stopped): nothing written yet, and a
     // repaint is asked for so the write happens even if the app idles.
     assert_eq!(camera_position(&a, id), before);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     a.sync_camera_view(rect());
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     assert!(a.camera_view_settle_in().is_some());
     let (eye, ..) = a.camera.basis();
     wait_out(&mut a);
     a.sync_camera_view(rect());
-    assert_eq!(a.editor.undo.len(), undo + 1, "one step for the gesture");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        undo + 1,
+        "one step for the gesture"
+    );
     assert!((camera_position(&a, id) - eye).length() < 1e-9);
     assert!(a.camera.settling.is_none() && a.camera_view_settle_in().is_none());
     // The view stays put after the write, and later frames write nothing.
     let (eye2, ..) = a.camera.basis();
     assert!((eye2 - eye).length() < 1e-6);
     a.sync_camera_view(rect());
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
 }
 
 #[test]
 fn a_drag_still_moves_the_camera_on_release_without_waiting() {
     let (mut a, id) = app();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.pointer_held = true;
     for _ in 0..3 {
         a.camera.yaw += 0.1;
         a.sync_camera_view(rect());
     }
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     assert!(
         a.camera_view_settle_in().is_none(),
         "no repaints while held"
@@ -81,7 +85,7 @@ fn a_drag_still_moves_the_camera_on_release_without_waiting() {
     let (eye, ..) = a.camera.basis();
     a.pointer_held = false;
     a.sync_camera_view(rect());
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert!((camera_position(&a, id) - eye).length() < 1e-9);
 }
 
@@ -89,13 +93,13 @@ fn a_drag_still_moves_the_camera_on_release_without_waiting() {
 fn undo_during_the_wait_undoes_the_waiting_move() {
     let (mut a, id) = app();
     let before = camera_position(&a, id);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     wheel_frame(&mut a);
     wheel_frame(&mut a);
     // Undo straight away: the move is written first, then undone, so the
     // camera and the view are back where they were and Redo brings it.
     a.run(Command::Undo);
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     assert!((camera_position(&a, id) - before).length() < 1e-9);
     a.sync_camera_view(rect());
     let (eye, ..) = a.camera.basis();

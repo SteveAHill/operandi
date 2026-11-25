@@ -1022,12 +1022,12 @@ impl Operandi {
         node: operandi_core::shader_tree::Node,
         gesture: Option<u64>,
     ) {
-        let previous = std::mem::replace(&mut self.editor.undo_fold, gesture);
+        let previous = std::mem::replace(&mut self.editor.history.undo_fold, gesture);
         self.run(Command::EditEnvironmentLayers {
             item,
             edit: operandi_core::environment::EnvironmentLayerEdit::Replace(Box::new(node)),
         });
-        self.editor.undo_fold = previous;
+        self.editor.history.undo_fold = previous;
     }
 
     /// Add Layer with an environment row selected (ENV §8): the layer goes
@@ -1592,12 +1592,12 @@ impl Operandi {
             };
             transform.rotation.y = shown.to_radians();
             let fold = Some(gesture ^ (locator << 24) ^ 0xE6_0000_0000);
-            let previous = std::mem::replace(&mut self.editor.undo_fold, fold);
+            let previous = std::mem::replace(&mut self.editor.history.undo_fold, fold);
             self.run(Command::ItemTransform {
                 item: locator,
                 transform,
             });
-            self.editor.undo_fold = previous;
+            self.editor.history.undo_fold = previous;
         }
     }
 

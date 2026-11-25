@@ -74,7 +74,7 @@ fn sk10_sk11_clicks_chain_joints_through_the_middle_of_the_mesh() {
 #[test]
 fn sk19_a_dragged_click_is_one_undo_step() {
     let mut a = tool_app();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let start = screen(&a, DVec3::ZERO);
     let Some(input::GestureKind::Skeleton(d)) = a.skeleton_press(start, rect(), Default::default())
     else {
@@ -85,7 +85,7 @@ fn sk19_a_dragged_click_is_one_undo_step() {
         a.skeleton_drag(&d, start, to, rect());
     }
     a.skeleton_release(&d);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert!((world(&a, d.joint).x - 0.5).abs() < 1e-6);
     a.run(Command::Undo);
     assert!(joints(&a).is_empty());
@@ -156,9 +156,9 @@ fn sk20_the_bind_dialog_runs_one_bind_line() {
         line.starts_with("operandi.skin.bind type:heat falloff:medium segments:true"),
         "{line}"
     );
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute(&line);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert!(operandi_core::skin_commands::skin_op(&a.editor.scene, mesh).is_ok());
     let ctx = Context::default();
     let _ = crate::tests::draw(&mut a, &ctx, egui::vec2(1400., 900.), vec![]);
@@ -216,7 +216,7 @@ fn ik51_pose_tool_drag_pin_and_one_step() {
         Default::default(),
     );
     assert!(a.pose.pins.is_empty());
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let start = screen(&a, world(&a, j[2]));
     let Some(input::GestureKind::Pose(d)) =
         a.pose_press(start, rect(), PointerButton::Primary, Default::default())
@@ -228,7 +228,7 @@ fn ik51_pose_tool_drag_pin_and_one_step() {
         a.pose_drag(&d, start, to, rect());
     }
     a.pose_release(&d);
-    assert_eq!(a.editor.undo.len(), steps + 1, "one step");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "one step");
     assert!(
         world(&a, j[2]).distance(DVec3::new(1., 0., 0.)) > 0.1,
         "{}",

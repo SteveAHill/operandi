@@ -196,7 +196,7 @@ fn live(ctx: &Context) -> (Operandi, Scene, Vec<String>) {
     arm(&mut a);
     frame(&mut a, ctx, vec![]);
     let source = a.editor.scene.clone();
-    let history = labels(&a.editor.undo);
+    let history = labels(&a.editor.history.undo);
     assert_eq!(displayed(&mut a, ctx), shown(explicit(true, false)));
     let at = a.viewport_rect.left_top() + vec2(20., 60.);
     click_at(&mut a, ctx, at);
@@ -269,10 +269,17 @@ fn thicken_on_live_checkboxes_replace_from_source_then_cancel_restores() {
         a.status
     );
     assert_eq!(a.editor.scene.selection, source_selection);
-    assert_eq!(labels(&a.editor.undo), history, "Cancel adds no history");
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        history,
+        "Cancel adds no history"
+    );
     // Existing contract: explicit Cancel resolves the stage and deactivates.
     assert!(a.editor.live.is_none(), "Cancel deactivates: {}", a.status);
-    assert!(a.editor.redo.is_empty(), "Cancel leaves nothing to redo");
+    assert!(
+        a.editor.history.redo.is_empty(),
+        "Cancel leaves nothing to redo"
+    );
 }
 
 #[test]
@@ -287,27 +294,27 @@ fn thicken_on_live_checkboxes_drop_undo_redo_and_save_load() {
     let committed = a.editor.scene.clone();
     assert_eq!(committed, editor_expected(&source, final_params));
     assert_eq!(&committed, stages.last().unwrap());
-    let after_drop = labels(&a.editor.undo);
+    let after_drop = labels(&a.editor.history.undo);
     assert_eq!(after_drop.len(), history.len() + 1, "{after_drop:?}");
     assert_eq!(after_drop.last().unwrap(), "Thicken");
 
     a.run(Command::Undo);
     assert!(a.editor.live.is_none());
-    assert_eq!(labels(&a.editor.redo), ["Thicken"]);
+    assert_eq!(labels(&a.editor.history.redo), ["Thicken"]);
     assert_eq!(a.editor.scene, source, "Undo restores source: {}", a.status);
-    assert_eq!(labels(&a.editor.undo), history);
+    assert_eq!(labels(&a.editor.history.undo), history);
     a.run(Command::Redo);
     assert_eq!(
         a.editor.scene, committed,
         "Redo restores shell: {}",
         a.status
     );
-    assert_eq!(labels(&a.editor.undo), after_drop);
+    assert_eq!(labels(&a.editor.history.undo), after_drop);
     assert!(
         a.editor.live.is_none(),
         "Redo restores the dropped shell only"
     );
-    assert!(a.editor.redo.is_empty());
+    assert!(a.editor.history.redo.is_empty());
     // Retained Thicken settings are session state, untouched by history.
     assert_eq!(a.editor.thicken_preset, Some(final_params));
 

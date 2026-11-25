@@ -14,7 +14,7 @@ fn editor() -> Editor {
         .unwrap()
         .into();
     e.scene.selection.mode = Mode::Vertex;
-    e.undo.clear();
+    e.history.undo.clear();
     e.auto_activate_flags = true;
     e
 }
@@ -111,11 +111,11 @@ fn cs22_armed_changes_nothing_and_drop_is_a_no_op() {
     e.dispatch(Command::Drop).unwrap();
     assert!(e.live.is_none() && !e.is_armed());
     assert_eq!(points(&e), before);
-    assert!(e.undo.is_empty(), "no undo step");
+    assert!(e.history.undo.is_empty(), "no undo step");
     e.dispatch(Command::Activate(Tool::Bend)).unwrap();
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(points(&e), before);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 
 /// CS-21: Apply runs the armed tool once as one undo step and leaves it
@@ -134,7 +134,7 @@ fn cs21_apply_runs_once_and_stays_armed() {
     e.dispatch(Command::Apply).unwrap();
     let once = points(&e);
     assert_ne!(once, before);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     assert!(e.is_armed(), "Apply leaves it armed");
     assert_eq!(params(&e).bend.angle, 90.);
     assert_eq!(
@@ -145,7 +145,7 @@ fn cs21_apply_runs_once_and_stays_armed() {
     // Dropping it now keeps the applied result and adds nothing.
     e.dispatch(Command::Drop).unwrap();
     assert_eq!(points(&e), once);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(points(&e), before);
 }

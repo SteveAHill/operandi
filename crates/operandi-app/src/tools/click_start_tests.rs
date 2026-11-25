@@ -14,7 +14,7 @@ fn app(ctx: &Context, mode: Mode) -> Operandi {
     a.click_to_start = true;
     a.camera.view = View::Front;
     a.run(Command::Mode(mode));
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     for _ in 0..3 {
         draw(&mut a, ctx, SIZE, vec![]);
     }
@@ -105,12 +105,12 @@ fn apply_runs_once_and_drop_changes_nothing() {
     assert_eq!(points(&a), before, "armed: values only");
     a.run(Command::Drop);
     assert_eq!(points(&a), before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     a.execute("bend");
     a.execute("tool.attr xfrm.bend angle 90");
     a.run(Command::Apply);
     assert_ne!(points(&a), before);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     assert!(a.editor.is_armed());
 }
 

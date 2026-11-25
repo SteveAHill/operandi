@@ -347,7 +347,7 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
     let source = a.editor.scene.clone();
     snapshot("source", &source);
     assert_eq!(counts(&source), (4, 1));
-    assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+    assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
 
     // Production Geometry > Polygon menu activation arms Extrude only.
     a.menu_action(&ctx, app_menu::line_action(Tool::Extrude.label()));
@@ -377,14 +377,14 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
         assert!(a.field_errors.is_empty(), "{field}: {:?}", a.field_errors);
         armed(&a, field);
         assert_eq!(a.editor.scene, source, "{field}: source unchanged");
-        assert!(a.editor.undo.is_empty(), "{field}: no history");
+        assert!(a.editor.history.undo.is_empty(), "{field}: no history");
     }
     choose_mode(&mut a, &ctx, "Shift");
     let p = armed(&a, "Mode Shift");
     assert_eq!(p, configured(reset.clone(), FIRST), "{}", a.status);
     assert_eq!(a.editor.scene, source, "Mode: source unchanged");
     assert_eq!(a.editor.scene.selection, source.selection);
-    assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+    assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
     let s = shown(&mut a, &ctx);
     assert_extent_shown(&s, FIRST, "configured");
     assert_eq!(s.sides, "1");
@@ -402,10 +402,10 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
         armed(&a, "after first Apply"),
         configured(reset.clone(), FIRST)
     );
-    assert_eq!(labels(&a.editor.undo), ["Extrude"]);
-    assert!(a.editor.redo.is_empty());
-    assert_eq!(a.editor.undo[0].before, source);
-    assert_eq!(a.editor.undo[0].after, first);
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude"]);
+    assert!(a.editor.history.redo.is_empty());
+    assert_eq!(a.editor.history.undo[0].before, source);
+    assert_eq!(a.editor.history.undo[0].after, first);
     assert_eq!(first, expected[0].scene, "first: whole scene");
     assert_eq!(first.selection, expected[0].scene.selection);
     assert_selected_cap_at(&first, &source, FIRST, "first");
@@ -427,8 +427,8 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
     );
     click_apply(&mut a, &ctx);
     assert_eq!(a.editor.scene, first, "invalid draft: first retained");
-    assert_eq!(labels(&a.editor.undo), ["Extrude"]);
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude"]);
+    assert!(a.editor.history.redo.is_empty());
     assert!(a.field_errors.contains_key("extent2"));
     assert_eq!(armed(&a, "refused Apply").extent, FIRST, "last valid kept");
     assert_eq!(shown(&mut a, &ctx).extent[2], "1 m/0");
@@ -439,7 +439,7 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
     assert_eq!(a.status, "Ready");
     assert_eq!(armed(&a, "corrected"), configured(reset.clone(), SECOND));
     assert_eq!(a.editor.scene, first, "correction: first unchanged");
-    assert_eq!(labels(&a.editor.undo), ["Extrude"]);
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude"]);
     let s = shown(&mut a, &ctx);
     assert_extent_shown(&s, SECOND, "corrected");
     assert_eq!(s.mode, "Shift");
@@ -451,10 +451,10 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
     snapshot("second", &second);
     assert_eq!(counts(&second), (12, 9), "EX-012 second stage");
     assert_eq!(armed(&a, "after second Apply"), configured(reset, SECOND));
-    assert_eq!(labels(&a.editor.undo), ["Extrude", "Extrude"]);
-    assert!(a.editor.redo.is_empty());
-    assert_eq!(a.editor.undo[1].before, first);
-    assert_eq!(a.editor.undo[1].after, second);
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude", "Extrude"]);
+    assert!(a.editor.history.redo.is_empty());
+    assert_eq!(a.editor.history.undo[1].before, first);
+    assert_eq!(a.editor.history.undo[1].after, second);
     assert_eq!(second, expected[1].scene, "second: whole scene");
     assert_eq!(second.selection, expected[1].scene.selection);
     assert_selected_cap_at(&second, &source, FIRST + SECOND, "second");
@@ -467,7 +467,11 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
     frame(&mut a, &ctx, vec![key(Key::Q)]);
     assert!(a.editor.live.is_none(), "Q drops: {}", a.status);
     assert_eq!(a.editor.scene, second, "Drop keeps the second stage");
-    assert_eq!(labels(&a.editor.undo), ["Extrude", "Extrude"], "no third");
+    assert_eq!(
+        labels(&a.editor.history.undo),
+        ["Extrude", "Extrude"],
+        "no third"
+    );
 
     // Undo/Redo through the production Edit menu routing.
     for (action, want, step) in [
@@ -488,8 +492,8 @@ fn ex_t11_actual_panel_two_apply_stages_invalid_draft_drop_undo_redo() {
         a.editor.scene, expected[1].scene,
         "Redo: second matches again"
     );
-    assert_eq!(labels(&a.editor.undo), ["Extrude", "Extrude"]);
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude", "Extrude"]);
+    assert!(a.editor.history.redo.is_empty());
 }
 
 const NO_MAP: &str = "No UV map selected";
@@ -596,7 +600,7 @@ fn ex_002_actual_panel_uv_map_selector_retains_v_after_deselection() {
     assert_eq!(counts(&source), (4, 1));
     assert_eq!(src_mesh.uv_maps[TEXTURE], vec![vec![None; 4]]);
     assert!(src_mesh.attributes.point_uvs.is_empty(), "no assigned UVs");
-    assert!(a.editor.undo.is_empty() && a.editor.redo.is_empty());
+    assert!(a.editor.history.undo.is_empty() && a.editor.history.redo.is_empty());
 
     // Arm through the production menu route; configure through real controls.
     a.menu_action(&ctx, app_menu::line_action(Tool::Extrude.label()));
@@ -616,8 +620,8 @@ fn ex_002_actual_panel_uv_map_selector_retains_v_after_deselection() {
     let unchanged = |a: &Operandi, step: &str| {
         assert_eq!(a.editor.scene, source, "{step}: source unchanged");
         assert_eq!(a.editor.scene.selection, source.selection, "{step}");
-        assert!(a.editor.undo.is_empty(), "{step}: no history");
-        assert!(a.editor.redo.is_empty(), "{step}: no redo");
+        assert!(a.editor.history.undo.is_empty(), "{step}: no history");
+        assert!(a.editor.history.redo.is_empty(), "{step}: no redo");
     };
     unchanged(&a, "configured");
     let retained_uvs = armed(&a, "configured").extrude_uvs;
@@ -698,10 +702,10 @@ fn ex_002_actual_panel_uv_map_selector_retains_v_after_deselection() {
     snapshot("uv result", &result);
     assert_eq!(counts(&result), (8, 5), "EX-012 one stage");
     assert_eq!(armed(&a, "after Apply"), want);
-    assert_eq!(labels(&a.editor.undo), ["Extrude"]);
-    assert!(a.editor.redo.is_empty());
-    assert_eq!(a.editor.undo[0].before, source);
-    assert_eq!(a.editor.undo[0].after, result);
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude"]);
+    assert!(a.editor.history.redo.is_empty());
+    assert_eq!(a.editor.history.undo[0].before, source);
+    assert_eq!(a.editor.history.undo[0].after, result);
     assert_eq!(result, expected.scene, "whole scene vs Editor route");
     assert_eq!(result.selection, expected.scene.selection);
     assert_eq!(
@@ -727,7 +731,7 @@ fn ex_002_actual_panel_uv_map_selector_retains_v_after_deselection() {
     frame(&mut a, &ctx, vec![release]);
     assert!(a.editor.live.is_none(), "Q drops: {}", a.status);
     assert_eq!(a.editor.scene, result, "Drop keeps the stage");
-    assert_eq!(labels(&a.editor.undo), ["Extrude"]);
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude"]);
     for (action, want, step) in [
         (app_menu::line_action("app.undo"), &source, "Undo → source"),
         (app_menu::line_action("app.redo"), &result, "Redo → result"),
@@ -747,6 +751,6 @@ fn ex_002_actual_panel_uv_map_selector_retains_v_after_deselection() {
         assert!(a.editor.live.is_none(), "{step}: no tool restored");
         frame(&mut a, &ctx, vec![]);
     }
-    assert_eq!(labels(&a.editor.undo), ["Extrude"]);
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(labels(&a.editor.history.undo), ["Extrude"]);
+    assert!(a.editor.history.redo.is_empty());
 }

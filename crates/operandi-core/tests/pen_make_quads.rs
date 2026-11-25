@@ -82,7 +82,7 @@ fn pmq_02_three_clicks_make_one_quad_facing_the_strip_order() {
         &[v(0., 0.), v(1., 0.), v(1., 1.), v(0., 1.)]
     ));
     assert!(m.normal(0).z > 0.99);
-    assert_eq!(e.undo.last().unwrap().label, "Pen Quads");
+    assert_eq!(e.history.undo.last().unwrap().label, "Pen Quads");
 }
 
 #[test]
@@ -155,7 +155,7 @@ fn ctrl_click_needs_a_starting_edge_and_make_quads() {
 fn undo_takes_back_one_click_and_the_strip_is_one_undo_step() {
     let mut e = editor();
     let before = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     start(&mut e, quads());
     for (x, y) in [(0., 0.), (1., 0.), (0., 1.), (0., 2.)] {
         click(&mut e, x, y);
@@ -175,7 +175,7 @@ fn undo_takes_back_one_click_and_the_strip_is_one_undo_step() {
     click(&mut e, 0., 1.);
     assert_eq!(e.scene, before, "nothing is published while drawing");
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     let after = e.scene.clone();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, before);

@@ -246,12 +246,12 @@ fn editing_the_source_changes_the_instances() {
 fn drop_is_one_step_and_instances_save() {
     let mut e = editor(DVec3::ZERO, Mode::Item);
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     run(&mut e, Tool::Clone, |d| {
         d.clone.count = 2;
         d.clone.offset = DVec3::X * 2.;
     });
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let dir = std::env::temp_dir().join(format!("op-inst-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("instances.opscene");
@@ -305,10 +305,10 @@ fn pen_instance_places_along_the_path() {
 fn the_instance_command() {
     let mut e = editor(DVec3::new(1., 2., 3.), Mode::Item);
     let src = source(&e);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::InstanceItems).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Instance");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Instance");
     assert_eq!(e.scene.items.len(), 2);
     let made = e.scene.items[1].clone();
     assert_eq!(made.instance_of, Some(src));

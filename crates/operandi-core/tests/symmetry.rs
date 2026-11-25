@@ -271,13 +271,17 @@ fn sym_sel02_04_off_plane_and_isolated_points() {
     e.dispatch(Command::SelectSymmetrical).unwrap();
     assert_eq!(e.scene.selection.vertices, vec![9, 7, 5]);
 
-    let undo_depth = e.undo.len();
+    let undo_depth = e.history.undo.len();
     e.dispatch(Command::Symmetry(Symmetry::OFF)).unwrap();
     select_vertices(&mut e, &[9]);
     let before = e.scene.clone();
     e.dispatch(Command::SelectSymmetrical).unwrap();
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), undo_depth, "Off records no history step");
+    assert_eq!(
+        e.history.undo.len(),
+        undo_depth,
+        "Off records no history step"
+    );
 
     // Two points in no polygon, 10 and 11, mirrored across x = 0.
     let mut e = editor(&o);

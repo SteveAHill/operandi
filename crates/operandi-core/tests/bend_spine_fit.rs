@@ -67,7 +67,7 @@ fn bend_on_box() -> Editor {
             .unwrap()
             .into();
     e.scene.selection.mode = Mode::Polygon;
-    e.undo.clear();
+    e.history.undo.clear();
     e.dispatch(Command::Activate(Tool::Bend)).unwrap();
     e
 }

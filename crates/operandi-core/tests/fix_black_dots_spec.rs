@@ -147,13 +147,13 @@ fn fb_c_a_bent_pair_on_a_cube_becomes_one_six_sided_polygon() {
 
 fn refused(m: Mesh) {
     let mut e = editor(m.clone(), Mode::Polygon);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert_eq!(
         e.dispatch(Command::FixBlackDots).unwrap_err(),
         NO_BLACK_DOTS
     );
     assert_eq!(active(&e), &m, "no change");
-    assert_eq!(e.undo.len(), steps, "no undo step (MT2-04)");
+    assert_eq!(e.history.undo.len(), steps, "no undo step (MT2-04)");
 }
 
 #[test]

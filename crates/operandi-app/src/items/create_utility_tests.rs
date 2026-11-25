@@ -54,7 +54,7 @@ fn app(positions: &[DVec3]) -> (Operandi, Context, Vec<u64>) {
         ids.push(item.id);
     }
     a.editor.synchronize_identities().unwrap();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.run(Command::SelectItem(Some(ids[0])));
     a.category = toolbox::Category::Create;
     a.create_folded.clear();
@@ -71,10 +71,10 @@ fn copy_and_paste_buttons_add_a_selected_copy() {
     a.editor.scene.selection.faces = vec![0];
     press_button(&mut a, &ctx, "Copy Selection");
     assert!(a.editor.clipboard.is_some(), "{}", a.status);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     press_button(&mut a, &ctx, "Paste Selection");
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 7);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     press_button(&mut a, &ctx, "Cut Selection");
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 6);
 }

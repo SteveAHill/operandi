@@ -134,11 +134,11 @@ fn add_per_light_outputs_is_one_step_and_skips_lights_that_have_one() {
     e.dispatch(Command::NewLight(LightKind::Spot)).unwrap();
     let rim = e.scene.selection.item.unwrap();
     let rim_name = e.scene.item(rim).unwrap().name.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert!(matches!(run(&mut e), Ok(None)));
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     assert_eq!(
-        e.undo.last().unwrap().label,
+        e.history.undo.last().unwrap().label,
         operandi_core::per_light_outputs::LABEL
     );
     let outs = lpe_outputs(&e);

@@ -72,9 +72,9 @@ fn flip_flips_every_mesh_selection_in_one_step() {
     let (mut e, a, b) = tops();
     let (a0, b0) = (mesh(&e, a), mesh(&e, b));
     let (ta, tb) = (top(&e, a), top(&e, b));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::FlipPolygons).unwrap();
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     assert!(mesh(&e, a).normal(ta as usize).y < -0.9);
     assert!(mesh(&e, b).normal(tb as usize).y < -0.9);
     // Each mesh keeps its own selection.
@@ -96,10 +96,10 @@ fn detriangulate_runs_on_every_mesh_in_one_step() {
     assert_eq!(mesh(&e, a).faces.len(), 7);
     assert_eq!(mesh(&e, b).faces.len(), 7);
     assert_eq!(faces_of(&e, b).len(), 2, "b's triangles stay selected");
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Detriangulate(DetriangulateOptions::default()))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     assert_eq!(mesh(&e, a).faces.len(), 6);
     assert_eq!(mesh(&e, b).faces.len(), 6);
     e.dispatch(Command::Undo).unwrap();
@@ -203,11 +203,11 @@ fn a_failure_on_one_mesh_changes_nothing() {
     let tb = top(&e, b);
     pick(&mut e, b, Component::Polygon(tb));
     let (a0, b0) = (mesh(&e, a), mesh(&e, b));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let error = e.dispatch(Command::MergePolygons).unwrap_err();
     assert!(error.contains(&item_name(&e, b)), "{error}");
     assert_eq!((mesh(&e, a), mesh(&e, b)), (a0, b0));
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 fn item_name(e: &Editor, id: u64) -> String {
     e.scene
@@ -252,7 +252,7 @@ fn run_tool(e: &mut Editor, tool: Tool, edit: impl FnOnce(&mut Parameters)) {
 fn bevel_has_one_handle_and_bevels_every_mesh_in_one_step() {
     let (mut e, a, b) = tops();
     let (a0, b0) = (mesh(&e, a), mesh(&e, b));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     let frame = e.live.as_ref().unwrap().action_frame.unwrap();
     assert!(
@@ -264,7 +264,7 @@ fn bevel_has_one_handle_and_bevels_every_mesh_in_one_step() {
     p.shift = 0.5;
     e.dispatch(Command::Preview(p)).unwrap();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     for id in [a, b] {
         assert_eq!(mesh(&e, id).faces.len(), 10);
         assert!((highest(&mesh(&e, id)) - 1.5).abs() < 1e-9);
@@ -334,9 +334,9 @@ fn tool_with_nothing_selected_on_the_primary_still_runs_on_the_others() {
 fn extrude_runs_on_every_mesh_and_selects_each_mesh_caps() {
     let (mut e, a, b) = tops();
     let (a0, b0) = (mesh(&e, a), mesh(&e, b));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     run_tool(&mut e, Tool::Extrude, |p| p.extent = DVec3::Y);
-    assert_eq!(e.undo.len(), steps + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one undo step");
     for id in [a, b] {
         assert!((highest(&mesh(&e, id)) - 2.).abs() < 1e-9);
         assert_eq!(mesh(&e, id).faces.len(), 10);

@@ -44,7 +44,7 @@ fn app() -> (Operandi, Context) {
     let mut a = Operandi::empty();
     a.run(Command::NewMesh);
     a.editor.scene.active_mut().unwrap().mesh = grid().into();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.camera.view = View::Front;
     a.camera.target = DVec3::ZERO;
     a.camera.distance = 3.;
@@ -176,8 +176,8 @@ fn a_push_stroke_raises_the_surface_as_one_undo_step() {
     );
     let z = mid(&a).z;
     assert!(z > 0.005, "z {z} ({})", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
-    assert_eq!(a.editor.undo[0].label, "Push Stroke");
+    assert_eq!(a.editor.history.undo.len(), 1);
+    assert_eq!(a.editor.history.undo[0].label, "Push Stroke");
     // The brush stays on for the next stroke (SC-93).
     assert_eq!(a.sculpt.brush, Some(SculptBrush::Push));
     a.run(Command::Undo);
@@ -210,8 +210,8 @@ fn ctrl_digs_and_shift_smooths() {
         Modifiers::SHIFT,
     );
     assert!(mid(&a).z > dug, "Shift smoothed toward flat");
-    assert_eq!(a.editor.undo.last().unwrap().label, "Smooth Stroke");
-    assert_eq!(a.editor.undo.len(), 2);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Smooth Stroke");
+    assert_eq!(a.editor.history.undo.len(), 2);
 }
 
 #[test]
@@ -220,7 +220,7 @@ fn a_press_off_the_mesh_does_nothing() {
     brush(&mut a, SculptBrush::Push, 60.);
     let corner = a.viewport_rect.left_top() + vec2(20., 60.);
     stroke(&mut a, &ctx, corner, vec2(10., 0.), 2, Modifiers::NONE);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     assert_eq!(mid(&a).z, 0.);
 }
 
@@ -234,7 +234,7 @@ fn move_drags_the_grabbed_points_in_the_screen_plane() {
     // Screen up is world +Y in the Front view; nothing moves off the plane.
     assert!(p.y > 0.05, "{p:?} ({})", a.status);
     assert!(p.z.abs() < 1e-9);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Move Stroke");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Move Stroke");
 }
 
 #[test]
@@ -279,7 +279,7 @@ fn right_drag_sizes_and_middle_drag_sets_strength() {
     );
     assert!((a.sculpt.settings.push.offset_amount - 0.2).abs() < 1e-9);
     // Neither touched the mesh or the history (SC-91).
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }
 
 #[test]
@@ -292,7 +292,7 @@ fn panel_edits_change_the_next_stroke_only() {
     });
     assert_eq!(a.sculpt.settings.push.offset_mode, OffsetMode::Absolute);
     assert_eq!(a.sculpt.settings.push.normal_mode, NormalMode::Z);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     // Each brush keeps its own settings (SC-95).
     a.activate_sculpt(SculptBrush::Inflate);
     assert_eq!(a.sculpt.settings.inflate.offset_mode, OffsetMode::Adaptive);
@@ -382,7 +382,7 @@ fn symmetry_strokes_both_sides_in_one_step() {
     );
     assert!(right > 0.);
     assert!((right - left).abs() < 1e-9, "{right} {left}");
-    assert_eq!(a.editor.undo.len(), 1, "both sides are one step");
+    assert_eq!(a.editor.history.undo.len(), 1, "both sides are one step");
 }
 
 /// SC-110 probe (opt-in, release): stroke frames on a 100k-point grid with
@@ -522,7 +522,7 @@ fn sculpt_frame_time_100k_points() {
             times[times.len() - 1]
         );
         assert_eq!(
-            a.editor.undo.last().map(|c| c.label.clone()),
+            a.editor.history.undo.last().map(|c| c.label.clone()),
             Some(format!("{} Stroke", b.label()))
         );
     }
@@ -671,8 +671,8 @@ fn push_z_with(pressure: impl Fn(f32) -> f32, tool: crate::tablet::PenTool) -> (
         pressure,
         tool,
     );
-    assert_eq!(a.editor.undo.len(), 1, "one stroke, one undo step");
-    (mid(&a).z, a.editor.undo[0].label.clone())
+    assert_eq!(a.editor.history.undo.len(), 1, "one stroke, one undo step");
+    (mid(&a).z, a.editor.history.undo[0].label.clone())
 }
 
 #[test]
@@ -726,7 +726,7 @@ fn the_eraser_end_inverts_or_smooths_as_the_preference_says() {
         |_| 1.,
         PenTool::Eraser,
     );
-    assert_eq!(a.editor.undo[0].label, "Smooth Stroke");
+    assert_eq!(a.editor.history.undo[0].label, "Smooth Stroke");
 }
 
 #[test]
@@ -990,7 +990,7 @@ fn vertex_map_tools_paint_through_the_viewport() {
         .clone();
     assert!(map.get(&(MID as u32)).is_some_and(|w| *w > 0.4), "{map:?}");
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Vertex Map Paint Stroke"
     );
     assert_eq!(mid(&a).z, 0., "painting moves nothing");
@@ -1100,7 +1100,7 @@ fn a_dialog_mid_stroke_ends_it_as_its_own_step() {
     a.show_about = true;
     frame(&mut a, &ctx, vec![]);
     assert!(!a.app_stroke_held(), "the stroke ended");
-    assert_eq!(a.editor.undo.len(), 1, "as its own step");
+    assert_eq!(a.editor.history.undo.len(), 1, "as its own step");
     a.show_about = false;
     frame(&mut a, &ctx, vec![]);
     // The release lands late, then a second stroke.
@@ -1122,7 +1122,7 @@ fn a_dialog_mid_stroke_ends_it_as_its_own_step() {
         6,
         Modifiers::NONE,
     );
-    assert_eq!(a.editor.undo.len(), 2, "two strokes, two steps");
+    assert_eq!(a.editor.history.undo.len(), 2, "two strokes, two steps");
     a.run(Command::Undo);
     a.run(Command::Undo);
     assert_eq!(mid(&a).z, 0., "back to the flat grid");

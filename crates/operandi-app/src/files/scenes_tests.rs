@@ -28,14 +28,14 @@ fn each_scene_keeps_its_own_history_selection_path_and_dirty_state() {
     assert!(a.save(file.clone()));
     edit(&mut a);
     let first = a.editor.scene.clone();
-    let first_undo = a.editor.undo.len();
+    let first_undo = a.editor.history.undo.len();
 
     a.request_file(FileAction::New);
     assert_eq!(a.scenes.tabs.len(), 2);
     assert_eq!(a.scenes.active, 1);
     assert!(a.path.is_none() && !a.dirty());
     assert!(
-        a.editor.undo.is_empty(),
+        a.editor.history.undo.is_empty(),
         "a new scene starts its own history"
     );
     // The other scene was saved, so no Untitled scene is open.
@@ -48,7 +48,7 @@ fn each_scene_keeps_its_own_history_selection_path_and_dirty_state() {
     a.run(Command::Undo);
     assert!(a.switch_scene(0));
     assert_eq!(a.editor.scene, first);
-    assert_eq!(a.editor.undo.len(), first_undo);
+    assert_eq!(a.editor.history.undo.len(), first_undo);
     assert_eq!(a.path.as_deref(), Some(file.as_path()));
     assert!(a.dirty());
     assert_eq!(a.scene_label(), "first.opscene");
@@ -203,7 +203,7 @@ fn close_scene_asks_for_unsaved_work_and_leaves_one_blank_scene() {
     a.pending = None;
     a.do_file(FileAction::CloseScene);
     assert_eq!(a.scenes.tabs.len(), 1);
-    assert!(!a.dirty() && a.editor.undo.is_empty());
+    assert!(!a.dirty() && a.editor.history.undo.is_empty());
     assert_eq!(
         a.editor.scene.items.len(),
         4,
@@ -588,7 +588,7 @@ fn delete_asks_about_child_items_only_when_there_are_some() {
 
     a.run(Command::SelectItem(Some(group)));
     let before = a.editor.scene.clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.request_delete();
     assert!(a.scenes.confirm_delete_children);
     let nodes = frame(&mut a, vec![]);
@@ -625,7 +625,7 @@ fn delete_asks_about_child_items_only_when_there_are_some() {
     frame(&mut a, vec![]);
     assert!(!a.scenes.confirm_delete_children);
     assert_eq!(a.editor.scene, before);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
 
     // No (Escape, GL-Q7): the child goes to the root.
     a.request_delete();
@@ -644,7 +644,7 @@ fn delete_asks_about_child_items_only_when_there_are_some() {
     assert!(a.editor.scene.items.iter().all(|i| i.id != group));
     let kept = a.editor.scene.item(child).unwrap();
     assert_eq!(kept.parent, None);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
 
     // Return (Yes): the children go too.
     a.run(Command::Undo);

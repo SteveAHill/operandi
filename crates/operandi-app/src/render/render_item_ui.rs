@@ -102,9 +102,9 @@ impl Operandi {
             _ => crate::colour_field::next_gesture(),
         };
         self.shading.render_gesture = dragging.then_some(gesture);
-        let previous = self.editor.undo_fold.replace(gesture);
+        let previous = self.editor.history.undo_fold.replace(gesture);
         self.run(Command::SetRenderSettings(s));
-        self.editor.undo_fold = previous;
+        self.editor.history.undo_fold = previous;
     }
 
     /// The Frame tab (RI-F01, RI-F03). Returns a newly picked render

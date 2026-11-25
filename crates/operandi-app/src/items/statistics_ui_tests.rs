@@ -110,11 +110,11 @@ fn plus_in_the_list_selects_and_switches_mode() {
     // "4 (quads)" is open by default; click its + cell.
     let key = Row::PolygonVertices(4).key();
     let at = a.statistics.tree.cells[&(key, 0)].center();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     click(&mut a, &ctx, at);
     assert_eq!(a.editor.scene.selection.mode, Mode::Polygon, "{}", a.status);
     assert_eq!(a.editor.scene.selection.faces.len(), 6);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     settled(&mut a, &ctx);
     assert_eq!(tally(&a, Row::PolygonVertices(4)), (6, 6));
     // −.

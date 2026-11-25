@@ -187,7 +187,7 @@ fn split_ngon_and_successive_cuts_across_polygons() {
     mesh.validate().unwrap();
     assert_eq!(mesh.faces.len(), 4);
     assert!(mesh.faces.iter().all(|f| f.vertices.len() == 3));
-    assert_eq!(b.editor.undo.len(), 1, "all cuts are one edit");
+    assert_eq!(b.editor.history.undo.len(), 1, "all cuts are one edit");
     let before = b.editor.scene.clone();
     b.menu_action(&context(), app_menu::line_action("app.undo"));
     assert_ne!(b.editor.scene, before);
@@ -204,5 +204,5 @@ fn split_refuses_a_cut_outside_a_concave_polygon() {
     a.execute("poly.split");
     assert!(a.status.ends_with("nothing changed"), "{}", a.status);
     assert_eq!(a.editor.scene, before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }

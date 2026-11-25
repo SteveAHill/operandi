@@ -65,11 +65,11 @@ fn scale_handles_reach_zero_and_grow_back() {
     assert_eq!(d[axis], 0., "{d}");
     assert!(d.is_finite());
     // The preview is finite and the drop is one undo step that undoes.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.run(Command::Drop);
     let after = a.editor.scene.active().unwrap().mesh.clone();
     assert!(after.vertices.iter().all(|v| v.is_finite()));
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     a.run(Command::Undo);
     assert_eq!(*a.editor.scene.active().unwrap().mesh, *original);
 }

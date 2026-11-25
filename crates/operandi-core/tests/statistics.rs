@@ -138,9 +138,9 @@ fn plus_and_minus_select_rows_and_every_sel_cell_follows() {
         "operandi.statistics.select row:polygons.vertices:more action:only",
     );
     assert_eq!(e.scene.selection.faces, [3]);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     run(&mut e, "operandi.statistics.select row:polygons.vertices:1");
-    assert_eq!(e.undo.len(), undo, "an empty row records nothing");
+    assert_eq!(e.history.undo.len(), undo, "an empty row records nothing");
     assert_eq!(e.scene.selection.faces, [3]);
 }
 
@@ -148,14 +148,14 @@ fn plus_and_minus_select_rows_and_every_sel_cell_follows() {
 fn plus_on_a_vertex_row_switches_to_vertex_mode() {
     // 5.
     let mut e = editor(acceptance_mesh(), Mode::Polygon);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     run(&mut e, "operandi.statistics.select row:vertices.edges:0");
     assert_eq!(e.scene.selection.mode, Mode::Vertex);
     let mut v = e.scene.selection.vertices.clone();
     v.sort();
     assert_eq!(v, [11, 12, 13, 14]);
     assert_eq!(
-        e.undo.len(),
+        e.history.undo.len(),
         undo + 1,
         "mode switch and selection: one step"
     );
@@ -173,14 +173,14 @@ fn plus_on_a_vertex_row_switches_to_vertex_mode() {
 fn renaming_a_part_is_one_undo_step() {
     // 6.
     let mut e = editor(acceptance_mesh(), Mode::Polygon);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     run(
         &mut e,
         "operandi.statistics.rename row:polygons.part:Wheel name:{Front Wheel}",
     );
     let part = |e: &Editor| e.scene.active().unwrap().mesh.faces[0].part.clone();
     assert_eq!(part(&e).as_deref(), Some("Front Wheel"));
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(part(&e).as_deref(), Some("Wheel"));
     // Delete removes the tag; the polygon stays.
@@ -263,10 +263,10 @@ fn checks_find_bent_concave_sliver_and_overlapping_polygons() {
 #[test]
 fn count_query_answers_and_changes_nothing() {
     let mut e = editor(acceptance_mesh(), Mode::Polygon);
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     run(&mut e, "operandi.statistics.count row:edges.polygons:1");
     assert_eq!(e.command_note.as_deref(), Some("11 (0 selected)"));
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
 }
 
 #[test]

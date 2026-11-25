@@ -205,12 +205,12 @@ fn drop_is_one_step_cancel_restores_and_it_saves() {
     e.dispatch(Command::Activate(Tool::Symmetrize)).unwrap();
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, before);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Symmetrize)).unwrap();
     set(&mut e, |s| s.axis = 2);
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Symmetrize");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Symmetrize");
     let after = e.scene.clone();
     let dir = std::env::temp_dir().join(format!("op-symz-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();

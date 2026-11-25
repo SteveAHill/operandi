@@ -78,7 +78,7 @@ pub fn scene_import(e: &mut Editor, args: &Map<String, Value>) -> Result<Value> 
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default();
-    if let Some(step) = e.undo.last_mut().map(std::sync::Arc::make_mut) {
+    if let Some(step) = e.history.undo.last_mut().map(std::sync::Arc::make_mut) {
         step.label = format!("Import {file}");
     }
     let added: Vec<Value> = e

@@ -36,7 +36,7 @@ fn app(mesh: operandi_core::Mesh, points: Vec<u32>) -> Operandi {
     a.category = toolbox::Category::Vertex;
     a.run(Command::Mode(Mode::Vertex));
     a.editor.scene.selection.vertices = points;
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a
 }
 
@@ -108,7 +108,7 @@ fn vertex_tab_rows_shortcuts_and_verbs_share_one_operation() {
     let row = button_by_line(&a, "Vertex Collapse").center();
     click(&mut a, &ctx, size, row, Modifiers::NONE);
     assert_eq!(
-        a.editor.undo.last().map(|u| u.label.as_str()),
+        a.editor.history.undo.last().map(|u| u.label.as_str()),
         Some("Collapse"),
         "{}",
         a.status
@@ -164,7 +164,7 @@ fn vertex_tab_rows_shortcuts_and_verbs_share_one_operation() {
         "{}",
         e.status
     );
-    assert_eq!(e.editor.undo.last().unwrap().label, "Make Polygon");
+    assert_eq!(e.editor.history.undo.last().unwrap().label, "Make Polygon");
 }
 
 #[test]
@@ -222,7 +222,7 @@ fn vertex_tool_shortcuts_and_handle_drags() {
         };
         assert!(moved > 0., "{tool:?}: {moved} {}", a.status);
         a.run(Command::Drop);
-        assert_eq!(a.editor.undo.len(), 1, "{tool:?} is one step");
+        assert_eq!(a.editor.history.undo.len(), 1, "{tool:?} is one step");
         assert_ne!(*a.editor.scene.active().unwrap().mesh, grid(), "{tool:?}");
     }
     // Shift+X still opens polygon Extrude in Polygon mode.
@@ -271,7 +271,7 @@ fn create_clicks_add_points_and_weld_clicks_join_them() {
     let m = &a.editor.scene.active().unwrap().mesh;
     assert_eq!(m.vertices.len(), 3);
     assert_eq!(a.editor.scene.selection.vertices, vec![0, 1, 2]);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     // Cancel discards a Create session.
     a.execute("tool.set vert.create on");
     click(
@@ -295,7 +295,7 @@ fn create_clicks_add_points_and_weld_clicks_join_them() {
     assert_eq!(w.pick_vertex(at, r), Some(6));
     click(&mut w, &ctx, size, at, Modifiers::NONE);
     assert_eq!(w.editor.scene.active().unwrap().mesh.vertices.len(), 16);
-    assert!(w.editor.undo.is_empty(), "{}", w.status);
+    assert!(w.editor.history.undo.is_empty(), "{}", w.status);
     // Drop (Q) disarms it.
     w.run(Command::Drop);
     assert!(!w.vertex_weld);
@@ -362,8 +362,8 @@ fn weld_drag_snaps_and_merges_at_the_destination() {
     assert_eq!(mesh.vertices.len(), 15, "{}", a.status);
     assert!(mesh.vertices.iter().any(|p| *p == DVec3::new(2., 1., 0.)));
     assert!(!mesh.vertices.iter().any(|p| *p == DVec3::new(1., 1., 0.)));
-    assert_eq!(a.editor.undo.len(), 1);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Weld");
+    assert_eq!(a.editor.history.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Weld");
     // The selection (points 0 and 15) is kept, renumbered past the removed 5.
     assert_eq!(a.editor.scene.selection.vertices, vec![0, 14]);
     // The tool stays armed for another drag, which is its own undo step.
@@ -372,7 +372,7 @@ fn weld_drag_snaps_and_merges_at_the_destination() {
     let to = screen(&a, DVec3::new(2., 1., 0.), r);
     weld_drag(&mut a, &ctx, size, from, &[to]);
     assert_eq!(a.editor.scene.active().unwrap().mesh.vertices.len(), 14);
-    assert_eq!(a.editor.undo.len(), 2, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), 2, "{}", a.status);
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.active().unwrap().mesh.vertices.len(), 15);
 }
@@ -390,7 +390,7 @@ fn weld_drag_released_in_empty_space_moves_the_point() {
     assert_eq!(mesh.vertices.len(), 16, "{}", a.status);
     assert!(mesh.vertices[5].distance(DVec3::new(1.5, 1.5, 0.)) < 1e-3);
     assert_eq!(mesh.faces, grid().faces);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     assert!(
         a.editor.scene.selection.vertices.is_empty(),
         "selection unchanged"
@@ -411,7 +411,7 @@ fn weld_drag_just_outside_the_snap_radius_does_not_merge() {
         &[six + vec2(0., weld_drag::WELD_SNAP_RADIUS + 1.)],
     );
     assert_eq!(a.editor.scene.active().unwrap().mesh.vertices.len(), 16);
-    assert_eq!(a.editor.undo.len(), 1, "a move, not a merge");
+    assert_eq!(a.editor.history.undo.len(), 1, "a move, not a merge");
 }
 
 #[test]
@@ -440,7 +440,7 @@ fn weld_drag_ignores_the_selection_and_escape_cancels_it() {
         vec![pointer(six, false, Modifiers::NONE)],
     );
     assert_eq!(a.editor.scene.active().unwrap().mesh.vertices.len(), 16);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     assert_eq!(a.editor.scene.selection.vertices, vec![10]);
 }
 
@@ -450,7 +450,7 @@ fn weld_drag_from_empty_space_does_nothing() {
     let from = screen(&a, DVec3::new(1.5, 1.5, 0.), r);
     let to = screen(&a, DVec3::new(2., 1., 0.), r);
     weld_drag(&mut a, &ctx, size, from, &[to]);
-    assert!(a.editor.undo.is_empty(), "{}", a.status);
+    assert!(a.editor.history.undo.is_empty(), "{}", a.status);
     assert!(a.editor.scene.selection.vertices.is_empty());
 }
 
@@ -486,7 +486,7 @@ fn vertex_bevel_drags_anywhere_in_the_viewport() {
     let narrow = drag(&mut a, -30.);
     assert!(narrow < wide && narrow > 0., "{wide} {narrow}");
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 #[test]
@@ -581,7 +581,7 @@ fn every_m3_vertex_row_is_callable_from_the_command_line() {
         assert_ne!(a.status, "Ready", "{bad}");
         assert!(!a.status.ends_with(" done"), "{bad}: {}", a.status);
         assert_eq!(a.editor.scene, before, "{bad}");
-        assert!(a.editor.undo.is_empty(), "{bad}");
+        assert!(a.editor.history.undo.is_empty(), "{bad}");
     }
     // Each verb runs its operation as one undo step.
     let mut bent = grid();
@@ -596,8 +596,8 @@ fn every_m3_vertex_row_is_callable_from_the_command_line() {
     ] {
         let mut b = app(bent.clone(), vec![4, 5, 6, 7]);
         b.execute(verb);
-        assert_eq!(b.editor.undo.len(), 1, "{verb}: {}", b.status);
-        assert_eq!(b.editor.undo.last().unwrap().label, label, "{verb}");
+        assert_eq!(b.editor.history.undo.len(), 1, "{verb}: {}", b.status);
+        assert_eq!(b.editor.history.undo.last().unwrap().label, label, "{verb}");
     }
     let mut b = app(grid(), vec![5, 6]);
     b.execute("vert.removeEdge");
@@ -617,7 +617,12 @@ fn every_m3_vertex_row_is_callable_from_the_command_line() {
     );
     let mut b = app(grid(), vec![5]);
     b.execute("vert.weld target:6");
-    assert_eq!(b.editor.undo.last().unwrap().label, "Weld", "{}", b.status);
+    assert_eq!(
+        b.editor.history.undo.last().unwrap().label,
+        "Weld",
+        "{}",
+        b.status
+    );
     // Rows with options open their dialog without arguments.
     let mut b = app(grid(), vec![5]);
     b.execute("vert.new");
@@ -639,7 +644,7 @@ fn show_vertices_changes_no_scene_selection_or_history() {
     a.run_vertex_row(vertex_panel::VertexRow::ShowVertices);
     assert!(!a.display.settings.drawing.show_verts);
     assert_eq!(a.editor.scene, before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }
 
 #[test]
@@ -699,7 +704,7 @@ fn create_xyz_fields_move_the_last_point_and_escape_cancels() {
     a.run(Command::Drop);
     let m = &a.editor.scene.active().unwrap().mesh;
     assert_eq!((m.vertices[1].x, m.vertices[1].z), (1., 0.5));
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 
     // Escape over the viewport cancels a new Create session.
     let before = a.editor.scene.clone();
@@ -719,7 +724,7 @@ fn create_xyz_fields_move_the_last_point_and_escape_cancels() {
         a.editor.scene.active().unwrap().mesh,
         before.active().unwrap().mesh
     );
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 #[test]

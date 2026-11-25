@@ -137,7 +137,7 @@ fn delete_loop_is_one_undo_step_and_reopens_the_same() {
     command_exec::run(&mut e, "delete", &Default::default()).unwrap();
     let after = e.scene.active().unwrap().mesh.clone();
     assert_clean_closed(&after);
-    assert_eq!(e.undo.last().unwrap().label, "Delete");
+    assert_eq!(e.history.undo.last().unwrap().label, "Delete");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, before);
     e.dispatch(Command::Redo).unwrap();
@@ -208,7 +208,7 @@ fn delete_command_per_mode_is_one_undo_step() {
         e.scene.selection.faces = vec![3];
         let start = e.scene.clone();
         command_exec::run(&mut e, "delete", &none).unwrap();
-        assert_eq!(e.undo.last().unwrap().label, "Delete");
+        assert_eq!(e.history.undo.last().unwrap().label, "Delete");
         let mesh = &e.scene.active().unwrap().mesh;
         let mut used = vec![false; mesh.vertices.len()];
         for f in &mesh.faces {

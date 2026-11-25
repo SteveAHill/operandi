@@ -89,7 +89,7 @@ const HALF: [DVec3; 4] = [
 fn pen_polygon_mirrors_and_welds_at_the_seam() {
     let mut e = editor(Symmetry::x());
     pen(&mut e, plane_z(), &HALF);
-    let before = e.undo.len();
+    let before = e.history.undo.len();
     drop(&mut e);
     let m = mesh(&e);
     assert_eq!(m.faces.len(), 2);
@@ -104,7 +104,7 @@ fn pen_polygon_mirrors_and_welds_at_the_seam() {
     // The new geometry is selected, both halves.
     assert_eq!(e.scene.selection.faces, vec![0, 1]);
     // One undo step removes both halves.
-    assert_eq!(e.undo.len(), before + 1);
+    assert_eq!(e.history.undo.len(), before + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(mesh(&e).faces.len(), 0);
 }

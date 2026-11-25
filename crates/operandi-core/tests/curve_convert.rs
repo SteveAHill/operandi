@@ -254,10 +254,10 @@ fn bezier_tangent_command_is_one_step_in_vertex_mode() {
     );
     let mut e = editor(c.clone(), Mode::Vertex);
     e.scene.selection.vertices = vec![0];
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::BezierTangent(TangentOptions::default()))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_ne!(e.scene.active().unwrap().mesh, c);
 }
 

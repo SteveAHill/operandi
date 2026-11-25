@@ -41,7 +41,7 @@ fn editor(mesh: Mesh, selected: &[u32]) -> Editor {
     e.scene.selection.faces = selected.to_vec();
     e.scene.validate().unwrap();
     e.synchronize_identities().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 

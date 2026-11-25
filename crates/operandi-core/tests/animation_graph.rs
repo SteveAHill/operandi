@@ -60,9 +60,9 @@ fn y_at(e: &Editor, id: u64, f: f64) -> f64 {
 fn ge_check2_moving_the_top_key_up_is_one_step() {
     let (mut e, id) = ball();
     ok(&mut e, &format!("operandi.key.select keys:{id}:pos.Y@0"));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, "operandi.key.setValue value:1 mode:add");
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     near(y_at(&e, id, 0.), 3.);
     assert!(y_at(&e, id, 4.) > 2.);
     e.dispatch(Command::Undo).unwrap();
@@ -294,12 +294,12 @@ fn ge44_transform_scales_time_and_value_in_one_step() {
         &mut e,
         &format!("operandi.key.select keys:{id}:pos.Y@0,{id}:pos.Y@12,{id}:pos.Y@24"),
     );
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(
         &mut e,
         "operandi.key.transform timeFactor:2 timePivot:0 valueFactor:0.5 valuePivot:0",
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let rate = e.scene.time.rate;
     let c = &e.scene.animation.channels[&ChannelKey::new(id, "pos.Y")].curve;
     let frames: Vec<i64> = c.keys.iter().map(|k| rate.frame_at(k.time)).collect();

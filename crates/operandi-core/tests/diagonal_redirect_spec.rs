@@ -154,13 +154,13 @@ fn refused(m: Mesh, mode: Mode, faces: &[u32]) {
     if mode == Mode::Edge {
         e.scene.selection.edges = vec![(6, 7)];
     }
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert_eq!(
         e.dispatch(Command::DiagonalRedirect).unwrap_err(),
         SELECT_TWO
     );
     assert_eq!(active(&e), &m);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]

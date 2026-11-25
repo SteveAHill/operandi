@@ -192,11 +192,11 @@ fn image_ink_stamp_is_one_click_and_one_undo_step() {
         "operandi.paint.inkSet kind:image image:{id} stamp:true"
     ));
     a.execute("operandi.paint.inkWidget action:show");
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let r = rect();
     let kind = a.paint_press(pos2(700., 50.), r, Modifiers::NONE);
     assert!(matches!(kind, input::GestureKind::Blocked), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "{}", a.status);
     let (red, green) = reds_greens(&a);
     assert!(
         red > 100 && green > 100,

@@ -337,7 +337,7 @@ impl Editor {
         self.restore_source(from, &saved);
         // By mark (Astra P9-006): at Max Undo Level the length doesn't grow.
         if self.steps_since(mark) > 0
-            && let Some(step) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+            && let Some(step) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
         {
             step.before.selection = saved;
             step.after.selection = self.scene.selection.clone();

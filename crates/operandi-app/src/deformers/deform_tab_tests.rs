@@ -40,7 +40,7 @@ fn deform_tab(ctx: &Context) -> Operandi {
     let mut a = box_app();
     a.camera.view = View::Front;
     a.run(Command::Mode(Mode::Vertex));
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     for _ in 0..3 {
         draw(&mut a, ctx, SIZE, vec![]);
     }
@@ -142,7 +142,7 @@ fn preset_row_starts_the_preset_and_a_second_click_drops_it() {
     assert!(a.editor.live.is_none());
     assert!(a.editor.spatial_falloff.is_none());
     // A neutral session leaves no step behind.
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }
 
 #[test]
@@ -161,8 +161,8 @@ fn push_drags_up_to_push_out_and_drop_is_one_step() {
         assert!(q.length() > p.length(), "pushed out along the normals");
     }
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.len(), 1);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Push");
+    assert_eq!(a.editor.history.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Push");
 }
 
 #[test]

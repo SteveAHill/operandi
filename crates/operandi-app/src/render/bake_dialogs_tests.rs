@@ -31,9 +31,9 @@ fn bare_commands_open_their_dialogs_and_typed_lines_run() {
     a.bake_dialog = None;
 
     // Typed with arguments: Atlas is one undo step, then a bake writes.
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.execute("operandi.uv.atlas angle:0.7");
-    assert_eq!(a.editor.undo.len(), undo + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), undo + 1, "{}", a.status);
     assert!(
         a.editor
             .scene
@@ -57,7 +57,7 @@ fn bare_commands_open_their_dialogs_and_typed_lines_run() {
         a.status
     );
     // The bake changed nothing in the scene.
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
 }
 
 #[test]

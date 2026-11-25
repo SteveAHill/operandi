@@ -57,7 +57,7 @@ fn editor(mesh: Mesh) -> Editor {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = mesh.into();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 #[test]
@@ -128,25 +128,25 @@ fn sa_t09_t12_discrete_apply_history_invalid_recovery_and_exact_roundtrip() {
     e.dispatch(Command::ConfigureSpike(0.25)).unwrap();
     let first = e.scene.clone();
     assert_eq!(first.active().unwrap().mesh.vertices[4], DVec3::Z * 0.5);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Apply).unwrap();
     let second = e.scene.clone();
     assert_eq!(second.active().unwrap().mesh.vertices.len(), 9);
     assert_eq!(second.active().unwrap().mesh.faces.len(), 12);
-    assert_eq!(e.undo.len(), 2);
+    assert_eq!(e.history.undo.len(), 2);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, first);
     e.dispatch(Command::Redo).unwrap();
     assert_eq!(e.scene, second);
     assert!(e.spike.is_none());
     e.dispatch(Command::ArmSpike).unwrap();
-    let checkpoints = e.undo.len();
+    let checkpoints = e.history.undo.len();
     assert!(e.dispatch(Command::ConfigureSpike(f64::NAN)).is_err());
     assert_eq!(e.spike.as_ref().unwrap().requested, 0.25);
     e.dispatch(Command::ConfigureSpike(f64::MAX)).unwrap();
     assert!(e.dispatch(Command::Apply).is_err());
     assert_eq!(e.scene, second);
-    assert_eq!(e.undo.len(), checkpoints);
+    assert_eq!(e.history.undo.len(), checkpoints);
     e.dispatch(Command::ConfigureSpike(-0.1)).unwrap();
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, second);
@@ -258,7 +258,7 @@ fn sa_t11_operation_budgets_and_identity_exhaustion_are_atomic() {
     let original = e.scene.clone();
     assert!(e.dispatch(Command::Apply).unwrap_err().contains("budget"));
     assert_eq!(e.scene, original);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     let mut m = square();
     m.uv_maps
         .insert("Known".into(), vec![vec![Some(DVec2::ZERO); 4]]);

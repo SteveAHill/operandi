@@ -89,16 +89,16 @@ fn options_cancel_and_zero_acknowledgment_history() {
     button(&mut a, &c, "Cancel");
     assert!(a.unify.is_none());
     assert_eq!(a.editor.scene, before);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     a.execute("poly.unify false");
     let mut expected = before.clone();
     expected.selection.faces.clear();
     assert_eq!(a.editor.scene, expected);
     assert_eq!(a.unify_count, Some(0));
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     button(&mut a, &c, "OK");
     assert!(a.unify_count.is_none());
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     a.execute("undo");
     assert_eq!(a.editor.scene, before);
     a.execute("redo");
@@ -128,7 +128,7 @@ fn force_command_and_modal_ownership() {
     a.execute("poly.unify nonsense");
     assert!(a.unify.is_none());
     assert!(a.unify_count.is_none());
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
 }
 #[test]
 fn remapped_key_and_text_focus() {
@@ -312,13 +312,13 @@ fn panel_force_checkbox_apply_and_modified_cancel_with_redo() {
         .dispatch(Command::Rename("Changed".into()))
         .unwrap();
     cancel.editor.dispatch(Command::Undo).unwrap();
-    assert!(!cancel.editor.redo.is_empty());
+    assert!(!cancel.editor.history.redo.is_empty());
     let before = cancel.editor.clone();
     button(&mut cancel, &c, "Unify...");
     checkbox(&mut cancel, &c, "Force Unify");
     button(&mut cancel, &c, "Cancel");
     assert!(cancel.editor == before);
-    assert!(!cancel.editor.redo.is_empty());
+    assert!(!cancel.editor.history.redo.is_empty());
     cancel.execute("redo");
     assert_eq!(cancel.editor.scene.active().unwrap().name, "Changed");
     let c = context();
@@ -334,9 +334,9 @@ fn panel_force_checkbox_apply_and_modified_cancel_with_redo() {
     button(&mut a, &c, "OK");
     assert_eq!(a.editor.scene, expected);
     assert_eq!(a.unify_count, Some(1));
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     button(&mut a, &c, "OK");
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     a.execute("undo");
     assert_eq!(a.editor.scene, original);
     a.execute("redo");

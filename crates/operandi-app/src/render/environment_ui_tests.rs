@@ -28,9 +28,9 @@ fn env_ids(a: &Operandi) -> Vec<u64> {
 #[test]
 fn create_environment_from_the_menu_and_add_layer() {
     let (mut a, ctx) = app();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.menu_action(&ctx, app_menu::line_action("item.create environment"));
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     let first = env_ids(&a);
     assert_eq!(first.len(), 1);
     assert_eq!(a.shading.environment, Some(EnvironmentRow::Item(first[0])));
@@ -99,17 +99,21 @@ fn duplicate_and_delete_are_one_step() {
     let (mut a, _ctx) = app();
     a.create_environment();
     let id = env_ids(&a)[0];
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.run(Command::SelectItem(Some(id)));
     a.run(Command::DuplicateItem);
-    assert_eq!(a.editor.undo.len(), steps + 1, "Duplicate is one step");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        steps + 1,
+        "Duplicate is one step"
+    );
     let ids = env_ids(&a);
     assert_eq!(ids.len(), 2);
     let copy = ids[0];
     a.shading.environment = Some(EnvironmentRow::Item(copy));
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     assert!(a.shading_delete_selected());
-    assert_eq!(a.editor.undo.len(), steps + 1, "Delete is one step");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "Delete is one step");
     assert_eq!(env_ids(&a), vec![id]);
     assert_eq!(a.shading.environment, None);
     a.run(Command::Undo);
@@ -125,9 +129,9 @@ fn layers_under_an_environment() {
     let (mut a, ctx) = app();
     a.create_environment();
     let id = env_ids(&a)[0];
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.add_environment_layer(NewLayer::Constant);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     let first = a.environment(id).unwrap().layers[0].id;
     assert_eq!(
         a.shading.environment,
@@ -172,7 +176,7 @@ fn layers_under_an_environment() {
             draw(&mut a, &ctx, SIZE, vec![]);
         }
     }
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.toggle_environment_layer(id, first);
     assert!(
         !a.environment(id)
@@ -187,7 +191,7 @@ fn layers_under_an_environment() {
     a.shading.environment = Some(EnvironmentRow::Layer(id, first));
     assert!(a.shading_delete_selected());
     assert_eq!(names(&a), ["Image Map", "Noise"]);
-    assert_eq!(a.editor.undo.len(), steps + 2);
+    assert_eq!(a.editor.history.undo.len(), steps + 2);
 }
 
 /// UIC-160/163: the typed commands behind the rows: item.channel on the
@@ -198,7 +202,7 @@ fn typed_commands_set_and_read_environments() {
     a.create_environment();
     let id = env_ids(&a)[0];
     let material = a.environment(id).unwrap().material.id;
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute(&format!("item.channel intensity 2 item:{id}"));
     assert_eq!(a.environment(id).unwrap().intensity, 2.0, "{}", a.status);
     a.execute(&format!("item.channel zenColor 1,0,0 layer:{material}"));
@@ -213,7 +217,7 @@ fn typed_commands_set_and_read_environments() {
         a.environment(id).unwrap().material.settings.kind,
         EnvironmentType::Overcast
     );
-    assert_eq!(a.editor.undo.len(), steps + 3, "one step each");
+    assert_eq!(a.editor.history.undo.len(), steps + 3, "one step each");
     a.execute(&format!("item.channel type ? layer:{material}"));
     assert!(a.status.contains("Overcast"), "{}", a.status);
     a.execute("item.create light.directional");
@@ -401,9 +405,9 @@ fn environments_section_rows() {
         RowIcon::Icon(crate::icons::Icon::TreeMaterial)
     ));
     // The eye hides it: no ray sees it, one undo step.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.run(Command::Visibility(id));
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert!(
         a.editor
             .scene

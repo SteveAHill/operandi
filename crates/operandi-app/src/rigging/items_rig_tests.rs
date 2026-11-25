@@ -112,7 +112,7 @@ fn rig_rows_select_rename_enable_and_delete() {
         .unwrap();
     assert_eq!(row.selected, Selected::Primary);
     // Rename: one undo step; the Schematic and query show it too.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     event(
         &mut a,
         TreeEvent::Rename {
@@ -120,7 +120,7 @@ fn rig_rows_select_rename_enable_and_delete() {
             name: "Follow the box".into(),
         },
     );
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     let row = a
         .item_rows()
         .into_iter()
@@ -247,9 +247,9 @@ fn uic60_rig_menus_are_never_empty_and_delete_works() {
     }
     assert_eq!(drawn, 3, "every rig menu shows entries");
     // Delete through the command the menu runs: one undo step.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute(&format!("operandi.rig.remove piece:{piece}"));
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert!(!keys(&a).contains(&ItemKey::Rig(here(&a), piece)));
 }
 

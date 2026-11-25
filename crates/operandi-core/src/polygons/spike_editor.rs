@@ -69,7 +69,7 @@ impl Editor {
         if changed && self.spike_result_live() {
             let fold = self.spike.as_ref().and_then(|s| s.applied_step);
             let fold = fold.ok_or("No Spike result")?;
-            let last = self.undo.last().cloned().ok_or("No Spike result")?;
+            let last = self.history.undo.last().cloned().ok_or("No Spike result")?;
             let candidate = self.spiked_from(&last.before, strength)?;
             let shown = std::mem::replace(&mut self.scene, candidate);
             self.record_folded("Spike Apply", shown, fold);

@@ -101,7 +101,7 @@ fn add_curve(a: &mut Operandi, points: Vec<DVec3>, closed: bool, kind: CurveKind
 fn edit_curve(a: &mut Operandi, ctx: &Context, face: u32, kind: DrawKind, mode: DrawMode) {
     a.run(Command::Mode(Mode::Polygon));
     a.editor.scene.selection.faces = vec![face];
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.activate_draw(kind);
     let t = a.draw.as_mut().expect("draw tool on");
     assert_eq!(t.face, Some(face));
@@ -172,7 +172,7 @@ fn dpm_t02_edit_click_in_empty_space_changes_nothing() {
     let p = screen(&a, DVec3::new(1.5, 2., 0.));
     click(&mut a, &ctx, p);
     assert_eq!(curve_points(&a, face), four());
-    assert_eq!(a.editor.undo.len(), 0, "no undo step");
+    assert_eq!(a.editor.history.undo.len(), 0, "no undo step");
 }
 
 #[test]
@@ -183,7 +183,7 @@ fn dpm_t03_edit_drag_moves_a_point_in_one_step() {
     let c = curve_points(&a, face);
     assert_eq!(c.len(), 4);
     assert!(close(c[1], DVec3::new(1., 2., 0.)), "{c:?} ({})", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
 }
 
 #[test]

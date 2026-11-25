@@ -240,7 +240,7 @@ fn m11_amendment_category_switch_preserves_task_grid_and_focus_at_both_scales() 
             a.editor.live.as_ref().unwrap().params,
             before.live.as_ref().unwrap().params
         );
-        assert_eq!(a.editor.undo.len(), before.undo.len());
+        assert_eq!(a.editor.history.undo.len(), before.history.undo.len());
         // Tool drop does not choose a category for the user.
         a.run(Command::Drop);
         assert_eq!(a.category, toolbox::Category::Polygon);
@@ -471,7 +471,7 @@ fn par_t15_t16_category_strip_anchor_grid_hit_regions_and_live_state() {
                 a.editor.live.as_ref().unwrap().params,
                 editor.live.as_ref().unwrap().params
             );
-            assert_eq!(a.editor.undo.len(), editor.undo.len());
+            assert_eq!(a.editor.history.undo.len(), editor.history.undo.len());
             assert_eq!(a.viewport_rect, viewport, "scale {scale} size {size:?}");
             assert_eq!(a.toolbox_rects["Category Create"], tabs[0]);
             let header = a.toolbox_rects["Polygon Tools"].center();
@@ -646,7 +646,7 @@ fn font_t05_unavailable_face_is_explicit_and_preserves_layout_and_task() {
                 assert!(surface.shrink(1.).contains_rect(ink));
             }
             assert_eq!(a.editor.scene, before.scene);
-            assert_eq!(a.editor.undo.len(), before.undo.len());
+            assert_eq!(a.editor.history.undo.len(), before.history.undo.len());
             assert_eq!(
                 a.editor.live.as_ref().unwrap().params,
                 before.live.as_ref().unwrap().params

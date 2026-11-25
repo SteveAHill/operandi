@@ -52,12 +52,12 @@ fn uv_tab_unwrap_and_pack() {
     assert_eq!(o.iterations, 100);
     // OK.
     a.uv_dialog = None;
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.run(Command::UvUnwrap(o));
     let mesh = &a.editor.scene.active().unwrap().mesh;
     assert!(mesh.uv_maps.contains_key("Texture"), "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1);
-    assert_eq!(a.editor.undo.last().unwrap().label, "UV Unwrap");
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "UV Unwrap");
 
     let row = a.form_rects["Pack UVs"].center();
     click(&mut a, &ctx, size, row);
@@ -70,7 +70,7 @@ fn uv_tab_unwrap_and_pack() {
     a.uv_dialog = None;
     a.run(Command::PackUvs(p));
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Pack UVs",
         "{}",
         a.status

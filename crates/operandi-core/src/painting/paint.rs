@@ -540,7 +540,12 @@ impl Editor {
             }
         };
         rename(&mut self.scene);
-        for c in self.undo.iter_mut().chain(self.redo.iter_mut()) {
+        for c in self
+            .history
+            .undo
+            .iter_mut()
+            .chain(self.history.redo.iter_mut())
+        {
             let c = std::sync::Arc::make_mut(c);
             rename(&mut c.before);
             rename(&mut c.after);

@@ -147,12 +147,12 @@ fn selection_gesture_is_separate_and_completion_branches_parked_context() {
         if cancel {
             assert_eq!(e.scene, scene);
             assert_eq!(e.i2.selected, stage);
-            assert!(e.undo.is_empty());
+            assert!(e.history.undo.is_empty());
             assert!(e.history_eligibility(HistoryAction::Redo).is_available());
         } else {
             assert!(e.i2.selected.is_none() && e.i2.prior.is_none());
-            assert_eq!(e.undo.len(), 1);
-            assert_eq!(e.undo.last().unwrap().label, "Selection");
+            assert_eq!(e.history.undo.len(), 1);
+            assert_eq!(e.history.undo.last().unwrap().label, "Selection");
             assert!(e.scene.selection.faces.is_empty());
         }
     }
@@ -168,7 +168,7 @@ fn source_level_selection_activate_and_generic_cancel_do_not_normalize_gesture()
     assert!(e.live.is_none() && e.selection_start.is_some());
     e.dispatch(Command::EndSelection { cancel: true }).unwrap();
     assert_eq!(e.scene, scene);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 #[test]
 fn successful_empty_history_keeps_cleanup_and_publication_effects() {
@@ -206,7 +206,7 @@ fn successful_empty_history_keeps_cleanup_and_publication_effects() {
         })
         .unwrap();
         assert_eq!(e.scene, scene);
-        assert!(e.undo.is_empty() && e.redo.is_empty());
+        assert!(e.history.undo.is_empty() && e.history.redo.is_empty());
         assert!(e.live.is_none() && e.spike.is_none());
         assert!(e.identities.publication > publication && e.identities.request > request);
         assert_eq!(e.identities.next_id().unwrap(), next);

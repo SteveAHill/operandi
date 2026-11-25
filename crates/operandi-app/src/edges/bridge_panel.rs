@@ -427,7 +427,7 @@ mod tests {
         }
         a.editor.scene.selection.mode = Mode::Polygon;
         a.editor.scene.selection.faces = vec![0, 1];
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         a.execute("Bridge");
         a
     }
@@ -448,7 +448,7 @@ mod tests {
         a.execute("bridge apply");
         assert_eq!(a.editor.scene, before);
         assert_eq!(a.fields["bri_twist"], "bad");
-        assert!(a.editor.undo.is_empty());
+        assert!(a.editor.history.undo.is_empty());
         a.fields.insert("bri_twist".into(), "0".into());
         assert!(a.confirm_fields());
         a.execute("bridge mode smooth");
@@ -466,7 +466,7 @@ mod tests {
         assert!(a.bridge_panel_eligibility().is_err());
         a.execute("bridge apply");
         assert_eq!(a.editor.scene, after);
-        assert_eq!(a.editor.undo.len(), 1);
+        assert_eq!(a.editor.history.undo.len(), 1);
         a.execute("undo");
         assert_eq!(a.editor.scene, before);
         a.execute("redo");
@@ -788,7 +788,7 @@ mod tests {
             center: DVec3::ZERO,
         };
         a.editor.action_context.center = operandi_core::CenterMode::Selection;
-        a.editor.undo.clear();
+        a.editor.history.undo.clear();
         a.execute("Bridge");
         assert!(a.bridge_panel_eligibility().is_ok());
         let p = a.editor.bridge.as_ref().unwrap().requested;
@@ -809,7 +809,7 @@ mod tests {
         let mesh = &a.editor.scene.active().unwrap().mesh;
         assert_eq!(mesh.faces.len(), 3);
         assert!(mesh.normal(2).z > 0.9);
-        assert_eq!(a.editor.undo.len(), 1);
+        assert_eq!(a.editor.history.undo.len(), 1);
         // Polygon mode: the options are live again.
         a.editor.scene.selection.mode = Mode::Polygon;
         let form = BridgeFields::form(&a, &p);

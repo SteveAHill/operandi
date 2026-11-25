@@ -112,7 +112,7 @@ fn acceptance_29_the_paint_layout_opens_the_set_the_strip_and_textured_view() {
     let thumb = strip.min + vec2(4. + k as f32 * (size + 6.) + size / 2., 4. + size / 2.);
     let image = a.current_image().unwrap();
     let before = a.editor.scene.paint.buffers[&image].clone();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     click(&mut a, &ctx, thumb);
     assert_eq!(
         a.painting.brush.tips.choice,
@@ -120,7 +120,7 @@ fn acceptance_29_the_paint_layout_opens_the_set_the_strip_and_textured_view() {
         "{}",
         a.status
     );
-    assert_eq!(a.editor.undo.len(), steps, "the click didn't paint");
+    assert_eq!(a.editor.history.undo.len(), steps, "the click didn't paint");
     assert!(std::sync::Arc::ptr_eq(
         &before,
         &a.editor.scene.paint.buffers[&image]

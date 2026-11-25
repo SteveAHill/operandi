@@ -16,7 +16,7 @@ fn tool_switch_routes_confirm_fields_and_commit_once() {
             a.editor.live.as_ref().unwrap().params.clone(),
         ));
         a.fields.insert("inset".into(), "0.1 m".into());
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         // Real toolbox click confirms pending text, drops Bevel and starts Move.
         for _ in 0..2 {
             let _ = draw(&mut a, &ctx, vec2(1440., 900.), vec![]);
@@ -32,23 +32,23 @@ fn tool_switch_routes_confirm_fields_and_commit_once() {
             ],
         );
         assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Move);
-        assert_eq!(a.editor.undo.len(), history + 1);
-        assert_eq!(a.editor.undo.last().unwrap().label, "Bevel");
+        assert_eq!(a.editor.history.undo.len(), history + 1);
+        assert_eq!(a.editor.history.undo.last().unwrap().label, "Bevel");
         assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 10);
         assert!(!a.fields.contains_key("inset"));
         a.fields.insert("delta0".into(), "0.25 m".into());
         a.menu_action(&ctx, app_menu::line_action(Tool::Rotate.label()));
         assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Rotate);
-        assert_eq!(a.editor.undo.len(), history + 2);
+        assert_eq!(a.editor.history.undo.len(), history + 2);
         assert!(!a.fields.contains_key("delta0"));
         // Keyboard switching drops a neutral tool without another checkpoint.
         ctx.memory_mut(|m| m.surrender_focus(m.focused().unwrap_or(Id::NULL)));
         let _ = draw(&mut a, &ctx, vec2(1440., 900.), vec![key(Key::R)]);
         assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Scale);
-        assert_eq!(a.editor.undo.len(), history + 2);
+        assert_eq!(a.editor.history.undo.len(), history + 2);
         a.execute("extrude");
         assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Extrude);
-        assert_eq!(a.editor.undo.len(), history + 2);
+        assert_eq!(a.editor.history.undo.len(), history + 2);
     }
 }
 #[test]
@@ -70,7 +70,7 @@ fn invalid_text_blocks_switch_until_corrected() {
     a.fields.insert("inset".into(), "0.1 m".into());
     a.activate(Tool::Move);
     assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Move);
-    assert_eq!(a.editor.undo.len(), before.undo.len() + 1);
+    assert_eq!(a.editor.history.undo.len(), before.history.undo.len() + 1);
     assert!(a.field_errors.is_empty());
 }
 #[test]
@@ -90,7 +90,7 @@ fn t11_002_save_failure_keeps_task_history_buffers_and_association() {
         a.editor.live.as_ref().unwrap().params,
         before.live.as_ref().unwrap().params
     );
-    assert_eq!(a.editor.undo.len(), before.undo.len());
+    assert_eq!(a.editor.history.undo.len(), before.history.undo.len());
     assert_eq!(a.path, path);
     a.fields.insert("inset".into(), "abc".into());
     assert!(!a.save(std::env::temp_dir().join("must-not-be-written.opscene")));
@@ -147,7 +147,7 @@ fn t11_005_captured_navigation_never_becomes_edit_even_coalesced() {
                 ],
             );
             assert_eq!(a.editor.scene, before.scene, "{tool:?}");
-            assert_eq!(a.editor.undo.len(), before.undo.len());
+            assert_eq!(a.editor.history.undo.len(), before.history.undo.len());
             assert_eq!(
                 a.editor.live.as_ref().map(|l| &l.params),
                 before.live.as_ref().map(|l| &l.params)

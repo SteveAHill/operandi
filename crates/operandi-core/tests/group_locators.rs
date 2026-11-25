@@ -67,10 +67,10 @@ fn add_group_locator_is_named_selected_placed_and_one_undo_step() {
     let a = cube_at(&mut e, "A", DVec3::ZERO);
     cube_at(&mut e, "B", DVec3::ZERO);
     e.dispatch(Command::SelectItem(Some(a))).unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let g = add_locator(&mut e);
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "New Group Locator");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "New Group Locator");
     assert_eq!(names(&e), ["A", "Group Locator", "B"]);
     let l = item(&e, g);
     assert!(l.is_group_locator() && !l.is_mesh());
@@ -148,10 +148,13 @@ fn shared_parent_keeps_local_transforms_exactly() {
     let worlds = [world_points(&e, a), world_points(&e, b)];
     e.dispatch(Command::SelectItem(Some(b))).unwrap();
     e.scene.toggle_item(a);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::ParentToGroupLocator).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
-    assert_eq!(e.undo.last().unwrap().label, "Parent to Group Locator");
+    assert_eq!(e.history.undo.len(), steps + 1);
+    assert_eq!(
+        e.history.undo.last().unwrap().label,
+        "Parent to Group Locator"
+    );
     let g = e.scene.selection.item.unwrap();
     assert_eq!(e.scene.selected_items(), vec![g]);
     let l = item(&e, g);
@@ -236,11 +239,11 @@ fn mixed_parents_needing_shear_refuse_the_whole_command() {
     e.dispatch(Command::SelectItem(Some(b))).unwrap();
     e.scene.toggle_item(a);
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let err = e.dispatch(Command::ParentToGroupLocator).unwrap_err();
     assert!(err.contains("shear"), "{err}");
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]
@@ -249,10 +252,10 @@ fn parent_to_group_locator_needs_a_selection() {
     cube_at(&mut e, "A", DVec3::ZERO);
     e.dispatch(Command::SelectItem(None)).unwrap();
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert!(e.dispatch(Command::ParentToGroupLocator).is_err());
     assert_eq!(e.scene, before);
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]
@@ -386,10 +389,10 @@ fn delete_with_children_yes_deletes_the_whole_branch() {
     );
     e.dispatch(Command::SelectItem(Some(g))).unwrap();
     let before = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::DeleteItems(item_delete::ChildrenOnDelete::Delete))
         .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let left: Vec<u64> = e.scene.items.iter().map(|i| i.id).collect();
     assert_eq!(left, vec![root]);
     assert!([g, a, a1, b].iter().all(|id| !left.contains(id)));
@@ -431,12 +434,12 @@ fn plain_delete_moves_children_to_the_root_and_childless_items_delete_as_before(
     e.dispatch(Command::SelectItem(Some(g))).unwrap();
     e.dispatch(Command::DeleteItem).unwrap();
     assert_eq!((item(&e, a).parent, item(&e, b).parent), (None, None));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::SelectItem(Some(b))).unwrap();
     assert!(item_delete::children_question(&e.scene, &[b]).is_none());
     e.dispatch(Command::DeleteItem).unwrap();
     assert!(e.scene.items.iter().all(|i| i.id != b));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
 }
 
 #[test]
@@ -449,12 +452,12 @@ fn delete_with_children_multi_selection_is_one_step() {
         "Some of the selected items have child items. Do you want to delete the child items too?"
     );
     let a1_world = world_points(&e, a1);
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::DeleteItems(
         item_delete::ChildrenOnDelete::MoveToRoot,
     ))
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let left: Vec<u64> = e.scene.items.iter().map(|i| i.id).collect();
     assert!(!left.contains(&a) && !left.contains(&root));
     // G (Root's child) and A1 (A's child) go to the root; B stays in G.

@@ -105,9 +105,9 @@ fn set_query_and_adjust_with_normalize() {
         query(&e, json!({"item": mesh, "map": "Root1", "vertex": 1}))["value"],
         1.0
     );
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, &format!("operandi.weight.normalize item:{mesh}"));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     for p in 0..e.scene.item(mesh).unwrap().mesh.open().vertices.len() as u32 {
         let t = total(&e, mesh, p);
         assert!(t == 0. || (t - 1.).abs() < 1e-9, "point {p}: {t}");

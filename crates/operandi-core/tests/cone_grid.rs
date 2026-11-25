@@ -398,7 +398,7 @@ fn ca_gt02_all_grid_coordinates_and_oriented_cycles_at_six_resolutions() {
 fn editor() -> Editor {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 #[test]

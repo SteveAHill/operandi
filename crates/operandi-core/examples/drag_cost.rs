@@ -76,7 +76,7 @@ fn editor(grid_size: usize, history: usize, edit_grid: bool) -> Editor {
     e.synchronize_identities().unwrap();
     for i in 0..history {
         let s = e.scene.clone();
-        e.undo.push(std::sync::Arc::new(Checkpoint {
+        e.history.undo.push(std::sync::Arc::new(Checkpoint {
             identity_before: None,
             identity_after: None,
             label: format!("h{i}"),

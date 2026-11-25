@@ -97,7 +97,7 @@ fn delete_and_backspace_take_the_loops_points_and_shift_backspace_keeps_them() {
         let mesh = &a.editor.scene.active().unwrap().mesh;
         assert_eq!(**mesh, *expected, "{key:?} {modifiers:?}");
         assert_eq!(a.editor.scene.items.len(), 1, "{key:?} kept the item");
-        assert_eq!(a.editor.undo.last().unwrap().label, label);
+        assert_eq!(a.editor.history.undo.last().unwrap().label, label);
     }
 }
 

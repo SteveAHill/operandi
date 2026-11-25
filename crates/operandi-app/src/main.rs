@@ -2536,8 +2536,8 @@ impl Operandi {
             // A colour field's drag or pick is one undo step across frames
             // and items (colour_field.rs); a caller's own gesture (a
             // Render item field drag, an environment layer) is kept.
-            let outer = self.editor.undo_fold;
-            self.editor.undo_fold = colour_field::frame_gesture().or(outer);
+            let outer = self.editor.history.undo_fold;
+            self.editor.history.undo_fold = colour_field::frame_gesture().or(outer);
             // Subdivide checks its result against free memory (scenes
             // replace the editor, so it is set on every command).
             self.editor.free_memory = operandi_core::FreeMemory(Some(
@@ -2546,7 +2546,7 @@ impl Operandi {
                     .unwrap_or(free_memory::free_bytes),
             ));
             let result = self.editor.dispatch(c).map(|()| None);
-            self.editor.undo_fold = outer;
+            self.editor.history.undo_fold = outer;
             self.editor.tweak_held = held;
             result
         };

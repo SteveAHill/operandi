@@ -144,7 +144,10 @@ fn sub_05_buttons_set_only_the_method() {
     // Faceted: the cube's corners didn't move.
     let m = &a.editor.scene.active().unwrap().mesh;
     assert!(m.vertices[..8].iter().all(|p| p.abs() == DVec3::splat(0.5)));
-    assert_eq!(a.editor.undo.last().unwrap().label, "Subdivide Polygons");
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Subdivide Polygons"
+    );
 }
 
 #[test]
@@ -152,11 +155,11 @@ fn sub_06_alt_click_sds_subdivide_runs_twice_as_one_step() {
     let (mut a, ctx) = cube_app();
     frame(&mut a, &ctx, Modifiers::ALT, vec![]);
     assert_eq!(shown(&a, "SDS Subdivide").0, "SDS Subdivide 2X");
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let r = rect(&a, "SDS Subdivide").center();
     click(&mut a, &ctx, r, Modifiers::ALT);
     assert_eq!(faces(&a), 96, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     a.run(Command::Undo);
     assert_eq!(faces(&a), 6);
     // A plain click: one Catmull-Clark step.
@@ -195,7 +198,10 @@ fn sub_03_d_and_options() {
     let before = faces(&a);
     press(&mut a, &ctx, Key::D, Modifiers::NONE);
     assert_eq!(faces(&a), before);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Edge Subdivide");
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Edge Subdivide"
+    );
 }
 
 #[test]
@@ -235,7 +241,7 @@ fn sub_40_unsubdivide_opens_its_dialog_first() {
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert!(a.subdivide_ui.unsubdivide.is_none());
     assert_eq!(faces(&a), 6, "{}", a.status);
-    assert_eq!(a.editor.undo.last().unwrap().label, "UnSubdivide");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "UnSubdivide");
     // Iteration 0 does nothing, and is remembered.
     a.execute("poly.subdivide ccsds");
     click(&mut a, &ctx, r, Modifiers::NONE);
@@ -342,7 +348,7 @@ fn slide_button_follows_the_mode_and_freeze_dialog() {
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert!(a.subdivide_ui.freeze.is_none());
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Freeze",
         "{}",
         a.status
@@ -426,7 +432,7 @@ fn sub_03_item_mode_d_subdivides_selected_meshes_and_shift_d_is_instance() {
     a.editor.scene.selection.item = Some(first);
     a.editor.scene.selection.also = vec![second];
     frame(&mut a, &ctx, Modifiers::NONE, vec![]);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     press(&mut a, &ctx, Key::D, Modifiers::NONE);
     let count = |a: &Operandi, id: u64| a.editor.scene.item(id).unwrap().mesh.faces.len();
     assert_eq!(
@@ -435,15 +441,15 @@ fn sub_03_item_mode_d_subdivides_selected_meshes_and_shift_d_is_instance() {
         "{}",
         a.status
     );
-    assert_eq!(a.editor.undo.len(), steps + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "one undo step");
     // Shift+D in Item mode: Instance (DX-38), one instance per selected
     // mesh, one undo step.
     let items = a.editor.scene.items.len();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     press(&mut a, &ctx, Key::D, Modifiers::SHIFT);
     assert!(a.subdivide_ui.options.is_none());
     assert_eq!(a.editor.scene.items.len(), items + 2, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "one undo step");
     let made = a.editor.scene.selected_items();
     assert_eq!(made.len(), 2);
     for id in made {
@@ -506,10 +512,10 @@ fn sub_50_freeze_dialog_defaults_and_tessellation() {
         .unwrap()
         .set_tessellation(false);
     frame(&mut a, &ctx, Modifiers::NONE, vec![]);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert!(a.subdivide_ui.freeze.is_none());
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     assert_eq!(faces(&a), 6);
     assert!(a.status.contains("Nothing to freeze"), "{}", a.status);
     // Reopened: still off. On + OK: frozen in one step.
@@ -530,7 +536,7 @@ fn sub_50_freeze_dialog_defaults_and_tessellation() {
     frame(&mut a, &ctx, Modifiers::NONE, vec![]);
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Freeze",
         "{}",
         a.status
@@ -643,10 +649,10 @@ fn frz_curves_freeze_from_the_dialog_and_the_command() {
         .values
         .set("curves_as", form::Value::Choice(0));
     frame(&mut a, &ctx, Modifiers::NONE, vec![]);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert_eq!(faces(&a), 36, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert_eq!(
         a.subdivide_ui.freeze_options.curves_as,
         subdivide_ui::FreezeCurves::TwoPointPolygons
@@ -742,13 +748,13 @@ fn a_subdivide_needing_over_half_the_free_memory_asks_first() {
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 100);
     assert!(a.status.contains("nothing changed"), "{}", a.status);
     // Asked again, Return goes ahead as one undo step.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.subdivide_with(SubdivideMethod::Faceted, 1);
     frame(&mut a, &ctx, Modifiers::NONE, vec![]);
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert!(a.subdivide_ui.large.is_none());
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 400);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     // Plenty free: no question.
     a.subdivide_ui.free_memory = Some(|| 1 << 40);
     a.subdivide_with(SubdivideMethod::Faceted, 1);
@@ -761,7 +767,7 @@ fn a_subdivide_needing_over_half_the_free_memory_asks_first() {
 fn a_subdivide_needing_more_than_the_free_memory_is_refused() {
     let mut a = grid_app();
     a.subdivide_ui.free_memory = Some(|| 1_000);
-    let before = a.editor.undo.len();
+    let before = a.editor.history.undo.len();
     a.subdivide_with(SubdivideMethod::Faceted, 1);
     assert!(
         a.subdivide_ui.large.is_none(),
@@ -773,5 +779,5 @@ fn a_subdivide_needing_more_than_the_free_memory_is_refused() {
         a.status
     );
     assert_eq!(a.editor.scene.active().unwrap().mesh.faces.len(), 100);
-    assert_eq!(a.editor.undo.len(), before);
+    assert_eq!(a.editor.history.undo.len(), before);
 }

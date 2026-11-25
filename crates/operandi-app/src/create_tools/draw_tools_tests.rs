@@ -61,7 +61,7 @@ fn drag(a: &mut Operandi, ctx: &Context, from: Pos2, to: Pos2) {
 fn app(kind: DrawKind) -> (Operandi, Context) {
     let mut a = Operandi::empty();
     a.run(Command::NewMesh);
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.category = toolbox::Category::Create;
     let ctx = Context::default();
     theme::install(&ctx);
@@ -126,7 +126,7 @@ fn curve_clicks_add_points_one_undo_step_each() {
         s[0].x < s[1].x && s[1].x < s[2].x && s[1].y < s[0].y,
         "{s:?}"
     );
-    assert_eq!(a.editor.undo.len(), 2);
+    assert_eq!(a.editor.history.undo.len(), 2);
     a.run(Command::Undo);
     frame(&mut a, &ctx, vec![]);
     assert_eq!(curves(&a)[0].0.len(), 2);
@@ -162,13 +162,13 @@ fn dragging_a_point_moves_it_in_one_step() {
         click(&mut a, &ctx, p0);
     }
     let before = curves(&a)[0].0.clone();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     let p = screen(&a, before[1]);
     drag(&mut a, &ctx, p, p + vec2(0., 70.));
     let after = &curves(&a)[0].0;
     assert!((after[1] - before[1]).length() > 1e-3);
     assert!((after[0] - before[0]).length() < 1e-9);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
 }
 
 #[test]
@@ -238,11 +238,11 @@ fn bezier_press_drag_pulls_out_handles_as_one_step() {
     let (mut a, ctx) = app(DrawKind::Bezier);
     let p0 = spot(&a, -150., 0.);
     click(&mut a, &ctx, p0);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     let p0 = spot(&a, 100., 0.);
     let p1 = spot(&a, 160., 40.);
     drag(&mut a, &ctx, p0, p1);
-    assert_eq!(a.editor.undo.len(), undo + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), undo + 1, "{}", a.status);
     let c = &curves(&a)[0];
     assert_eq!(c.2, CurveKind::Bezier);
     // a0, out0, in1, a1: the second anchor's in handle mirrors the drag.
@@ -374,13 +374,13 @@ fn sketch_stroke_makes_a_curve_and_type_change_rebuilds_it() {
         "fitted to a few points: {}",
         c[0].0.len()
     );
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     // Type Quads rebuilds the same stroke as a strip, still one step.
     if let Some(t) = a.draw.as_mut() {
         t.sketch.kind = operandi_core::sketch::SketchType::Quads;
     }
     a.rebuild_sketch_for_test();
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     let m = &a.editor.scene.active().unwrap().mesh;
     assert!(curves(&a).is_empty());
     assert!(m.faces.len() > 5, "{} quads", m.faces.len());
@@ -793,14 +793,14 @@ fn patch_curves_build_on_the_closing_click() {
             DVec3::new(-1., 0., 1.),
         ],
     );
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     pick(&mut a, &ctx, &mids);
     assert_eq!(mesh(&a).faces.len(), 4, "four picks alone build nothing");
     assert_eq!(a.draw.as_ref().unwrap().picks.len(), 4);
     assert!(a.status.contains("close the loop"), "{}", a.status);
     pick(&mut a, &ctx, &mids[..1]);
     assert_eq!(mesh(&a).faces.len(), 4 + 100, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert!(a.draw.as_ref().unwrap().picks.is_empty());
     a.run(Command::Undo);
     assert_eq!(mesh(&a).faces.len(), 4);
@@ -1021,9 +1021,9 @@ fn patch_curves_live_patch_is_one_polygon() {
             DVec3::new(-1., 0., 1.),
         ],
     );
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     pick(&mut a, &ctx, &[mids[0], mids[1], mids[2], mids[3], mids[0]]);
-    assert_eq!(a.editor.undo.len(), undo + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), undo + 1, "{}", a.status);
     let m = mesh(&a).clone();
     assert_eq!(m.faces.len(), 5);
     assert!(operandi_core::patch_live::is_patch(&m, 4));
@@ -1064,9 +1064,9 @@ fn patch_curves_option_change_rebuilds_the_last_patch() {
         ],
     );
     pick(&mut a, &ctx, &[mids[0], mids[1], mids[2], mids[3], mids[0]]);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.draw.as_mut().unwrap().patch.parallel = 3;
     a.rebuild_patch_for_test();
-    assert_eq!(a.editor.undo.len(), undo);
+    assert_eq!(a.editor.history.undo.len(), undo);
     assert_eq!(mesh(&a).faces.len(), 4 + 30);
 }

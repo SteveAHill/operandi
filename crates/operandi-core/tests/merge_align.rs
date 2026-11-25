@@ -13,7 +13,7 @@ fn editor_with_cubes(positions: &[DVec3]) -> (Editor, Vec<u64>) {
         ids.push(item.id);
     }
     e.synchronize_identities().unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     (e, ids)
 }
 fn world_points(e: &Editor, id: u64) -> Vec<DVec3> {

@@ -227,9 +227,9 @@ fn smoothing_command_undoes_and_a_field_drag_is_one_step() {
         assert_eq!(e.scene, before);
     }
     // The same value again makes no step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     set(&mut e, before.smoothing.clone(), false).unwrap();
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]

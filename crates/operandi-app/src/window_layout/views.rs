@@ -1281,7 +1281,7 @@ mod tests {
         assert!(a.displays[&1].settings.drawing.uv_seams);
         // The commands and the Alt choice change only the active view, and
         // no scene history.
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         a.execute("wireframe view");
         a.display.set_style(Style::Gooch, true);
         a.display.settings.drawing.grid = false;
@@ -1291,7 +1291,7 @@ mod tests {
         assert_eq!(a.displays[&1].settings.active.style, Style::Default);
         assert_eq!(a.displays[&1].settings.inactive.style, Style::Default);
         assert!(a.displays[&1].settings.drawing.grid);
-        assert_eq!(a.editor.undo.len(), history);
+        assert_eq!(a.editor.history.undo.len(), history);
         // The second view, made active, brings its own back.
         let at = a.view_rects[&1].center();
         draw(&mut a, &ctx, SIZE, vec![pointer(at, true, Modifiers::NONE)]);

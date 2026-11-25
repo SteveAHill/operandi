@@ -224,8 +224,8 @@ impl crate::Editor {
         let mut candidate = self.scene.clone();
         candidate.smoothing = settings;
         if continuing
-            && self.redo.is_empty()
-            && let Some(last) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+            && self.history.redo.is_empty()
+            && let Some(last) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
             && last.label == SMOOTHING_STEP
             && last.after == self.scene
         {

@@ -12,7 +12,7 @@ fn fixture() -> Editor {
 }
 
 fn completed_ids(e: &Editor) {
-    for c in e.undo.iter().chain(&e.redo) {
+    for c in e.history.undo.iter().chain(&e.history.redo) {
         c.identity_before
             .as_ref()
             .unwrap()
@@ -51,13 +51,13 @@ fn ordinary_checkpoints_publish_valid_sidecars_restore_exact_ids_and_branch() {
         .unwrap();
     let renamed = e.scene.clone();
     let renamed_ids = e.identities.current.clone();
-    assert_eq!(e.undo.last().unwrap().label, "Rename Mesh");
+    assert_eq!(e.history.undo.last().unwrap().label, "Rename Mesh");
     completed_ids(&e);
     e.dispatch(Command::ClearSelection).unwrap();
     let selected = e.scene.clone();
     let selected_ids = e.identities.current.clone();
     assert_ne!(selected.selection, renamed.selection);
-    assert_eq!(e.undo.last().unwrap().label, "Clear Selection");
+    assert_eq!(e.history.undo.last().unwrap().label, "Clear Selection");
     completed_ids(&e);
     restore(
         &mut e,
@@ -95,8 +95,8 @@ fn ordinary_checkpoints_publish_valid_sidecars_restore_exact_ids_and_branch() {
         &renamed_ids,
     );
     e.dispatch(Command::Rename("new branch".into())).unwrap();
-    assert!(e.redo.is_empty());
-    let branch = e.undo.last().unwrap();
+    assert!(e.history.redo.is_empty());
+    let branch = e.history.undo.last().unwrap();
     assert_eq!(branch.before, renamed);
     assert_eq!(branch.identity_before.as_ref().unwrap(), &renamed_ids);
     assert_eq!(
@@ -118,12 +118,12 @@ fn cone_apply_and_drop_capture_complete_steps() {
     let applied = e.scene.clone();
     let applied_ids = e.identities.current.clone();
     assert_ne!(applied, original);
-    assert_eq!(e.undo.last().unwrap().label, "Cone");
+    assert_eq!(e.history.undo.last().unwrap().label, "Cone");
     completed_ids(&e);
     // Drop after Apply shows no preview: it records nothing.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
     assert!(e.cone.is_none());
     restore(
         &mut e,
@@ -143,7 +143,7 @@ fn cone_apply_and_drop_capture_complete_steps() {
     }))
     .unwrap();
     e.dispatch(Command::Drop).unwrap();
-    let dropped = e.undo.last().unwrap();
+    let dropped = e.history.undo.last().unwrap();
     assert_eq!(dropped.label, "Cone");
     assert_eq!(dropped.before, applied);
     assert_ne!(dropped.after, applied);
@@ -173,7 +173,7 @@ fn i2_local_restore_then_finish_publishes_one_complete_base_to_result_checkpoint
         local.effect,
         HistoryEffect::Local { from: 2, to: 1, .. }
     ));
-    assert!(e.undo.is_empty() && e.redo.is_empty());
+    assert!(e.history.undo.is_empty() && e.history.redo.is_empty());
     assert!(
         e.dispatch_history_reported(HistoryRequest::Redo)
             .unwrap()
@@ -183,8 +183,8 @@ fn i2_local_restore_then_finish_publishes_one_complete_base_to_result_checkpoint
     assert_eq!(e.identities.current, result_ids);
     e.dispatch(Command::Drop).unwrap();
     assert!(e.i2.selected.is_none());
-    assert_eq!(e.undo.len(), 1);
-    let c = &e.undo[0];
+    assert_eq!(e.history.undo.len(), 1);
+    let c = &e.history.undo[0];
     assert_eq!(c.label, "Extrude");
     assert_eq!(c.before, base);
     assert_eq!(c.after, result);
@@ -226,7 +226,10 @@ fn substantive_surface_mode_outer_publication_failure_preserves_accepted_state()
         let marks = (e.identities.next_id().unwrap(), e.i2.serial.next().unwrap());
         let mut nested_control = e.clone();
         nested_control.dispatch(Command::Drop).unwrap();
-        assert_eq!(nested_control.undo.last().unwrap().label, tool.label());
+        assert_eq!(
+            nested_control.history.undo.last().unwrap().label,
+            tool.label()
+        );
         nested_control.dispatch(Command::Mode(Mode::Edge)).unwrap();
         assert_eq!(nested_control.identities.publication, u64::MAX);
         assert!(nested_control.live.is_none());
@@ -239,7 +242,7 @@ fn substantive_surface_mode_outer_publication_failure_preserves_accepted_state()
         assert_eq!(e.scene, before.scene);
         assert_eq!(e.scene.selection, before.scene.selection);
         assert_eq!(e.identities.current, before.identities.current);
-        assert!(e.undo == before.undo && e.redo == before.redo);
+        assert!(e.history.undo == before.history.undo && e.history.redo == before.history.redo);
         assert!(e.live == before.live && e.i2 == before.i2);
         assert_eq!(e.revision, before.revision);
         assert_eq!(e.identities.publication, before.identities.publication);

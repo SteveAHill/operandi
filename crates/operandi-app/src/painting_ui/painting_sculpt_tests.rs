@@ -44,7 +44,7 @@ fn app() -> (Operandi, Context) {
     let mut a = Operandi::empty();
     a.run(Command::NewMesh);
     a.editor.scene.active_mut().unwrap().mesh = grid().into();
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.camera.view = View::Front;
     a.camera.target = DVec3::ZERO;
     a.camera.distance = 3.;
@@ -127,17 +127,17 @@ fn a3_mask_paint_holds_points_from_the_push_brush_and_undoes_in_one_step() {
         .settings
         .brush_mut(SculptBrush::VmPaint)
         .offset_amount = 1.;
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let left = screen(&a, DVec3::new(-0.25, -0.5, 0.));
     let dy = screen(&a, DVec3::new(0., 0.5, 0.)).y - left.y;
     stroke(&mut a, &ctx, left, vec2(0., dy), 12);
     assert_eq!(
-        a.editor.undo.len(),
+        a.editor.history.undo.len(),
         steps + 1,
         "one undo step: {}",
         a.status
     );
-    assert_eq!(a.editor.undo.last().unwrap().label, "Mask Paint");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Mask Paint");
     let mask = a.editor.scene.paint.masks.get(&id).expect("a mask").clone();
     assert!(
         mask[at(15, 20)] > 0.9,

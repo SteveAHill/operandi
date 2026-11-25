@@ -111,9 +111,9 @@ fn move_in_a_uv_view_drags_uvs_on_the_u_arrow_and_leaves_3d() {
     assert!((u[0][0].x - du).abs() < 1e-3, "{:?} {}", u[0][0], a.status);
     assert!(u[0][0].y.abs() < 1e-9);
     assert_eq!(a.editor.scene.active().unwrap().mesh.vertices, points);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     a.run(Command::Undo);
     assert!(uvs(&a)[0][0].x.abs() < 1e-9);
 }
@@ -211,7 +211,7 @@ fn edit_tab_island_buttons_run_presets_and_ctrl_opens_the_dialog() {
         ],
     );
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Flip U",
         "{}",
         a.status
@@ -229,7 +229,7 @@ fn edit_tab_island_buttons_run_presets_and_ctrl_opens_the_dialog() {
     a.uv_dialog = None;
     a.island_dialog_ok(operandi_core::uv_edit::RuleKind::Fit, &values)
         .unwrap();
-    assert_eq!(a.editor.undo.last().unwrap().label, "Fit UVs");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Fit UVs");
     let _ = fit;
 }
 
@@ -738,7 +738,10 @@ fn stage3_buttons_run_and_their_dialogs_open() {
     a.run(Command::Mode(Mode::Polygon));
     a.editor.scene.selection.faces = vec![0];
     a.execute("operandi.uv.rotatePolygons");
-    assert_eq!(a.editor.undo.last().unwrap().label, "Rotate Polygon UVs");
+    assert_eq!(
+        a.editor.history.undo.last().unwrap().label,
+        "Rotate Polygon UVs"
+    );
     for kind in [
         "texel", "split", "sew", "moveSew", "errors", "setValue", "paste", "toOrigin",
     ] {
@@ -828,7 +831,7 @@ fn uvt63_split_brush_splits_the_points_it_passes_and_sew_brush_joins_them() {
     let mid = v.to_screen(v.rect, DVec2::splat(0.5));
     drag(&mut a, &ctx, mid, mid + vec2(15., 0.), Modifiers::NONE);
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Split Brush",
         "{}",
         a.status
@@ -851,7 +854,7 @@ fn uvt63_split_brush_splits_the_points_it_passes_and_sew_brush_joins_them() {
     // Shift-stroke over them again sews.
     drag(&mut a, &ctx, mid, mid + vec2(15., 0.), Modifiers::SHIFT);
     assert_eq!(
-        a.editor.undo.last().unwrap().label,
+        a.editor.history.undo.last().unwrap().label,
         "Sew Brush",
         "{}",
         a.status

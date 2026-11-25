@@ -53,7 +53,7 @@ fn shift_w_keys_position_and_shift_right_steps_a_frame() {
     let ctx = Context::default();
     let (mut a, id) = items_app();
     frames(&mut a, &ctx, 2);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     key(&mut a, &ctx, Key::W, Modifiers::SHIFT);
     assert!(
         a.editor
@@ -63,10 +63,14 @@ fn shift_w_keys_position_and_shift_right_steps_a_frame() {
         "{}",
         a.status
     );
-    assert_eq!(a.editor.undo.len(), steps + 1, "one undo step");
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "one undo step");
     key(&mut a, &ctx, Key::ArrowRight, Modifiers::SHIFT);
     assert_eq!(a.editor.scene.time.current_frame(), 1);
-    assert_eq!(a.editor.undo.len(), steps + 1, "time is no undo step");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        steps + 1,
+        "time is no undo step"
+    );
     // In Edge mode the same key doesn't step time.
     a.run(Command::Mode(Mode::Edge));
     key(&mut a, &ctx, Key::ArrowRight, Modifiers::SHIFT);
@@ -106,6 +110,7 @@ fn playback_advances_and_stops_with_one_history_line() {
     assert_eq!(a.editor.scene.time.current_frame(), stopped);
     assert!(
         a.editor
+            .history
             .undo
             .iter()
             .all(|c| c.label == "Time Settings" || !c.label.contains("Time"))
@@ -250,9 +255,9 @@ fn graph_editor_opens_draws_and_shares_the_selection() {
     frames(&mut a, &ctx, 2);
     assert_eq!(a.editor.live_selected_keys().len(), 1);
     // A drag's result is one command, one undo step (GE-45).
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute("operandi.key.offset frames:1 value:0.5");
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     for line in [
         "operandi.graph.view fit:all",
         "operandi.graph.view normalise:toggle stacked:toggle isolate:toggle",
@@ -394,9 +399,9 @@ fn graph_editor_gap_tools_draw_and_run() {
     assert!(a.graph.box_scale && a.graph.speed && a.graph.retime);
     assert_eq!(a.graph.rows, 2);
     // The box drag's result: one transform line, one undo step.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute("operandi.key.transform timeFactor:2 timePivot:0");
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     // Envelope presets land in Presets/Envelopes.
     let folder = a.envelope_folder();
     std::fs::create_dir_all(&folder).unwrap();

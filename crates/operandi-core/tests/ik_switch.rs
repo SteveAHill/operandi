@@ -101,9 +101,9 @@ fn ik31_switch_to_fk_and_back_never_pops() {
     let before: Vec<Vec<DVec3>> = (0..=24).step_by(6).map(|f| pose(&mut e, j, f)).collect();
     at_frame(&mut e, 24);
     e.scene.select_item(Some(goal));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, "operandi.ik.switch");
-    assert_eq!(e.undo.len(), steps + 1, "one step");
+    assert_eq!(e.history.undo.len(), steps + 1, "one step");
     // At 24 nothing moved; before 24 everything is as it was.
     for (k, f) in (0..=24).step_by(6).enumerate() {
         let now = pose(&mut e, j, f);

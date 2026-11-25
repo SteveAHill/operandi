@@ -154,7 +154,7 @@ fn ik42_limit_fk_clamps_edits() {
 #[test]
 fn joint_settings_query_undo_and_save() {
     let (mut e, j) = leg();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(
         &mut e,
         &format!(
@@ -162,7 +162,7 @@ fn joint_settings_query_undo_and_save() {
             j[1]
         ),
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let q: Value = serde_json::from_str(
         &command_exec::answer(
             &e,

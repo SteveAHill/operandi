@@ -49,7 +49,7 @@ fn editor(m: Mesh, mode: Mode) -> Editor {
     e.dispatch(Command::NewMesh).unwrap();
     e.scene.active_mut().unwrap().mesh = m.into();
     e.scene.selection.mode = mode;
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -85,8 +85,8 @@ fn sl_sp1_vertices_go_along_the_row_then_up_the_column() {
         [0, 1, 2, 3, 4, 5, 11, 17, 23, 29, 35].into_iter().collect()
     );
     // One undo step that changes only the selection.
-    assert_eq!(e.undo.len(), 1);
-    assert_eq!(e.undo.last().unwrap().label, "Shortest Path");
+    assert_eq!(e.history.undo.len(), 1);
+    assert_eq!(e.history.undo.last().unwrap().label, "Shortest Path");
     let mesh = e.scene.active().unwrap().mesh.clone();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(verts(&e), [0, 35].into_iter().collect());
@@ -165,7 +165,7 @@ fn shortest_path_refuses_one_element_or_separate_pieces() {
             .is_err()
     );
     assert_eq!(verts(&e), [0, 6].into_iter().collect());
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 
 // ---- Sharp (SL-10..12) ----

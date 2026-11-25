@@ -1960,9 +1960,9 @@ mod layer_tests {
         assert_eq!(e.scene, before);
         // Each setting edit is one step.
         e.dispatch(Command::Redo).unwrap();
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         change(&mut e, id, |n| procedural(n).zones.gain = 0.7);
-        assert_eq!(e.undo.len(), undo + 1);
+        assert_eq!(e.history.undo.len(), undo + 1);
     }
 
     #[test]

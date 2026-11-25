@@ -113,10 +113,10 @@ fn pb_t1_material_group_with_two_layers_round_trips() {
     let into = add(&mut target, NewLayer::Group, None);
     // Something already inside the group is replaced.
     add(&mut target, NewLayer::Constant, Some(into));
-    let undo_before = target.undo.len();
+    let undo_before = target.history.undo.len();
     let scene_before = target.scene.clone();
     load(&mut target, &path, Some(into)).unwrap();
-    assert_eq!(target.undo.len(), undo_before + 1, "one undo step");
+    assert_eq!(target.history.undo.len(), undo_before + 1, "one undo step");
     assert_eq!(
         contents(&target.scene, into),
         contents(&source.scene, group)
@@ -157,7 +157,7 @@ fn pb_q3_material_load_without_a_group_changes_nothing() {
     // The Base Material is not a material group either.
     assert!(load(&mut target, &path, Some(4)).is_err());
     assert_eq!(target.scene, before);
-    assert!(target.undo.is_empty());
+    assert!(target.history.undo.is_empty());
 }
 
 #[test]
@@ -208,7 +208,7 @@ fn pb_t2_mesh_preset_drops_the_item_transform() {
 
     let mut target = Editor::default();
     load(&mut target, &path, None).unwrap();
-    assert_eq!(target.undo.len(), 1);
+    assert_eq!(target.history.undo.len(), 1);
     let item = target.scene.active().expect("the loaded mesh is selected");
     assert_eq!(item.transform, Transform::default());
     let mesh = &source.scene.items[0].mesh;
@@ -338,7 +338,7 @@ fn pb_t3_environment_replaces_every_light_in_one_step() {
     let mut other = mesh_editor();
     add_light(&mut other, LightKind::Directional, DVec3::ZERO);
     let before = other.scene.clone();
-    let steps = other.undo.len();
+    let steps = other.history.undo.len();
     load(&mut other, &path, None).unwrap();
     let kinds: Vec<LightKind> = other
         .scene
@@ -361,7 +361,7 @@ fn pb_t3_environment_replaces_every_light_in_one_step() {
         other.scene.items.iter().any(|i| i.light.is_none()),
         "meshes stay"
     );
-    assert_eq!(other.undo.len(), steps + 1);
+    assert_eq!(other.history.undo.len(), steps + 1);
     other.dispatch(Command::Undo).unwrap();
     assert_eq!(other.scene, before);
     // No lights, no environment preset.
@@ -407,7 +407,7 @@ fn render_settings_replace_outputs_and_add_the_camera() {
         .unwrap();
     let mut target = Editor::default();
     target.dispatch(Command::NewCamera).unwrap();
-    let steps = target.undo.len();
+    let steps = target.history.undo.len();
     load(&mut target, &path, None).unwrap();
     let outputs: Vec<&Node> = target
         .scene
@@ -434,7 +434,7 @@ fn render_settings_replace_outputs_and_add_the_camera() {
         .filter(|i| i.camera.is_some())
         .count();
     assert_eq!(cameras, 2, "the preset's camera is added");
-    assert_eq!(target.undo.len(), steps + 1);
+    assert_eq!(target.history.undo.len(), steps + 1);
 }
 
 #[test]
@@ -495,10 +495,10 @@ fn a_refused_load_leaves_the_scene_and_history_alone() {
         .dispatch(Command::Activate(crate::Tool::Move))
         .unwrap();
     let before = target.scene.clone();
-    let undo = target.undo.len();
+    let undo = target.history.undo.len();
     assert!(load(&mut target, &path, None).is_err());
     assert_eq!(target.scene, before);
-    assert_eq!(target.undo.len(), undo);
+    assert_eq!(target.history.undo.len(), undo);
     // A broken file is an error, not a panic.
     std::fs::write(dir.join("bad.oppreset"), b"{nope").unwrap();
     assert!(persistence::load_preset(&dir.join("bad.oppreset")).is_err());
@@ -544,7 +544,7 @@ fn cd_t3_an_hdr_becomes_the_environment_image_in_one_step() {
     let mut e = Editor::default();
     e.scene.ensure_environment().unwrap();
     let before = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::SetEnvironmentImage {
         path: "/hdri/studio_4k.exr".into(),
         width: 64,
@@ -552,7 +552,7 @@ fn cd_t3_an_hdr_becomes_the_environment_image_in_one_step() {
         item: None,
     })
     .unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     let image_of = |scene: &Scene| {
         let env = scene
             .environments()
@@ -640,9 +640,9 @@ fn ep_t1_an_hdr_goes_on_the_top_environment_above_its_material() {
         },
     })
     .unwrap();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(hdr("/hdri/studio.hdr")).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     let (id, env) = top_env(&e.scene);
     assert_eq!(id, newer);
     assert_eq!(env.layers.len(), 2);
@@ -970,7 +970,7 @@ fn pb_110_a_drop_fills_the_existing_group_of_the_tag() {
     };
     let top = group_for("TableTop");
     let edge = group_for("Table_Edge");
-    e.undo.clear();
+    e.history.undo.clear();
     let before = e.scene.clone();
     let groups = |e: &Editor| {
         e.scene
@@ -1069,11 +1069,11 @@ fn ep_t3_two_environments_and_a_light_replace_the_default_in_one_step() {
     let mut target = Editor::default();
     target.scene.ensure_environment().unwrap();
     let default_env = top_env(&target.scene).0;
-    let steps = target.undo.len();
+    let steps = target.history.undo.len();
     let before = target.scene.clone();
     // Double-click is Replace.
     apply(&mut target, &saved, ApplyMode::Replace, "sky");
-    assert_eq!(target.undo.len(), steps + 1);
+    assert_eq!(target.history.undo.len(), steps + 1);
     assert!(
         target.scene.items.iter().all(|i| i.id != default_env),
         "default env gone"
@@ -1307,9 +1307,9 @@ fn ep_t5_add_puts_the_new_environments_on_top_and_they_win() {
     let mut e = Editor::default();
     e.scene.ensure_environment().unwrap();
     let old = top_env(&e.scene).0;
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     apply(&mut e, &preset, ApplyMode::Add, "sky");
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(e.scene.environments().count(), 2, "nothing replaced");
     let top = top_env(&e.scene).0;
     assert_ne!(top, old);

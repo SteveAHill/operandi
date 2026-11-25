@@ -42,11 +42,11 @@ fn set(e: &mut Editor, items: Vec<u64>, c: Option<EditorColor>) {
 #[test]
 fn ic01_two_items_one_undo_step() {
     let (mut e, [_, arm, leg, _]) = rig();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     set(&mut e, vec![arm, leg], Some(EditorColor::Orange));
     assert_eq!(color(&e, arm), Some(EditorColor::Orange));
     assert_eq!(color(&e, leg), Some(EditorColor::Orange));
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(color(&e, arm), None);
     assert_eq!(color(&e, leg), None);

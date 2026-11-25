@@ -3157,8 +3157,8 @@ impl crate::Editor {
         // A continuing edit replaces the previous step's result when that
         // step was this same layer's last edit and nothing came after it.
         if fold.is_some()
-            && self.redo.is_empty()
-            && let Some(last) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+            && self.history.redo.is_empty()
+            && let Some(last) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
             && last.label == label
             && last.after == self.scene
         {
@@ -3539,7 +3539,7 @@ mod editor_tests {
                 },
             );
         }
-        assert_eq!(e.undo.len(), 3);
+        assert_eq!(e.history.undo.len(), 3);
         assert_eq!(e.scene.shader_tree.get(3).unwrap().layer.opacity, 0.5);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene.shader_tree.get(3).unwrap().layer.opacity, 1.);
@@ -3550,7 +3550,7 @@ mod editor_tests {
         e.dispatch(Command::Redo).unwrap();
         assert!(e.scene.shader_tree.get(group).is_some());
         // A refused edit changes nothing and records nothing.
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         assert!(
             e.dispatch(Command::ShaderTree(ShaderTreeEdit::Move {
                 ids: vec![group],
@@ -3561,7 +3561,7 @@ mod editor_tests {
             }))
             .is_err()
         );
-        assert_eq!(e.undo.len(), undo);
+        assert_eq!(e.history.undo.len(), undo);
     }
 
     #[test]

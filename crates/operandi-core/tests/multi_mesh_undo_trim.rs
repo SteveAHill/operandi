@@ -37,14 +37,18 @@ fn multi_mesh_commands_survive_undo_memory_trimming() {
     for _ in 0..4 {
         e.dispatch(Command::FlipPolygons).unwrap();
     }
-    assert!(e.undo.len() > 2);
+    assert!(e.history.undo.len() > 2);
     let before = e.scene.clone();
     // A budget so small that every recorded step trims all older ones, as
     // a scene near the real budget does.
-    e.undo_memory_budget = Some(1);
+    e.history.undo_memory_budget = Some(1);
     e.dispatch(Command::FlipPolygons).unwrap();
-    assert_eq!(e.undo.len(), 1, "trimmed once the steps were joined");
-    assert!(!e.undo_trim_paused);
+    assert_eq!(
+        e.history.undo.len(),
+        1,
+        "trimmed once the steps were joined"
+    );
+    assert!(!e.history.undo_trim_paused);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, before, "the joined step undoes both meshes");
 }

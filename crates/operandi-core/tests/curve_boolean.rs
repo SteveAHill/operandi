@@ -189,13 +189,13 @@ fn cb_18_19_both_selected_union_and_one_undo_step() {
     e.scene.active_mut().unwrap().mesh = scene().into();
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
     e.scene.selection.faces = vec![0];
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::CurveBoolean(CurveBooleanOptions {
         op: CurveBooleanOp::Intersect,
         ..Default::default()
     }))
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(e.scene.selection.faces.is_empty(), "CB-19");
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh, scene());

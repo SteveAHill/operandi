@@ -622,7 +622,7 @@ impl crate::Editor {
         }
         if changed
             && let Some(unprotected) = unprotected
-            && let Some(last) = self.undo.last_mut().map(std::sync::Arc::make_mut)
+            && let Some(last) = self.history.undo.last_mut().map(std::sync::Arc::make_mut)
             && last.after == unprotected
         {
             last.after = self.scene.clone();

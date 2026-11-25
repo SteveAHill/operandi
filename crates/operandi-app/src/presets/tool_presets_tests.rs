@@ -48,7 +48,7 @@ fn choose(a: &mut Operandi, c: &Context, role: Role, name: &str) {
 fn box_in(mode: Mode) -> Operandi {
     let mut a = super::tests::box_app();
     a.run(Command::Mode(mode));
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a
 }
 
@@ -140,19 +140,22 @@ fn flip_it_button_dialog_and_command_line_agree() {
     choose(&mut a, &c, Role::Button, "Cancel");
     assert!(a.flip_it.is_none());
     assert_eq!(a.editor.scene, source);
-    assert!(a.editor.undo.is_empty());
+    assert!(a.editor.history.undo.is_empty());
     click(&mut a, &c, p);
     choose(&mut a, &c, Role::Button, "OK");
     assert_eq!(a.editor.scene, want, "{}", a.status);
-    assert_eq!(a.editor.undo.len(), 1);
-    assert_eq!(a.editor.undo[0].label, "Flip It");
+    assert_eq!(a.editor.history.undo.len(), 1);
+    assert_eq!(a.editor.history.undo[0].label, "Flip It");
 
     let mut b = box_in(Mode::Polygon);
     b.execute("flip it x");
     assert_eq!(b.editor.scene, want, "{}", b.status);
     let mut origin = box_in(Mode::Polygon);
     origin.execute("flip it origin y");
-    assert_eq!(origin.editor.undo.last().unwrap().label, "Flip It Origin");
+    assert_eq!(
+        origin.editor.history.undo.last().unwrap().label,
+        "Flip It Origin"
+    );
     let mut bare = box_in(Mode::Polygon);
     bare.execute("flip it origin");
     assert!(

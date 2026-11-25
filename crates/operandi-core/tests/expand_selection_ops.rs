@@ -48,9 +48,9 @@ fn sorted<T: Ord + Clone>(v: &[T]) -> Vec<T> {
 /// back to the selection before it.
 fn one_step(e: &mut Editor, operation: SelectionOperation) {
     let before = e.scene.selection.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::Selection(operation)).unwrap();
-    assert_eq!(e.undo.len(), history + 1, "one undo step");
+    assert_eq!(e.history.undo.len(), history + 1, "one undo step");
     let after = e.scene.selection.clone();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.selection, before);
@@ -94,11 +94,11 @@ fn loop_adds_each_selected_edges_loop_and_keeps_the_seeds() {
     assert_eq!(sorted(edges), vec![(3, 4), (4, 5), (10, 13), (13, 16)]);
 
     // Again: nothing more to add is refused and records nothing.
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     assert!(
         e.dispatch(Command::Selection(SelectionOperation::Loop))
             .is_err()
     );
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
     assert_eq!(e.scene.selection.edges.len(), 4);
 }

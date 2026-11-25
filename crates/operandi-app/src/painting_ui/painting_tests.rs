@@ -41,7 +41,7 @@ fn bare_new_image_opens_the_panel_and_typed_lines_make_images() {
     a.execute("operandi.image.new");
     assert!(a.painting_dialog_open());
     a.painting = Default::default();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.execute("operandi.image.new resolution:256 format:rgb float:true color:0.5,0.25,1 name:Skin");
     let id = a.editor.paint.last_image.expect(&a.status);
     let image = a.editor.scene.images.iter().find(|i| i.id == id).unwrap();
@@ -52,7 +52,11 @@ fn bare_new_image_opens_the_panel_and_typed_lines_make_images() {
         (256, pixels::Format::Rgb, pixels::Depth::F32)
     );
     assert_eq!(px.get(0), [0.5, 0.25, 1., 1.]);
-    assert_eq!(a.editor.undo.len(), undo, "New Image isn't an undo step");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        undo,
+        "New Image isn't an undo step"
+    );
     // Non power of two: the one-time note.
     a.execute("operandi.image.new resolution:300");
     assert_eq!(a.status, pixels::SQUARE_POW2_NOTE);
@@ -68,9 +72,9 @@ fn add_color_texture_makes_the_paint_target_with_a_badge() {
     a.execute("operandi.paint.addTexture kind:color");
     assert!(a.painting_dialog_open(), "bare kind opens New Image");
     a.painting = Default::default();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.execute("operandi.paint.addTexture kind:color resolution:64");
-    assert_eq!(a.editor.undo.len(), undo + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), undo + 1, "{}", a.status);
     let layer = a.paint_target().expect("the new layer is the target");
     assert_eq!(a.shading.selected, vec![layer]);
     let rows = a.shading_tree_rows();
@@ -114,7 +118,7 @@ fn image_commands_grey_without_an_image_and_run_on_the_target() {
             .unavailable
             .is_none()
     );
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     a.execute("operandi.image.invert");
     assert_eq!(
         a.editor.scene.paint.buffers[&image].get(0),
@@ -125,7 +129,7 @@ fn image_commands_grey_without_an_image_and_run_on_the_target() {
     a.execute("operandi.image.expandSeams border:2");
     a.execute("operandi.image.clear");
     assert_eq!(a.editor.scene.paint.buffers[&image].get(0), [0.; 4]);
-    assert!(a.editor.undo.len() >= undo + 3, "{}", a.status);
+    assert!(a.editor.history.undo.len() >= undo + 3, "{}", a.status);
     // Not built yet: greyed with a reason.
     for line in [
         "operandi.image.newSequence",

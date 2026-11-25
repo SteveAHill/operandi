@@ -34,12 +34,12 @@ fn rows_list_pieces_then_the_skin_and_rename_is_one_step() {
     assert_eq!(names, ["Position Constraint", "Rotation Constraint"]);
     assert!(rig_list::rows(&e.scene, b).is_empty());
     let piece = e.scene.animation.rig.pieces[0].id;
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(
         &mut e,
         &format!("operandi.rig.rename piece:{piece} name:\"Follow B\""),
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(
         matches!(&rig_list::rows(&e.scene, a)[0], RigRow::Piece { name, .. } if name == "Follow B")
     );

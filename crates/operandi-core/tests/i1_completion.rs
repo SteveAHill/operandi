@@ -68,7 +68,7 @@ fn c01_two_stages_zero_or_nonzero_full_graphs_history_and_branch() {
         stage(&mut e, 0.5);
         assert_eq!(e.scene, fixed(&format!("{name}-second")));
         check_ids(&e, "i1_completion", &format!("{name}-second"));
-        assert_eq!(e.undo.len(), 2);
+        assert_eq!(e.history.undo.len(), 2);
         let second_ids = e.identities.current.clone();
         let token = e.identities.publication;
         e.dispatch(Command::Undo).unwrap();
@@ -90,8 +90,8 @@ fn c01_two_stages_zero_or_nonzero_full_graphs_history_and_branch() {
         stage(&mut e, 0.25);
         assert_eq!(e.scene, fixed(&format!("{name}-branch")));
         check_ids(&e, "i1_completion", &format!("{name}-branch"));
-        assert!(e.redo.is_empty());
-        assert_eq!(e.undo.len(), 2);
+        assert!(e.history.redo.is_empty());
+        assert_eq!(e.history.undo.len(), 2);
         assert_eq!(e.identities.current.meshes[&1].faces[1], FaceId(10));
         assert_eq!(
             e.identities.current.meshes[&1].corners[1],
@@ -521,7 +521,7 @@ fn c08_byte_identical_unported_topology_replacement_retires_handles() {
     let original = e.identities.current.clone();
     let ticket = e.identity_ticket().unwrap();
     let before_mark = e.identities.next_id().unwrap();
-    let history = e.undo.clone();
+    let history = e.history.undo.clone();
     let h = FaceHandle {
         scope: original.meshes[&1].scope,
         face: original.meshes[&1].faces[0],
@@ -529,7 +529,7 @@ fn c08_byte_identical_unported_topology_replacement_retires_handles() {
     e.dispatch(Command::Preview(p)).unwrap();
     assert_eq!(e.scene, scene);
     assert_eq!(persistence::encode(&e.scene).unwrap(), encoded);
-    assert!(e.undo == history);
+    assert!(e.history.undo == history);
     assert!(e.identities.publication > ticket.publication);
     assert_ne!(e.identities.current.meshes[&1].scope, h.scope);
     assert!(e.identities.next_id().unwrap() > before_mark);

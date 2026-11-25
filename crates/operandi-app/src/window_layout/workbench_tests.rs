@@ -138,10 +138,10 @@ fn pick_to_add_takes_a_toolbox_button_instead_of_running_it() {
     // Go to the Polygon tab and click Bevel: added, not started.
     a.category = toolbox::Category::Polygon;
     draw(&mut a, &ctx, SIZE, vec![]);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     click_line(&mut a, &ctx, "Bevel", Modifiers::NONE);
     assert!(a.editor.live.is_none(), "a picked button doesn't run");
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     assert_eq!(lines(&a), ["Bevel"]);
     assert_eq!(bench(&a).controls[0].width, Width::Full);
     assert!(
@@ -479,10 +479,10 @@ fn right_click_opens_the_item_menu_while_editing() {
         assert!(text.contains(entry), "{entry} missing from {text}");
     }
     // A click on an item while editing doesn't run it.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     draw(&mut a, &ctx, SIZE, vec![key(Key::Escape)]);
     click_at(&mut a, &ctx, at);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
 }
 
 #[test]
@@ -609,12 +609,12 @@ fn duplicate_delete_and_undo() {
     a.execute("operandi.workbench.delete 5");
     assert!(a.status.contains("no control 5"), "{}", a.status);
     // Workbench edits aren't scene undo steps; they have their own undo.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute("operandi.workbench.undo");
     assert_eq!(lines(&a), ["Grow", "Grow", "Shrink"]);
     a.execute("operandi.workbench.undo");
     assert_eq!(lines(&a), ["Grow", "Shrink"]);
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     a.execute("operandi.workbench.undo");
     a.execute("operandi.workbench.undo");
     assert!(lines(&a).is_empty());

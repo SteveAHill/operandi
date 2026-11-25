@@ -33,7 +33,7 @@ fn grid(n: u32) -> Editor {
     mesh.faces = faces.into();
     e.scene.active_mut().unwrap().mesh = MeshSlot::new(mesh);
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -46,27 +46,27 @@ fn undo_history_counts_mesh_data_and_trims_to_its_budget() {
         one_step > 10_000 * std::mem::size_of::<Face>(),
         "a step that replaced the polygons is charged for them: {one_step}"
     );
-    e.undo_memory_budget = Some(one_step * 5 + one_step / 2);
+    e.history.undo_memory_budget = Some(one_step * 5 + one_step / 2);
     for _ in 0..20 {
         e.dispatch(Command::FlipPolygons).unwrap();
     }
     assert!(
-        e.undo.len() < 10,
+        e.history.undo.len() < 10,
         "old steps were trimmed: {}",
-        e.undo.len()
+        e.history.undo.len()
     );
     assert!(
-        e.undo.len() >= 4,
+        e.history.undo.len() >= 4,
         "but not more than needed: {}",
-        e.undo.len()
+        e.history.undo.len()
     );
-    assert!(e.undo_memory_bytes() <= e.undo_memory_budget.unwrap());
+    assert!(e.undo_memory_bytes() <= e.history.undo_memory_budget.unwrap());
     // The kept steps still undo.
-    let n = e.undo.len();
+    let n = e.history.undo.len();
     for _ in 0..n {
         e.dispatch(Command::Undo).unwrap();
     }
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn shared_data_is_counted_once() {
     for k in 0..10 {
         e.dispatch(Command::Rename(format!("Grid {k}"))).unwrap();
     }
-    assert!(e.undo.len() >= 10);
+    assert!(e.history.undo.len() >= 10);
     assert!(
         e.undo_memory_bytes() < 1 << 20,
         "renames share the mesh: {}",
@@ -97,8 +97,8 @@ fn free_memory_caps_the_history() {
         e.dispatch(Command::FlipPolygons).unwrap();
     }
     assert!(
-        e.undo.len() <= 2,
+        e.history.undo.len() <= 2,
         "{} steps of {one_step} bytes",
-        e.undo.len()
+        e.history.undo.len()
     );
 }

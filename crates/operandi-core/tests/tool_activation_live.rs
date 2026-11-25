@@ -45,7 +45,7 @@ fn live_params(e: &Editor) -> Parameters {
 fn polygon_inset_then_shift_before_any_click_is_one_bevel() {
     let mut e = cube_top_selected();
     let before = e.scene.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     let mut p = live_params(&e);
     p.inset = 0.1;
@@ -69,7 +69,7 @@ fn polygon_inset_then_shift_before_any_click_is_one_bevel() {
     // Drop: one undo step; Undo restores the cube, Redo the bevel.
     e.dispatch(Command::Drop).unwrap();
     assert!(e.live.is_none());
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     let bevelled = e.scene.clone();
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(
@@ -97,7 +97,7 @@ fn polygon_inset_then_shift_before_any_click_is_one_bevel() {
 fn cancel_after_a_live_panel_edit_restores_the_mesh() {
     let mut e = cube_top_selected();
     let before = e.scene.active().unwrap().mesh.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     let mut p = live_params(&e);
     p.inset = 0.1;
@@ -106,7 +106,7 @@ fn cancel_after_a_live_panel_edit_restores_the_mesh() {
     assert_eq!(counts(&e), (12, 10));
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh, before);
-    assert_eq!(e.undo.len(), undo);
+    assert_eq!(e.history.undo.len(), undo);
 }
 
 /// TA-03: switching Bevel on and dropping it with no edit changes nothing,
@@ -116,7 +116,7 @@ fn activate_and_drop_without_an_edit_changes_nothing() {
     for resend in [false, true] {
         let mut e = cube_top_selected();
         let before = e.scene.clone();
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
         assert_eq!(counts(&e), (8, 6));
         if resend {
@@ -126,7 +126,7 @@ fn activate_and_drop_without_an_edit_changes_nothing() {
         }
         e.dispatch(Command::Drop).unwrap();
         assert_eq!(e.scene, before);
-        assert_eq!(e.undo.len(), undo);
+        assert_eq!(e.history.undo.len(), undo);
     }
 }
 
@@ -143,7 +143,7 @@ fn top_edge(e: &Editor) -> (u32, u32) {
 fn edge_value_before_any_click_bevels_live() {
     let mut e = cube(Mode::Edge);
     e.scene.selection.edges = vec![top_edge(&e)];
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::EdgeBevel)).unwrap();
     assert_eq!(counts(&e), (8, 6), "switching on changes nothing");
     let mut p = live_params(&e);
@@ -155,7 +155,7 @@ fn edge_value_before_any_click_bevels_live() {
         "{points} points, {polygons} polygons"
     );
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(counts(&e), (8, 6));
 }
@@ -261,7 +261,7 @@ fn undo_takes_back_one_panel_edit_at_a_time() {
 fn stacked_bevels_undo_one_edit_at_a_time() {
     let mut e = cube_top_selected();
     let cube = e.scene.active().unwrap().mesh.clone();
-    let undo = e.undo.len();
+    let undo = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     let mut p = live_params(&e);
     p.inset = 0.1;
@@ -269,7 +269,11 @@ fn stacked_bevels_undo_one_edit_at_a_time() {
     let one = e.scene.active().unwrap().mesh.clone();
     e.dispatch(Command::Continue).unwrap();
     assert_eq!((live_params(&e).inset, live_params(&e).shift), (0., 0.));
-    assert_eq!(e.undo.len(), undo, "no document step while the tool is on");
+    assert_eq!(
+        e.history.undo.len(),
+        undo,
+        "no document step while the tool is on"
+    );
     let mut p = live_params(&e);
     p.inset = 0.1;
     e.dispatch(Command::ConfigureBevel(p)).unwrap();
@@ -290,7 +294,7 @@ fn stacked_bevels_undo_one_edit_at_a_time() {
     }
     assert_eq!(counts(&e), (16, 14));
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), undo + 2);
+    assert_eq!(e.history.undo.len(), undo + 2);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh, one);
     e.dispatch(Command::Undo).unwrap();
@@ -309,7 +313,7 @@ fn stacked_bevels_undo_one_edit_at_a_time() {
     e.dispatch(Command::ConfigureBevel(p)).unwrap();
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh, one);
-    assert_eq!(e.undo.len(), undo + 1);
+    assert_eq!(e.history.undo.len(), undo + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh, cube);
 }

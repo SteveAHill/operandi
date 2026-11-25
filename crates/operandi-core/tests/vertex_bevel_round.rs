@@ -367,7 +367,7 @@ fn the_tool_rounds_tags_every_cap_polygon_selects_the_cuts_and_undoes() {
 fn cancel_leaves_the_mesh_as_it_was() {
     let mut e = editor(grid(), vec![1]);
     let before = e.scene.clone();
-    let history = e.undo.len();
+    let history = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::VertexBevel)).unwrap();
     let mut p = e.live.as_ref().unwrap().params.clone();
     p.inset = 0.3;
@@ -382,7 +382,7 @@ fn cancel_leaves_the_mesh_as_it_was() {
         e.scene.active().unwrap().mesh,
         before.active().unwrap().mesh
     );
-    assert_eq!(e.undo.len(), history);
+    assert_eq!(e.history.undo.len(), history);
 }
 
 /// The new points (past the 15 kept grid points) as (x, z), sorted.

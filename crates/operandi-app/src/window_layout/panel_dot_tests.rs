@@ -1037,7 +1037,7 @@ fn layout_changes_leave_the_undo_history_and_modified_flag_alone() {
     let original = a.editor.scene.clone();
     a.execute("new mesh");
     idle(&mut a, &ctx);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     assert!(steps > 0, "the modelling change is a step");
     let dirty = a.dirty();
     assert!(dirty);
@@ -1061,7 +1061,11 @@ fn layout_changes_leave_the_undo_history_and_modified_flag_alone() {
     let window = a.views.windows[0].id;
     a.discard_view_window(window);
     idle(&mut a, &ctx);
-    assert_eq!(a.editor.undo.len(), steps, "no layout step in the history");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        steps,
+        "no layout step in the history"
+    );
     assert_eq!(a.dirty(), dirty, "the scene's modified flag is unchanged");
     assert!(same_document(&a.editor.scene, &scene));
     // Undo takes back the modelling change; the layout stays as it is.
@@ -2136,7 +2140,7 @@ fn docking_tool_tabs_narrow_horizontal_row_scrolls_without_wrapping() {
     let first = a.toolbox_rects["Category Create"];
     assert!(!a.toolbox_rects.contains_key("Category Curve"));
     let scene = a.editor.scene.clone();
-    let undo_steps = a.editor.undo.len();
+    let undo_steps = a.editor.history.undo.len();
     let right = a.toolbox_rects["Scroll tool tabs right"].center();
     for _ in 0..12 {
         if a.toolbox_rects.contains_key("Category Curve") {
@@ -2165,7 +2169,7 @@ fn docking_tool_tabs_narrow_horizontal_row_scrolls_without_wrapping() {
     }
     assert_eq!(a.toolbox_rects["Category Create"], first);
     assert_eq!(a.editor.scene, scene);
-    assert_eq!(a.editor.undo.len(), undo_steps);
+    assert_eq!(a.editor.history.undo.len(), undo_steps);
 }
 
 #[test]

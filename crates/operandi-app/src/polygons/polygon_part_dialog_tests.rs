@@ -231,18 +231,18 @@ fn part_006_panel_dialog_ok_matches_direct_command_and_menu_history() {
     assert!(a.set_part.is_none());
     let expected = retagged(&source.scene, "Road Part");
     assert_eq!(a.editor.scene, expected);
-    assert_eq!(a.editor.undo.len(), 1);
-    assert_eq!(a.editor.undo[0].label, "Set Part");
+    assert_eq!(a.editor.history.undo.len(), 1);
+    assert_eq!(a.editor.history.undo[0].label, "Set Part");
 
     // Direct command on a separate equal starting scene: same full result.
     let mut direct = app(&source);
     direct.execute("poly.setPart {Road Part}");
     assert_eq!(direct.editor.scene, a.editor.scene);
-    assert_eq!(direct.editor.undo.len(), 1);
+    assert_eq!(direct.editor.history.undo.len(), 1);
     // Identical repeat is neutral.
     direct.execute("poly.setPart \"Road Part\"");
     assert_eq!(direct.editor.scene, expected);
-    assert_eq!(direct.editor.undo.len(), 1);
+    assert_eq!(direct.editor.history.undo.len(), 1);
     assert!(direct.status.contains("already"), "{}", direct.status);
 
     a.menu_action(&ctx, app_menu::line_action("app.undo"));
@@ -293,7 +293,7 @@ fn part_002_cancel_escape_and_list_choice_leave_scene_and_history_exact() {
     a.run(Command::Selection(SelectionOperation::Grow));
     a.run(Command::Undo);
     let before = a.editor.clone();
-    assert_eq!(before.redo.len(), 1);
+    assert_eq!(before.history.redo.len(), 1);
 
     open_from_panel(&mut a, &ctx);
     type_name(&mut a, &ctx, "Draft");
@@ -387,8 +387,8 @@ fn part_002_cancel_escape_and_list_choice_leave_scene_and_history_exact() {
     click_button(&mut a, &ctx, "OK");
     frame(&mut a, &ctx, vec![]);
     assert_eq!(a.editor.scene, retagged(&before.scene, "Neighbor"));
-    assert_eq!(a.editor.undo.len(), before.undo.len() + 1);
-    assert!(a.editor.redo.is_empty());
+    assert_eq!(a.editor.history.undo.len(), before.history.undo.len() + 1);
+    assert!(a.editor.history.redo.is_empty());
 }
 
 #[test]
@@ -469,7 +469,7 @@ fn sp_05_empty_selection_names_the_whole_mesh() {
         f.part = Some("Panel".into());
     }
     assert_eq!(e.editor.scene, expected);
-    assert_eq!(e.editor.undo.len(), 1);
+    assert_eq!(e.editor.history.undo.len(), 1);
     // Cancel (SP-C04) changes nothing and adds no undo step.
     let mut c = app(&empty);
     c.execute("poly.setPart");
@@ -477,7 +477,7 @@ fn sp_05_empty_selection_names_the_whole_mesh() {
     frame(&mut c, &ctx, vec![key(Key::Escape)]);
     assert!(c.set_part.is_none());
     assert_eq!(c.editor.scene, empty.scene);
-    assert!(c.editor.undo.is_empty());
+    assert!(c.editor.history.undo.is_empty());
 }
 
 /// SP-Q03 (Jason's call): the Name field shows the part the targets share,
@@ -641,7 +641,7 @@ fn amendment_1_equal_valued_replacement_document_refuses_open_dialog_commit() {
     assert!(a.set_part.is_none());
     assert!(a.status.contains("another document"), "{}", a.status);
     assert_eq!(a.editor.scene, replaced.scene);
-    assert_eq!(a.editor.undo.len(), replaced.undo.len());
+    assert_eq!(a.editor.history.undo.len(), replaced.history.undo.len());
     // A dialog opened on the replacement document commits normally.
     open_from_panel(&mut a, &ctx);
     type_name(&mut a, &ctx, "Road Part");

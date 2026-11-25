@@ -322,9 +322,9 @@ impl Operandi {
         let n = value.round().max(1.) as u64;
         let mut values = serde_json::Map::new();
         values.insert(key.to_owned(), n.into());
-        let previous = self.editor.undo_fold.replace(gesture);
+        let previous = self.editor.history.undo_fold.replace(gesture);
         let ok = self.run_ok(Command::MeshOpSet { op, values });
-        self.editor.undo_fold = previous;
+        self.editor.history.undo_fold = previous;
         if !ok {
             return Err(self.status.clone());
         }

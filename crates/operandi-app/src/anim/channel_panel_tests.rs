@@ -41,9 +41,9 @@ fn a_current_set_shows_its_panel_in_the_view_and_none_closes_it() {
     let label = crate::channel_panel_ui::row_label(&a.editor.scene, &ChannelKey::new(id, "rot.Y"));
     assert!(label.ends_with(" : rot.Y"), "{label}");
     // Choosing (none) closes it and is no undo step (CP-30, CP-60).
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.execute("operandi.channelSet.current set:none");
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     let before = ctx.cumulative_pass_nr();
     frames(&mut a, &ctx, 2);
     assert!(ctx.cumulative_pass_nr() > before);
@@ -65,10 +65,10 @@ fn the_field_shows_units_and_sets_each_kind_with_its_own_command() {
             .starts_with("transform.channel ")
     );
     // The line runs as one undo step.
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let line = crate::channel_row::set_line(&a.editor.scene, &ChannelKey::new(id, "pos.X"), 1.5);
     a.execute(&line);
-    assert_eq!(a.editor.undo.len(), steps + 1, "{}", a.status);
+    assert_eq!(a.editor.history.undo.len(), steps + 1, "{}", a.status);
     assert_eq!(
         a.editor.scene.item(id).unwrap().transform.translation.x,
         1.5

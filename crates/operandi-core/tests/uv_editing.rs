@@ -162,10 +162,10 @@ fn uv_move_cancel_restores_and_undo_redo_is_one_step() {
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(uvs(&e, "Texture"), before, "cancel leaves the map");
 
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     uv_tool(&mut e, Tool::Move, |p| p.delta = DVec3::new(0.25, 0., 0.));
     e.dispatch(Command::Drop).unwrap();
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let moved = uvs(&e, "Texture");
     assert!(near(moved[0][0], DVec2::new(0.25, 0.)));
     e.dispatch(Command::Undo).unwrap();
@@ -479,7 +479,7 @@ fn align_per_edge_row_flattens_each_row_on_its_own() {
 fn island_run_is_one_undo_step_and_refuses_an_empty_target() {
     let mut e = editor_with(plane());
     let before = uvs(&e, "Texture");
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     run(
         &mut e,
         IslandOp {
@@ -487,7 +487,7 @@ fn island_run_is_one_undo_step_and_refuses_an_empty_target() {
             grouping: Grouping::Entire,
         },
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(uvs(&e, "Texture"), before);
     // A mesh with no map gets an empty "Texture" and has nothing to fit.
@@ -638,13 +638,13 @@ fn map_list_names_delete_several_and_undo() {
         }))
         .is_err()
     );
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::UvMap(UvMapEdit::Delete(vec![
         "Texture 2".into(),
         "Texture 3".into(),
     ])))
     .unwrap();
-    assert_eq!(e.undo.len(), steps + 1, "one step for several");
+    assert_eq!(e.history.undo.len(), steps + 1, "one step for several");
     assert_eq!(mesh(&e).uv_maps.len(), 1);
     assert_eq!(current_map(mesh(&e)).as_deref(), Some("Texture"));
     e.dispatch(Command::Undo).unwrap();

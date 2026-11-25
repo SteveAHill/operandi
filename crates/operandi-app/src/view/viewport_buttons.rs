@@ -2131,7 +2131,7 @@ mod tests {
             assert!(!a.views.is_maximized(view));
         }
         a.cameras.get_mut(&2).unwrap().view = View::Front;
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         let button = a.corner.rects[&(2, Corner::Maximize)];
         click(&mut a, &ctx, button.center());
         assert!(a.views.is_maximized(2));
@@ -2153,7 +2153,7 @@ mod tests {
         assert!(!a.views.is_maximized(2));
         draw(&mut a, &ctx, SIZE, vec![]);
         assert_eq!(a.corner.areas, before);
-        assert_eq!(a.editor.undo.len(), history, "never an undo step");
+        assert_eq!(a.editor.history.undo.len(), history, "never an undo step");
     }
 
     #[test]
@@ -2722,7 +2722,7 @@ mod tests {
         let (mut a, ctx) = one_view();
         a.camera.view = View::Front;
         draw(&mut a, &ctx, SIZE, vec![]);
-        let history = a.editor.undo.len();
+        let history = a.editor.history.undo.len();
         let origin = |a: &Operandi| a.camera.project(DVec3::ZERO, a.viewport_rect).unwrap().0;
         let before = origin(&a);
         drag_button(
@@ -2760,7 +2760,7 @@ mod tests {
             (origin(&a).x - before.x - travel).abs() < 1.,
             "reversed: scene moves right"
         );
-        assert_eq!(a.editor.undo.len(), history, "never an undo step");
+        assert_eq!(a.editor.history.undo.len(), history, "never an undo step");
     }
 
     #[test]

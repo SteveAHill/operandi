@@ -40,7 +40,7 @@ fn around(lo: Pos2, hi: Pos2, pad: f32) -> Vec<Pos2> {
 fn front_app() -> (Operandi, Context) {
     let mut a = Operandi::empty();
     a.run(Command::NewMesh);
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     a.camera.view = View::Front;
     a.camera.distance = 12.;
     let ctx = Context::default();

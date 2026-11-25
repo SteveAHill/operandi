@@ -57,12 +57,12 @@ fn bake_turns_the_evaluated_motion_into_keys_and_disables_the_pieces() {
             world(&e, part)
         })
         .collect();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(
         &mut e,
         &format!("operandi.rig.bake items:{part} start:0 end:24"),
     );
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     // Disabled, not deleted.
     let p = &e.scene.animation.rig.pieces[0];
     assert_eq!(p.num("enable"), 0.);

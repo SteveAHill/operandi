@@ -286,12 +286,12 @@ impl Operandi {
             }
         }
         // One undo step for the whole drag (SAFE-13).
-        let previous = self.editor.undo_fold.replace(grab.gesture);
+        let previous = self.editor.history.undo_fold.replace(grab.gesture);
         self.run(Command::MeshOpSet {
             op: grab.op,
             values: changes,
         });
-        self.editor.undo_fold = previous;
+        self.editor.history.undo_fold = previous;
     }
 
     /// Draws the selected primitive op's handles.

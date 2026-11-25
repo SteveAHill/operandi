@@ -408,9 +408,9 @@ fn ea_t10_t11_sparse_source_selected_destination_replacement_history_and_reopen(
         }
         e.dispatch(Command::Apply).unwrap();
         assert_eq!(e.scene, expected);
-        assert_eq!(e.undo.len(), 1);
+        assert_eq!(e.history.undo.len(), 1);
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.undo.len(), 1);
+        assert_eq!(e.history.undo.len(), 1);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, base);
         e.dispatch(Command::Redo).unwrap();
@@ -466,7 +466,7 @@ fn ea_t01_reset_units_destinations_and_single_checkpoint() {
             assert_eq!(e.scene.items[0], before.items[0]);
         }
         assert!(e.ellipsoid.is_none());
-        assert_eq!(e.undo.len(), 1);
+        assert_eq!(e.history.undo.len(), 1);
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, before);
         e.dispatch(Command::Redo).unwrap();
@@ -529,13 +529,13 @@ fn ea_t11_invalid_recovery_cancellation_drop_save_and_context_guards() {
     assert!(e == failed);
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, base);
-    assert!(e.undo.is_empty());
+    assert!(e.history.undo.is_empty());
     e.dispatch(Command::ArmEllipsoid).unwrap();
     e.dispatch(Command::ConfigureEllipsoid(explicit())).unwrap();
     let expected = e.ellipsoid_preview_scene().unwrap().unwrap();
     e.dispatch(Command::Drop).unwrap();
     assert_eq!(e.scene, expected);
-    assert_eq!(e.undo.len(), 1);
+    assert_eq!(e.history.undo.len(), 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, base);
     e.dispatch(Command::Redo).unwrap();

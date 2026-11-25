@@ -180,9 +180,9 @@ fn intensity_label_follows_the_kind() {
 #[test]
 fn create_light_makes_a_portal_with_one_undo_step() {
     let mut a = box_app();
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     let id = new_light(&mut a, LightKind::Portal);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     let item = a.editor.scene.item(id).unwrap();
     assert_eq!(item.name, "Portal");
     assert_eq!(item.light.as_ref().unwrap().kind, LightKind::Portal);
@@ -371,9 +371,9 @@ fn photometry_chosen_loads_the_file() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../fixtures/photometry/operandi-downlight.ies"
     ));
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     a.photometry_chosen(id, path.clone());
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     let l = a.editor.scene.item(id).unwrap();
     let l = l.light.as_ref().unwrap();
     assert_eq!(l.photometry_file, path.to_string_lossy());

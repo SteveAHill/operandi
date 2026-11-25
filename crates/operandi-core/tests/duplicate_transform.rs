@@ -189,12 +189,12 @@ fn a_child_moves_with_its_selected_parent() {
 fn drop_is_one_undo_step_and_cancel_changes_nothing() {
     let mut e = items(2);
     let start = e.scene.clone();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     run(&mut e, "TransformArray", |d| {
         d.array.count = [2, 1, 1];
         d.array.offset = DVec3::new(4., 0., 0.);
     });
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert_ne!(e.scene.items, start.items);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.items, start.items);

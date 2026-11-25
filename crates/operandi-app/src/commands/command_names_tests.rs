@@ -16,7 +16,11 @@ fn same(setup: impl Fn() -> Operandi, old: &str, new: &str) -> Box<Operandi> {
     assert_eq!(a.editor.scene, b.editor.scene, "{old} vs {new}");
     assert_eq!(a.command_active(), b.command_active(), "{old} vs {new}");
     assert_eq!(a.vertex_weld, b.vertex_weld, "{old} vs {new}");
-    assert_eq!(a.editor.undo.len(), b.editor.undo.len(), "{old} vs {new}");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        b.editor.history.undo.len(),
+        "{old} vs {new}"
+    );
     assert_eq!(a.status, b.status, "{old} vs {new}");
     b
 }
@@ -71,7 +75,10 @@ fn old_command_verbs_and_help_topics_still_work() {
     same(edge_app, "edge.joinAverage", "edge.join average:true");
     same(edge_app, "edge.joinAverage", "edge.join 1");
     let joined = same(edge_app, "edge.join", "edge.join average:false");
-    assert_eq!(joined.editor.undo.len(), edge_app().editor.undo.len() + 1);
+    assert_eq!(
+        joined.editor.history.undo.len(),
+        edge_app().editor.history.undo.len() + 1
+    );
 }
 
 #[test]
@@ -102,7 +109,10 @@ fn old_view_and_selection_set_verbs_still_work() {
     );
     same(sets, "selset.delete Rim", "select.deleteSet Rim");
     let gone = same(sets, "selset.deleteAll", "select.deleteSet all:true");
-    assert!(gone.status.contains("Delet") || gone.editor.undo.len() > sets().editor.undo.len());
+    assert!(
+        gone.status.contains("Delet")
+            || gone.editor.history.undo.len() > sets().editor.history.undo.len()
+    );
     same(sets, "selset.group G Rim", "select.convertGroup G Rim");
     same(box_app, "backdrop.create", "backdrop.add");
 }

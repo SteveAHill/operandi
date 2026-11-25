@@ -34,7 +34,7 @@ fn rig() -> (Operandi, Context, Vec2, u64) {
     a.editor.scene.active_mut().unwrap().mesh = mesh.into();
     a.camera.view = View::Top;
     a.run(Command::Mode(Mode::Polygon));
-    a.editor.undo.clear();
+    a.editor.history.undo.clear();
     draw(&mut a, &ctx, size, vec![]);
     a.frame(false);
     draw(&mut a, &ctx, size, vec![]);
@@ -143,7 +143,7 @@ fn hovering_highlights_one_material_group_and_changes_nothing() {
         a.editor.scene, before,
         "the scene doesn't change while dragging"
     );
-    assert_eq!(a.editor.undo.len(), 0);
+    assert_eq!(a.editor.history.undo.len(), 0);
     // Cancelling (Esc, or a drop off the views) leaves everything as it was.
     a.update_drop_hover(Some(edge));
     a.cancel_browser_drag();
@@ -158,7 +158,7 @@ fn the_drop_fills_the_hovered_tags_group_in_one_step() {
     let edge = over(&a, "Table_Edge");
     let before = a.editor.scene.clone();
     assert!(a.browser_load(&entry, Target::Drop(edge)));
-    assert_eq!(a.editor.undo.len(), 1);
+    assert_eq!(a.editor.history.undo.len(), 1);
     // Tags unchanged; Table_Edge now has a group of its own holding the
     // preset; TableTop has none.
     assert_eq!(

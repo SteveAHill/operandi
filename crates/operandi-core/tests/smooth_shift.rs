@@ -23,7 +23,7 @@ fn editor(tool: Tool) -> Editor {
         ..Default::default()
     }
     .into();
-    e.undo.clear();
+    e.history.undo.clear();
     e.dispatch(Command::Activate(tool)).unwrap();
     e
 }
@@ -51,8 +51,8 @@ fn sst_both_identities_live_replacement_cancel_apply_continuation_and_history() 
         assert_eq!(e.scene, source);
         e.dispatch(Command::Apply).unwrap();
         assert!(!e.live.as_ref().unwrap().applied);
-        assert_eq!(e.undo.len(), 1);
-        assert_eq!(e.undo[0].label, tool.label());
+        assert_eq!(e.history.undo.len(), 1);
+        assert_eq!(e.history.undo[0].label, tool.label());
         let first = e.scene.clone();
         p.offset = 0.1;
         e.dispatch(Command::ConfigureSmoothShift(p)).unwrap();
@@ -442,7 +442,7 @@ fn two_quads(tool: Tool, center: CenterMode, symmetry: Symmetry) -> Editor {
     e.scene.selection.faces = vec![0, 1];
     e.symmetry = symmetry;
     e.action_context.center = center;
-    e.undo.clear();
+    e.history.undo.clear();
     e.dispatch(Command::Activate(tool)).unwrap();
     let p = SmoothShiftParameters {
         offset: 0.,

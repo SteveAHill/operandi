@@ -82,7 +82,7 @@ fn ordinary_empty_completed_and_state_change_revalidation() {
     e.dispatch(Command::Undo).unwrap();
     e.dispatch(Command::Redo).unwrap();
     assert_eq!(e.scene, scene);
-    assert!(e.undo.is_empty() && e.redo.is_empty());
+    assert!(e.history.undo.is_empty() && e.history.redo.is_empty());
     e.dispatch(Command::Rename("renamed".into())).unwrap();
     query(
         &e,

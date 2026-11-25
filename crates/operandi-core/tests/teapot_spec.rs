@@ -179,7 +179,7 @@ fn mt6_05_teapot_item_is_a_new_selected_item_and_one_undo_step() {
     let mut e = Editor::default();
     e.dispatch(Command::NewMesh).unwrap();
     let first = e.scene.active().unwrap().id;
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     e.dispatch(Command::InsertShapeUnit(
         UnitShape::Teapot,
         UnitDestination::NewMesh,
@@ -195,7 +195,7 @@ fn mt6_05_teapot_item_is_a_new_selected_item_and_one_undo_step() {
     );
     let (lo, hi) = bounds(&item.mesh);
     assert!(((lo + hi) / 2.).length() < 1e-9, "at the origin");
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().id, first);
 }

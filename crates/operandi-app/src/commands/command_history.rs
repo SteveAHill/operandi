@@ -150,7 +150,7 @@ impl Operandi {
     ) -> std::result::Result<(), String> {
         if self.history.depth > 0 {
             // A line run by a line: one of its sub-commands (UIC-227).
-            let cap = self.editor.history.max_sub_commands;
+            let cap = self.editor.history.settings.max_sub_commands;
             let line = canonical_line(text);
             if let Some(current) = self.history.current.as_mut() {
                 current.push_sub(line, cap);
@@ -178,11 +178,11 @@ impl Operandi {
         let mut record = CommandRecord::of_line(text, source, self.history.now());
         let pointer = moves_undo_pointer(text);
         let tool_before = self.history_tool();
-        let serial = self.editor.history_serial;
+        let serial = self.editor.history.history_serial;
         let modal_before = self.has_modal();
         let status_before = self.status.clone();
         if record.class == CommandClass::Undoable && !pointer {
-            self.editor.pending_records.0.push(record.clone());
+            self.editor.history.pending_records.0.push(record.clone());
         }
         self.last_failure = None;
         self.history.current = Some(record.clone());
@@ -203,19 +203,23 @@ impl Operandi {
             }
             None => {}
         }
-        let stepped = self.editor.history_serial != serial;
+        let stepped = self.editor.history.history_serial != serial;
         let tool_after = self.history_tool();
         if stepped && !pointer {
             self.attach_to_step(&record, tool_after.is_some() && tool_after != tool_before);
         }
         if tool_after.is_none() {
             // No session open: lines that made no step have nowhere to go.
-            self.editor.pending_records.0.clear();
+            self.editor.history.pending_records.0.clear();
         } else if !stepped {
             // A refused line inside a session isn't part of it.
             if !record.ok {
                 let time = record.time;
-                self.editor.pending_records.0.retain(|r| r.time != time);
+                self.editor
+                    .history
+                    .pending_records
+                    .0
+                    .retain(|r| r.time != time);
             }
         }
         let opened_dialog = !modal_before && self.has_modal() && !stepped && record.ok;
@@ -250,7 +254,13 @@ impl Operandi {
     /// outcome and sub-commands). `moved_to_session`: the line started a
     /// new tool session, so it waits for that session's drop instead.
     fn attach_to_step(&mut self, record: &CommandRecord, moved_to_session: bool) {
-        let Some(step) = self.editor.undo.last_mut().map(std::sync::Arc::make_mut) else {
+        let Some(step) = self
+            .editor
+            .history
+            .undo
+            .last_mut()
+            .map(std::sync::Arc::make_mut)
+        else {
             return;
         };
         let at = step
@@ -262,13 +272,13 @@ impl Operandi {
             if let Some(i) = at {
                 step.records.0.remove(i);
             }
-            self.editor.pending_records.0.push(record.clone());
+            self.editor.history.pending_records.0.push(record.clone());
             return;
         }
         match at {
             Some(i) => step.records.0[i] = record.clone(),
             None => {
-                let cap = self.editor.history.max_sub_commands as usize;
+                let cap = self.editor.history.settings.max_sub_commands as usize;
                 step.records.extend_capped(vec![record.clone()], cap);
             }
         }
@@ -306,9 +316,13 @@ impl Operandi {
         serial: u64,
         response: Option<&serde_json::Value>,
     ) {
-        if self.editor.history_serial == serial {
+        if self.editor.history.history_serial == serial {
             let time = r.time;
-            self.editor.pending_records.0.retain(|p| p.time != time);
+            self.editor
+                .history
+                .pending_records
+                .0
+                .retain(|p| p.time != time);
         }
         if let Some(resp) = response
             && resp["result"]["isError"] == serde_json::json!(true)
@@ -331,8 +345,15 @@ impl Operandi {
             Source::Button,
             self.history.now(),
         );
-        if stepped && let Some(step) = self.editor.undo.last_mut().map(std::sync::Arc::make_mut) {
-            let cap = self.editor.history.max_sub_commands as usize;
+        if stepped
+            && let Some(step) = self
+                .editor
+                .history
+                .undo
+                .last_mut()
+                .map(std::sync::Arc::make_mut)
+        {
+            let cap = self.editor.history.settings.max_sub_commands as usize;
             step.records.extend_capped(vec![off.clone()], cap);
         }
         self.history.log.push(off);
@@ -379,7 +400,7 @@ impl Operandi {
                 Source::Button,
                 time,
             );
-            self.editor.pending_records.0.push(record.clone());
+            self.editor.history.pending_records.0.push(record.clone());
             self.history.log.push(record);
         }
     }
@@ -501,16 +522,16 @@ impl Operandi {
             return self.history_fail("Use cmds.undoTo <index>");
         };
         loop {
-            let done = self.editor.undo.len();
-            let phrase = if done > target && !self.editor.undo.is_empty() {
+            let done = self.editor.history.undo.len();
+            let phrase = if done > target && !self.editor.history.undo.is_empty() {
                 "Undo"
-            } else if done < target && !self.editor.redo.is_empty() {
+            } else if done < target && !self.editor.history.redo.is_empty() {
                 "Redo"
             } else {
                 break;
             };
             self.execute(phrase);
-            if self.editor.undo.len() == done {
+            if self.editor.history.undo.len() == done {
                 break;
             }
         }

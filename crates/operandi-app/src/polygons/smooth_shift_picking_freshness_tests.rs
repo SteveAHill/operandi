@@ -52,7 +52,7 @@ fn tap(a: &mut Operandi, ctx: &Context, k: Key, at: Pos2) {
 
 fn labels(a: &Operandi) -> (Vec<String>, Vec<String>) {
     let l = |h: &[std::sync::Arc<Checkpoint>]| h.iter().map(|c| c.label.clone()).collect();
-    (l(&a.editor.undo), l(&a.editor.redo))
+    (l(&a.editor.history.undo), l(&a.editor.history.redo))
 }
 
 /// Source face, its outward unit normal and its world corner positions in

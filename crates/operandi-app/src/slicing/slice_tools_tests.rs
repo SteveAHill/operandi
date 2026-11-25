@@ -140,7 +140,7 @@ fn loop_slice_bar_drag_moves_the_slice_as_one_undo_step() {
         .rings;
     assert_eq!(rings, &vec![(3, 6)], "{}", a.status);
     a.run(Command::Drop);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Loop Slice");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Loop Slice");
 }
 
 #[test]
@@ -165,7 +165,7 @@ fn edge_slice_clicks_cut_and_undo_takes_back_one_click() {
     assert_eq!(live_tool(&a), Some(Tool::EdgeSlice));
     draw(&mut a, &ctx, size, vec![key(Key::Q)]);
     assert_eq!(live_tool(&a), None);
-    assert_eq!(a.editor.undo.last().unwrap().label, "Edge Slice");
+    assert_eq!(a.editor.history.undo.last().unwrap().label, "Edge Slice");
     a.run(Command::Undo);
     assert_eq!(faces(&a), 4);
 }

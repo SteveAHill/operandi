@@ -553,7 +553,7 @@ impl Operandi {
             .into_iter()
             .filter(|i| !i.is_locked())
             .collect();
-        let previous = self.editor.undo_fold.replace(gesture);
+        let previous = self.editor.history.undo_fold.replace(gesture);
         let mut result = Ok(());
         for target in targets {
             let now = [0, 1, 2].map(|a| channel(&target.transform, prefix, a));
@@ -584,7 +584,7 @@ impl Operandi {
                 break;
             }
         }
-        self.editor.undo_fold = previous;
+        self.editor.history.undo_fold = previous;
         self.item_field_owner = None;
         result
     }

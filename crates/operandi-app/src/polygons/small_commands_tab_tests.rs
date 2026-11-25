@@ -73,16 +73,16 @@ fn edit_tab_commands_run_fix_black_dots_edge_zip_and_diagonal_redirect() {
     };
     m.faces.push(half);
     let mut a = app_with(m, toolbox::Category::Edit);
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     draw(&mut a, &ctx, SIZE, vec![]);
     click_line(&mut a, &ctx, "operandi.mesh.fixBlackDots", Modifiers::NONE);
     let mesh = &a.editor.scene.active().unwrap().mesh;
     assert_eq!(mesh.faces.len(), 16, "{}", a.status);
     assert_eq!(a.editor.scene.selection.mode, Mode::Vertex);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     // Again: nothing left, a message and no step.
     click_line(&mut a, &ctx, "operandi.mesh.fixBlackDots", Modifiers::NONE);
-    assert_eq!(a.editor.undo.len(), steps + 1);
+    assert_eq!(a.editor.history.undo.len(), steps + 1);
     assert!(a.status.contains("No black dots found."), "{}", a.status);
 
     // Edge Zip: the full column x = 2.
@@ -113,7 +113,7 @@ fn edit_tab_commands_run_fix_black_dots_edge_zip_and_diagonal_redirect() {
     let mut a = app_with(grid(4), toolbox::Category::Edit);
     a.run(Command::Mode(Mode::Polygon));
     a.editor.scene.selection.faces = vec![5, 6];
-    let steps = a.editor.undo.len();
+    let steps = a.editor.history.undo.len();
     draw(&mut a, &ctx, SIZE, vec![]);
     click_line(
         &mut a,
@@ -121,7 +121,7 @@ fn edit_tab_commands_run_fix_black_dots_edge_zip_and_diagonal_redirect() {
         "operandi.poly.diagonalRedirect",
         Modifiers::NONE,
     );
-    assert_eq!(a.editor.undo.len(), steps);
+    assert_eq!(a.editor.history.undo.len(), steps);
     assert!(
         a.status.contains("Select two diagonal polygons."),
         "{}",

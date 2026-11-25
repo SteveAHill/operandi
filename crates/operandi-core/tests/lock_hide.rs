@@ -83,9 +83,9 @@ fn lck_t1_t3_item_lock_refuses_item_edits() {
     e.dispatch(Command::NewMesh).unwrap();
     let other = e.scene.items.last().unwrap().id;
     e.dispatch(Command::SelectItem(Some(id))).unwrap();
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     set_item_lock(&mut e, id, true);
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     assert!(e.scene.active().unwrap().is_locked());
     let moved = Transform {
         translation: DVec3::X,
@@ -231,7 +231,7 @@ fn lck_t5_lock_all_then_unlock() {
     lock(&mut e, ElementOp::Clear);
     assert!(elements(&e).locked.is_empty());
     // Nothing left to unlock: refused, no empty undo step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assert!(
         e.dispatch(Command::EditElements {
             kind: ElementKind::Lock,
@@ -239,7 +239,7 @@ fn lck_t5_lock_all_then_unlock() {
         })
         .is_err()
     );
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 /// LCK-T6: Invert after T4 unlocks the two and locks the other four.

@@ -57,7 +57,7 @@ fn middle_drag_copies_the_drawn_cube_and_adjusts_the_copy() {
     a.run(Command::Preview(first.clone()));
     draw(&mut a, &ctx, SIZE, vec![]);
     let vertices = a.editor.scene.active().unwrap().mesh.vertices.len();
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     let at = a.viewport_rect.center() + vec2(-150., 60.);
     // A middle click that doesn't move: a copy at the pointer.
     drag(&mut a, &ctx, at, at, PointerButton::Middle, Modifiers::NONE);
@@ -70,7 +70,11 @@ fn middle_drag_copies_the_drawn_cube_and_adjusts_the_copy() {
         live.params.position, first.position,
         "placed at the pointer"
     );
-    assert_eq!(a.editor.undo.len(), undo + 1, "the first cube was dropped");
+    assert_eq!(
+        a.editor.history.undo.len(),
+        undo + 1,
+        "the first cube was dropped"
+    );
     assert!(a.editor.scene.active().unwrap().mesh.vertices.len() > vertices);
     // A middle drag adjusts the copy it makes.
     let before = a.editor.live.as_ref().unwrap().params.clone();

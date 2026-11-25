@@ -484,7 +484,7 @@ mod callback_tests {
                 let (mut a, _) = admitted_cleanup_fixture(interleaved);
                 a.run(Command::NewMesh);
                 a.run(Command::Undo);
-                assert!(!a.editor.redo.is_empty());
+                assert!(!a.editor.history.redo.is_empty());
                 a.editor.selection_start = Some(Box::new(a.editor.scene.clone()));
                 let before = a.editor.clone();
                 let next = a.editor.identities.next_id().unwrap();
@@ -526,8 +526,8 @@ mod callback_tests {
                 a.execute(CLEAN_COMMAND);
             }
             assert_eq!(a.editor.scene, expected, "{route}: {}", a.status);
-            assert_eq!(a.editor.undo.len(), 1);
-            assert_eq!(a.editor.undo[0].label, "Mesh Cleanup");
+            assert_eq!(a.editor.history.undo.len(), 1);
+            assert_eq!(a.editor.history.undo[0].label, "Mesh Cleanup");
             let after_ids = a.editor.identities.current.clone();
             a.run(Command::Undo);
             assert_eq!(a.editor.scene, source);
@@ -551,7 +551,10 @@ mod callback_tests {
                     "reduction" => a.editor.dispatch(Command::ArmReduction).unwrap(),
                     _ => unreachable!(),
                 }
-                assert!(!a.editor.redo.is_empty(), "{owner} setup must retain redo");
+                assert!(
+                    !a.editor.history.redo.is_empty(),
+                    "{owner} setup must retain redo"
+                );
                 let before = a.editor.clone();
                 let next = a.editor.identities.next_id().unwrap();
                 a.status = "untouched sentinel".into();
@@ -584,7 +587,7 @@ mod callback_tests {
         a.run(Command::Undo);
         a.editor.dispatch(Command::PenStart).unwrap();
         assert!(a.editor.pen_draft.is_some());
-        assert!(!a.editor.redo.is_empty());
+        assert!(!a.editor.history.redo.is_empty());
         let before = a.editor.clone();
         let next = a.editor.identities.next_id().unwrap();
         a.status = "untouched sentinel".into();
@@ -599,7 +602,7 @@ mod callback_tests {
         let (mut a, _) = admitted_cleanup_fixture(false);
         a.run(Command::NewMesh);
         a.run(Command::Undo);
-        assert!(!a.editor.redo.is_empty());
+        assert!(!a.editor.history.redo.is_empty());
         let before = a.editor.clone();
         let next = a.editor.identities.next_id().unwrap();
         let cases = [
@@ -819,7 +822,7 @@ mod callback_tests {
             retained.next_id = stage.next_id;
             retained.selection = stage.selection.clone();
             assert_eq!(retained, stage, "stage preservation: {route}");
-            assert_eq!(a.editor.undo.last().unwrap().label, "New Mesh");
+            assert_eq!(a.editor.history.undo.last().unwrap().label, "New Mesh");
             a.run(Command::Undo);
             assert_eq!(a.editor.scene, stage, "{route}");
             assert_eq!(a.editor.identities.current, stage_ids, "{route}");

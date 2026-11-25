@@ -45,7 +45,7 @@ fn both_sides_click_and_slide_stay_one_undo_step() {
     let (mut a, _, [pa, pb]) = armed(edge_panel::EdgeClick::AddLoop);
     a.add_loop_settings.options.both_sides = true;
     let before = points(&a);
-    let undo = a.editor.undo.len();
+    let undo = a.editor.history.undo.len();
     let (_, slide) = a.edge_click_at(pa.lerp(pb, 0.25), rect(), false);
     // Two closed loops of four points around the box.
     assert_eq!(points(&a), before + 8, "{}", a.status);
@@ -60,7 +60,7 @@ fn both_sides_click_and_slide_stay_one_undo_step() {
     };
     a.edge_insert_slide(tool, x, y, ends, ends[0].0.lerp(ends[1].0, 0.3));
     assert_eq!(points(&a), before + 8);
-    assert_eq!(a.editor.undo.len(), undo + 1);
+    assert_eq!(a.editor.history.undo.len(), undo + 1);
     assert!(a.status.contains("30%"), "{}", a.status);
 }
 

@@ -71,9 +71,9 @@ fn assign_to_an_existing_name_adds_members() {
         vec![0, 1, 5]
     );
     // Assigning members it already has records no step.
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     assign(&mut e, "Ring").unwrap();
-    assert_eq!(e.undo.len(), steps);
+    assert_eq!(e.history.undo.len(), steps);
 }
 
 #[test]

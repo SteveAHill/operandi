@@ -1164,10 +1164,10 @@ mod tests {
     }
 
     fn round_trip(e: &mut Editor, target: Target, name: &str, value: &str, back: &str) {
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         set(e, target, name, value).unwrap_or_else(|err| panic!("{name} {value}: {err}"));
         // One undo step (none when the value was already that).
-        assert!(e.undo.len() <= undo + 1, "{name}: one undo step");
+        assert!(e.history.undo.len() <= undo + 1, "{name}: one undo step");
         assert_eq!(get(&e.scene, target, name).unwrap(), back, "{name}");
     }
 
@@ -1176,9 +1176,9 @@ mod tests {
     fn every_value_type_sets_and_reads_back() {
         let (mut e, mesh, light) = scene();
         let l = Target::Item(light);
-        let undo = e.undo.len();
+        let undo = e.history.undo.len();
         round_trip(&mut e, l, "intensity", "2.5", "2.5"); // float
-        assert_eq!(e.undo.len(), undo + 1, "a change is one undo step");
+        assert_eq!(e.history.undo.len(), undo + 1, "a change is one undo step");
         round_trip(&mut e, Target::Item(mesh), "rotOrder", "ZXY", "ZXY"); // every item
         round_trip(&mut e, l, "rotOrder", "0", "XYZ");
         round_trip(&mut e, l, "visCamera", "false", "false"); // bool

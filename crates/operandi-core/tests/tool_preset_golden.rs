@@ -28,7 +28,7 @@ fn column(mode: Mode, select: &[u32]) -> Editor {
         Mode::Polygon => e.scene.selection.faces = select.to_vec(),
         _ => e.scene.selection.vertices = select.to_vec(),
     }
-    e.undo.clear();
+    e.history.undo.clear();
     e
 }
 
@@ -98,7 +98,11 @@ fn case(preset: DeformPreset, mode: Mode, select: &[u32], user_falloff: bool) ->
     let _ = writeln!(
         out,
         "  history {:?}",
-        e.undo.iter().map(|c| c.label.as_str()).collect::<Vec<_>>()
+        e.history
+            .undo
+            .iter()
+            .map(|c| c.label.as_str())
+            .collect::<Vec<_>>()
     );
     record(&mut out, &e, "dropped");
     out

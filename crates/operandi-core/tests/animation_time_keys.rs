@@ -105,7 +105,7 @@ fn tk_check3_auto_key_animated_keys_only_keyed_channels() {
     ok(&mut e, "operandi.time.set frame:24");
     move_x(&mut e, 2.);
     ok(&mut e, "operandi.time.set frame:48");
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     let id0 = e.scene.items[0].id;
     let mut t = e.scene.items[0].transform.clone();
     t.translation = DVec3::new(3., 5., 0.);
@@ -115,7 +115,7 @@ fn tk_check3_auto_key_animated_keys_only_keyed_channels() {
     })
     .unwrap();
     // One undo step for the edit and its key.
-    assert_eq!(e.undo.len(), steps + 1);
+    assert_eq!(e.history.undo.len(), steps + 1);
     let anim = &e.scene.animation;
     assert_eq!(
         anim.channels[&ChannelKey::new(id, "pos.X")]
@@ -173,11 +173,15 @@ fn tk_check5_undo_takes_back_one_key_and_never_time() {
     let id = e.scene.items[0].id;
     let k = ChannelKey::new(id, "pos.X");
     ok(&mut e, &format!("operandi.key.set channels:{id}:pos.X"));
-    let steps = e.undo.len();
+    let steps = e.history.undo.len();
     ok(&mut e, "operandi.time.set frame:10");
     ok(&mut e, "operandi.time.step frames:3");
     ok(&mut e, "operandi.time.go to:last");
-    assert_eq!(e.undo.len(), steps, "time changes are not undo steps");
+    assert_eq!(
+        e.history.undo.len(),
+        steps,
+        "time changes are not undo steps"
+    );
     move_x(&mut e, 2.);
     assert_eq!(e.scene.animation.channels[&k].curve.keys.len(), 2);
     let at = e.scene.time.current;
