@@ -31,7 +31,7 @@ impl Editor {
         let own = match task {
             ActiveTask::Cone => {
                 let mut staged = self.clone();
-                staged.cone_preset = Default::default();
+                staged.presets.forget::<crate::ConePreset>();
                 staged.dispatch(Command::ConfigureCone(Default::default()))?;
                 *self = staged;
                 return Ok(());
@@ -112,11 +112,7 @@ impl Editor {
         self.bend_preset = fresh.bend_preset;
         self.thicken_preset = fresh.thicken_preset;
         self.bridge_preset = fresh.bridge_preset;
-        self.ellipsoid_preset = fresh.ellipsoid_preset;
-        self.shape_presets = fresh.shape_presets;
-        self.cone_preset = fresh.cone_preset;
         self.extrude_preset = fresh.extrude_preset;
-        self.cube_preset = fresh.cube_preset;
         self.slice_preset = fresh.slice_preset;
         self.subdivide_preset = fresh.subdivide_preset;
         self.unsubdivide_preset = fresh.unsubdivide_preset;

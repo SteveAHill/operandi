@@ -1195,3 +1195,9 @@ pub fn tube_geometry(parameters: &TubeParameters) -> Result<Mesh> {
     // layout and are left without UVs (provisional).
     finish(mesh, p.make_uvs.then_some(uvs))
 }
+
+/// Shape's last-used values (preset_store.rs).
+pub enum ShapePreset {}
+impl crate::PresetKey for ShapePreset {
+    type Value = ShapePresets;
+}

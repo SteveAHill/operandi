@@ -31,7 +31,13 @@ impl Editor {
             .ok_or("Select a mesh; use New Mesh before Ellipsoid")?
             .id;
         self.ellipsoid_target(target)?;
-        if self.ellipsoid_preset.radius.to_array().contains(&0.) {
+        if self
+            .presets
+            .get::<crate::EllipsoidPreset>()
+            .radius
+            .to_array()
+            .contains(&0.)
+        {
             // Spec: EA-Q01
             return Err(
                 "Can't resume an Ellipsoid with zero radius; use Reset or enter the values".into(),
@@ -39,7 +45,7 @@ impl Editor {
         }
         self.ellipsoid = Some(NumericEllipsoid::armed(
             target,
-            self.ellipsoid_preset.clone(),
+            self.presets.get::<crate::EllipsoidPreset>().clone(),
         ));
         Ok(())
     }
@@ -107,7 +113,7 @@ impl Editor {
             let before = std::mem::replace(&mut self.scene, candidate);
             self.record("Ellipsoid".into(), before);
         }
-        self.ellipsoid_preset = p;
+        *self.presets.get_mut::<crate::EllipsoidPreset>() = p;
         if drop {
             self.ellipsoid = None;
         } else if let Some(s) = &mut self.ellipsoid {

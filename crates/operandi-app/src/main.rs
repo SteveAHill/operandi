@@ -2726,7 +2726,10 @@ impl Operandi {
             .cone
             .as_ref()
             .filter(|s| s.error.is_none())
-            .map_or(&self.editor.cone_preset, |s| &s.requested);
+            .map_or(
+                self.editor.presets.get::<operandi_core::ConePreset>(),
+                |s| &s.requested,
+            );
         let cone_preset = ConeParameters {
             selected_uv_map: None,
             ..current.clone()
@@ -2735,9 +2738,11 @@ impl Operandi {
             bevel_states: self.editor.bevel_states.clone(),
             bevel_state: self.editor.bevel_state.clone(),
             bevel_profile: self.editor.bevel_profile,
-            cone_preset,
             ..Default::default()
         };
+        self.editor
+            .presets
+            .set::<operandi_core::ConePreset>(cone_preset);
         // Default Scene (Preferences > Defaults > Application): a scene
         // file every new scene starts from, untitled. Provisional (PREF-Q9):
         // Operandi scene files only; one that won't load is skipped with a

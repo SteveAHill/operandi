@@ -173,7 +173,7 @@ fn state(e: &Editor) -> State {
     State {
         scene: e.scene.clone(),
         cone: e.cone.clone(),
-        preset: e.cone_preset.clone(),
+        preset: e.presets.get::<operandi_core::ConePreset>().clone(),
         live: e.live.is_some(),
         undo: labels(&e.history.undo),
         redo: labels(&e.history.redo),
@@ -222,7 +222,7 @@ fn snapshot(step: &str, e: &Editor) {
             c.preview.as_ref().map(|p| p.vertices.len()),
             c.error.clone()
         )),
-        e.cone_preset.sides,
+        e.presets.get::<operandi_core::ConePreset>().sides,
         e.history.undo.iter().map(|c| &c.label).collect::<Vec<_>>(),
         e.history.redo.iter().map(|c| &c.label).collect::<Vec<_>>(),
     );
@@ -391,7 +391,10 @@ fn ca_con_025_026_actual_panel_two_applies_menu_history_and_reopen() {
     oracle.dispatch(Command::Drop).unwrap();
     assert!(a.editor.cone.is_none(), "dropped: {}", a.status);
     assert_eq!(a.editor.scene, second);
-    assert_eq!(a.editor.cone_preset, requested(10));
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::ConePreset>(),
+        requested(10)
+    );
     assert_matches(&a, &oracle, "Drop");
     let dropped = state(&a.editor);
 

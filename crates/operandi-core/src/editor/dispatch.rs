@@ -792,7 +792,7 @@ impl Editor {
                     return Err("Drop or Cancel the other tool before Ellipsoid Reset".into());
                 }
                 let mut staged = self.clone();
-                staged.ellipsoid_preset = Default::default();
+                staged.presets.forget::<crate::EllipsoidPreset>();
                 if staged.ellipsoid.is_none() {
                     staged.arm_ellipsoid()?;
                 }

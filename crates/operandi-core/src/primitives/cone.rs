@@ -424,3 +424,9 @@ impl Charts {
         }
     }
 }
+
+/// Cone's last-used values (preset_store.rs).
+pub enum ConePreset {}
+impl crate::PresetKey for ConePreset {
+    type Value = ConeParameters;
+}

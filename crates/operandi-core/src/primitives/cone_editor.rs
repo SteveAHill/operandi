@@ -11,7 +11,10 @@ impl Editor {
             .filter(|i| i.visible)
             .ok_or("Select a visible mesh before numeric Cone")?
             .id;
-        self.cone = Some(NumericCone::armed(target, self.cone_preset.clone()));
+        self.cone = Some(NumericCone::armed(
+            target,
+            self.presets.get::<crate::ConePreset>().clone(),
+        ));
         Ok(())
     }
     pub(crate) fn configure_cone(&mut self, p: ConeParameters) -> Result<()> {
@@ -92,7 +95,7 @@ impl Editor {
             let before = std::mem::replace(&mut self.scene, candidate);
             self.record("Cone".into(), before);
         }
-        self.cone_preset = p;
+        *self.presets.get_mut::<crate::ConePreset>() = p;
         self.cone = None;
         Ok(())
     }

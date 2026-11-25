@@ -327,3 +327,9 @@ pub fn ellipsoid_geometry(parameters: &EllipsoidParameters) -> Result<Mesh> {
     }
     Ok(mesh)
 }
+
+/// Ellipsoid's last-used values (preset_store.rs).
+pub enum EllipsoidPreset {}
+impl crate::PresetKey for EllipsoidPreset {
+    type Value = EllipsoidParameters;
+}

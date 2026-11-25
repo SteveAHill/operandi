@@ -125,7 +125,8 @@ fn apply_and_drop_cone(a: &mut Operandi) {
     a.execute("Drop");
     assert!(a.editor.cone.is_none());
     assert_eq!(
-        a.editor.cone_preset, want,
+        *a.editor.presets.get::<operandi_core::ConePreset>(),
+        want,
         "Drop stores the requested values"
     );
     assert!(a.dirty());
@@ -163,7 +164,11 @@ fn file_new_discard_retains_pure_cone_attributes_only() {
         selected_uv_map: None,
         ..requested()
     };
-    assert_eq!(a.editor.cone_preset, retained, "CA-CON-003/015 retention");
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::ConePreset>(),
+        retained,
+        "CA-CON-003/015 retention"
+    );
 
     // Reactivate on the new first mesh and read the panel's own widgets.
     a.execute("Cone");
@@ -245,9 +250,15 @@ fn old_scene_and_cold_start_keep_their_cone_state() {
         a.initialize_new_document();
         a
     };
-    assert_eq!(cold.editor.cone_preset, ConeParameters::default());
     assert_eq!(
-        Operandi::empty().editor.cone_preset,
+        *cold.editor.presets.get::<operandi_core::ConePreset>(),
+        ConeParameters::default()
+    );
+    assert_eq!(
+        *Operandi::empty()
+            .editor
+            .presets
+            .get::<operandi_core::ConePreset>(),
         ConeParameters::default()
     );
 
@@ -262,7 +273,7 @@ fn old_scene_and_cold_start_keep_their_cone_state() {
         selected_uv_map: None,
         ..requested()
     };
-    assert_eq!(a.editor.cone_preset, shared);
+    assert_eq!(*a.editor.presets.get::<operandi_core::ConePreset>(), shared);
 }
 
 // Amendment 1: New while Cone is still active. Its confirmed valid settings
@@ -426,13 +437,17 @@ fn clean_active_cone_preview_new_retains_confirmed_settings() {
     a.execute("Cone");
     let want = active_settings();
     configure_active_cone(&mut a, &want);
-    assert_eq!(a.editor.cone_preset, ConeParameters::default());
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::ConePreset>(),
+        ConeParameters::default()
+    );
     assert!(!a.dirty(), "preview is not a committed edit");
     a.request_file(FileAction::New); // current guard: no prompt for this state
     assert!(a.pending.is_none());
     assert_clean_new_document(&a);
     assert_eq!(
-        a.editor.cone_preset, want,
+        *a.editor.presets.get::<operandi_core::ConePreset>(),
+        want,
         "active confirmed values retained"
     );
     let ctx = context();
@@ -452,7 +467,10 @@ fn applied_active_cone_discard_retains_current_not_dropped_settings() {
     configure_active_cone(&mut a, &want);
     a.execute("Apply");
     assert!(a.editor.cone.is_some(), "Apply keeps Cone active");
-    assert_eq!(a.editor.cone_preset, requested());
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::ConePreset>(),
+        requested()
+    );
     assert!(a.dirty());
     let ctx = context();
 
@@ -464,7 +482,8 @@ fn applied_active_cone_discard_retains_current_not_dropped_settings() {
         ..want
     };
     assert_eq!(
-        a.editor.cone_preset, retained,
+        *a.editor.presets.get::<operandi_core::ConePreset>(),
+        retained,
         "current, not dropped, values"
     );
     assert_reactivated_panel(&mut a, &ctx, &retained);

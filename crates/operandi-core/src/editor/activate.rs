@@ -517,7 +517,7 @@ impl Editor {
         };
         let params = match t {
             Tool::Box => Parameters {
-                segments: self.cube_preset.segments,
+                segments: self.presets.get::<crate::CubePreset>().segments,
                 ..params
             },
             Tool::Sphere | Tool::Cylinder => {

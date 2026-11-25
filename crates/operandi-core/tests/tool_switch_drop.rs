@@ -193,7 +193,10 @@ fn cone_drop_keeps_the_drawn_cone_and_one_undo_removes_it() {
     assert_eq!(e.history.undo.len(), steps + 1);
     assert_eq!(e.history.undo.last().unwrap().label, "Cone");
     // The preset keeps the dropped values.
-    assert_eq!(e.cone_preset.size, DVec3::new(0.6, 1., 0.6));
+    assert_eq!(
+        e.presets.get::<operandi_core::ConePreset>().size,
+        DVec3::new(0.6, 1., 0.6)
+    );
 
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene, base);

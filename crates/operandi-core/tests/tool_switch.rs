@@ -138,7 +138,7 @@ fn every_tool_can_switch_to_another_eligible_tool() {
             assert_eq!(e.history.undo.len(), history + 1);
             assert_eq!(e.history.undo.last().unwrap().label, from.label());
             if from == Tool::Box {
-                assert_eq!(e.cube_preset, p);
+                assert_eq!(*e.presets.get::<operandi_core::CubePreset>(), p);
             }
             e.dispatch(Command::Cancel).unwrap();
             assert_eq!(e.scene, scene);

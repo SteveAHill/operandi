@@ -36,7 +36,7 @@ impl Editor {
             .ok_or_else(|| format!("Select a mesh; use New Mesh before {name}"))?
             .id;
         self.shape_target(target, kind)?;
-        let requested = self.shape_presets.get(kind);
+        let requested = self.presets.get::<crate::ShapePreset>().get(kind);
         self.shape = Some(NumericShape::armed(target, requested.clone()));
         // Torus, Capsule, Arc and Tube are drawn in the viewport, like Cone
         // and Ellipsoid: nothing shows until a drag (or a panel edit) places
@@ -137,7 +137,10 @@ impl Editor {
             .ok_or("Choose Torus, Capsule, Arc or Tube first")?
             .kind();
         let mut staged = self.clone();
-        staged.shape_presets.set(ShapeParameters::reset(kind));
+        staged
+            .presets
+            .get_mut::<crate::ShapePreset>()
+            .set(ShapeParameters::reset(kind));
         let reset = ShapeParameters::reset(kind);
         if matches!(&reset, ShapeParameters::Tube(_)) {
             // Reset Tube has no points: nothing to preview yet.
@@ -173,7 +176,7 @@ impl Editor {
             let before = std::mem::replace(&mut self.scene, candidate);
             self.record(kind.label().into(), before);
         }
-        self.shape_presets.set(p);
+        self.presets.get_mut::<crate::ShapePreset>().set(p);
         if drop {
             self.shape = None;
         } else if let Some(s) = &mut self.shape {

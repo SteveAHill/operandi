@@ -70,7 +70,10 @@ fn assert_unchanged(a: &Operandi, before: &Editor) {
     assert!(a.editor.live == before.live);
     assert_eq!(a.editor.history.undo.len(), before.history.undo.len());
     assert_eq!(a.editor.history.redo.len(), before.history.redo.len());
-    assert_eq!(a.editor.cube_preset, before.cube_preset);
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::CubePreset>(),
+        *before.presets.get::<operandi_core::CubePreset>()
+    );
 }
 /// Create-panel cells on the primitive-quick template (MB-Q8): Cube,
 /// Sphere, Ellipsoid, Cone, Cylinder, Torus, Capsule. Each shows a "Unit"

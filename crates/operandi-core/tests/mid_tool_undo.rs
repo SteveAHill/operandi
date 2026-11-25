@@ -306,7 +306,7 @@ fn set_sides(e: &mut Editor, sides: u32) {
 fn cone_value_change_is_a_tweak_and_apply_a_step() {
     let mut e = editor();
     let empty = e.scene.clone();
-    e.cone_preset = oracle_cone();
+    *e.presets.get_mut::<operandi_core::ConePreset>() = oracle_cone();
     e.dispatch(Command::ArmCone).unwrap();
     // A value change before Apply: Undo takes it back, Cone stays.
     set_sides(&mut e, 12);
@@ -349,7 +349,7 @@ fn leaving_cone_after_undo_keeps_the_first_cone_and_clears_redo() {
     // MTU-O-U8a (Escape) and MTU-O-U8b (Q).
     for leave in [Command::Cancel, Command::Drop] {
         let mut e = editor();
-        e.cone_preset = oracle_cone();
+        *e.presets.get_mut::<operandi_core::ConePreset>() = oracle_cone();
         e.dispatch(Command::ArmCone).unwrap();
         e.dispatch(Command::Apply).unwrap();
         let one = e.scene.clone();
@@ -369,7 +369,7 @@ fn leaving_cone_after_undo_keeps_the_first_cone_and_clears_redo() {
 #[test]
 fn cone_drag_is_one_tweak_and_a_typed_field_another() {
     let mut e = editor();
-    e.cone_preset = oracle_cone();
+    *e.presets.get_mut::<operandi_core::ConePreset>() = oracle_cone();
     e.dispatch(Command::ArmCone).unwrap();
     let frames = (1..=5).map(|i| {
         let r = 0.1 * f64::from(i);

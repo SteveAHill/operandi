@@ -187,13 +187,10 @@ pub struct Editor {
     /// MP-T11 Polygon Reduction session; `None` when the tool is off.
     pub reduction: Option<crate::NumericReduction>,
     pub ellipsoid: Option<crate::NumericEllipsoid>,
-    pub ellipsoid_preset: crate::EllipsoidParameters,
     /// Torus, Capsule, Arc or Tube numeric session (NPR), and each one's
     /// last settings.
     pub shape: Option<crate::NumericShape>,
-    pub shape_presets: crate::ShapePresets,
     pub cone: Option<crate::NumericCone>,
-    pub cone_preset: crate::ConeParameters,
     pub scene: Scene,
     pub action_context: crate::ActionContext,
     /// Shared Symmetry setting (SYM-ST-01); tool context, not scene data.
@@ -224,7 +221,6 @@ pub struct Editor {
     /// Extrude on several meshes: each mesh's moving caps and the caps it
     /// selects on Drop (multi_tools.rs). Boxed like `selection_start`.
     pub multi_extrude: Option<Box<crate::multi_tools::MultiExtrude>>,
-    pub cube_preset: Parameters,
     /// Last dropped Sides/Segments, used by the next activation and unit
     /// insertion. Not scene data.
     pub sphere_unit_resolution: Option<[u32; 2]>,

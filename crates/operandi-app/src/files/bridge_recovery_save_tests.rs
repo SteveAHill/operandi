@@ -249,6 +249,7 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         )*};
     }
     compare!(
+        presets,
         i2,
         identities,
         bevel_states,
@@ -264,9 +265,7 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         spike,
         spike_strength,
         ellipsoid,
-        ellipsoid_preset,
         cone,
-        cone_preset,
         scene,
         action_context,
         live,
@@ -277,7 +276,6 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         selection_start,
         extrude_preset,
         extrude_moved_caps,
-        cube_preset,
         sphere_unit_resolution,
         cylinder_unit_resolution
     );

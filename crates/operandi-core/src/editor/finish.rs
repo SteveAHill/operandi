@@ -113,7 +113,9 @@ impl Editor {
         } else {
             let mut staged = self.clone();
             staged.dispatch(Command::Activate(Tool::Box))?;
-            staged.dispatch(Command::Preview(self.cube_preset.clone()))?;
+            staged.dispatch(Command::Preview(
+                self.presets.get::<crate::CubePreset>().clone(),
+            ))?;
             staged.dispatch(Command::Drop)?;
             *self = staged;
         }
@@ -148,7 +150,7 @@ impl Editor {
         let mut staged = self.clone();
         staged.primitive_uvs_off[primitive_slot(tool)] = false;
         match tool {
-            Tool::Box => staged.cube_preset.segments = params.segments,
+            Tool::Box => staged.presets.get_mut::<crate::CubePreset>().segments = params.segments,
             Tool::Sphere => {
                 staged.sphere_unit_resolution = None;
                 staged.sphere_shape = None;
@@ -293,7 +295,7 @@ impl Editor {
                 self.primitive_uvs_off[primitive_slot(l.tool)] = !l.params.make_uvs;
             }
             if l.tool == Tool::Box {
-                self.cube_preset = l.params;
+                *self.presets.get_mut::<crate::CubePreset>() = l.params;
             }
             // The whole session is one step: from before its first tweak.
             let (base, identity_base) = match session_base {

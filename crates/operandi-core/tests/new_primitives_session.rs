@@ -142,7 +142,10 @@ fn settings_are_remembered_and_reset_restores_them() {
         e.shape.as_ref().unwrap().requested,
         ShapeParameters::Torus(Default::default())
     );
-    assert_eq!(e.shape_presets.torus, TorusParameters::default());
+    assert_eq!(
+        e.presets.get::<operandi_core::ShapePreset>().torus,
+        TorusParameters::default()
+    );
 }
 
 #[test]

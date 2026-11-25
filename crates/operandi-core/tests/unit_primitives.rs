@@ -97,7 +97,10 @@ fn pm_t13_t15_t17_canonical_existing_origin_retained_resolution_attributes_and_h
             }
         );
         // Unit canonical values must not overwrite ordinary remembered fields.
-        assert_eq!(e.cube_preset, before.cube_preset);
+        assert_eq!(
+            *e.presets.get::<operandi_core::CubePreset>(),
+            *before.presets.get::<operandi_core::CubePreset>()
+        );
         assert_eq!(e.sphere_unit_resolution, before.sphere_unit_resolution);
         assert_eq!(e.cylinder_unit_resolution, before.cylinder_unit_resolution);
         assert_eq!(e.history.undo.len(), before.history.undo.len() + 1);
@@ -194,12 +197,14 @@ fn pm_t10_t15_failure_is_exactly_atomic_for_targets_tasks_profiles_and_budgets()
                 match invalid {
                     "selection" => e.dispatch(Command::BeginSelection).unwrap(),
                     "resolution" => match tool {
-                        Tool::Box => e.cube_preset.segments = [0, 1, 1],
+                        Tool::Box => {
+                            e.presets.get_mut::<operandi_core::CubePreset>().segments = [0, 1, 1]
+                        }
                         Tool::Sphere => e.sphere_unit_resolution = Some([8, 1]),
                         _ => e.cylinder_unit_resolution = Some([0, 1]),
                     },
                     "item budget" => {
-                        e.cube_preset.segments = [u32::MAX; 3];
+                        e.presets.get_mut::<operandi_core::CubePreset>().segments = [u32::MAX; 3];
                         e.sphere_unit_resolution = Some([u32::MAX; 2]);
                         e.cylinder_unit_resolution = Some([u32::MAX; 2]);
                     }

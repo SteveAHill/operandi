@@ -276,3 +276,9 @@ pub fn segmented_cube(position: DVec3, size: DVec3, segments: [u32; 3]) -> Resul
     mesh.validate()?;
     Ok(mesh)
 }
+
+/// Cube's last-used values (preset_store.rs).
+pub enum CubePreset {}
+impl crate::PresetKey for CubePreset {
+    type Value = crate::Parameters;
+}
