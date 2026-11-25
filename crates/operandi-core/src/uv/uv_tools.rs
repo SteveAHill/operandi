@@ -1119,7 +1119,7 @@ impl crate::Editor {
     pub(crate) fn uv_unwrap(&mut self, options: UnwrapOptions) -> Result<()> {
         self.edge_insert_target("UV Unwrap")?;
         options.validate()?;
-        self.uv_unwrap_preset = UnwrapOptions {
+        *self.presets.get_mut::<crate::uv_tools::UvUnwrapPreset>() = UnwrapOptions {
             uv_map: None,
             ..options.clone()
         };
@@ -1246,7 +1246,7 @@ impl crate::Editor {
     pub(crate) fn pack_uvs(&mut self, options: PackOptions) -> Result<()> {
         self.edge_insert_target("Pack UVs")?;
         options.validate()?;
-        self.uv_pack_preset = options.clone();
+        *self.presets.get_mut::<crate::uv_tools::UvPackPreset>() = options.clone();
         let hidden = self.uv_hidden_faces();
         let selected = if self.scene.selection.mode == crate::Mode::Polygon {
             self.scene.selection.faces.clone()
@@ -1554,4 +1554,17 @@ pub fn pack_args(a: &Args, base: &PackOptions) -> Result<PackOptions> {
     arg_bool(a, "bestrot", &mut o.find_best_box_rotation)?;
     o.validate()?;
     Ok(o)
+}
+
+/// UV Unwrap's and Pack UVs' last-used values (the Pack dialog keeps
+/// them between uses, UV-Q10).
+pub enum UvUnwrapPreset {}
+impl crate::PresetKey for UvUnwrapPreset {
+    type Value = UnwrapOptions;
+}
+
+/// UvPack's last-used values (preset_store.rs).
+pub enum UvPackPreset {}
+impl crate::PresetKey for UvPackPreset {
+    type Value = PackOptions;
 }

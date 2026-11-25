@@ -381,7 +381,12 @@ impl Operandi {
                 operandi_core::selection_sets::set_names(&i.mesh, operandi_core::SetKind::Edge)
             })
             .unwrap_or_default();
-        let rows = unwrap_rows(&self.editor.uv_unwrap_preset, sets);
+        let rows = unwrap_rows(
+            self.editor
+                .presets
+                .get::<operandi_core::uv_tools::UvUnwrapPreset>(),
+            sets,
+        );
         self.uv_dialog = Some(UvDialog::Unwrap(self.form_dialog("UV Unwrap", rows)));
     }
 
@@ -394,7 +399,11 @@ impl Operandi {
             self.status = "Close the open dialog before Pack UVs".into();
             return;
         }
-        let rows = pack_rows(&self.editor.uv_pack_preset);
+        let rows = pack_rows(
+            self.editor
+                .presets
+                .get::<operandi_core::uv_tools::UvPackPreset>(),
+        );
         self.uv_dialog = Some(UvDialog::Pack(self.form_dialog("Pack UVs", rows)));
     }
 
@@ -451,7 +460,12 @@ impl Operandi {
             form::Outcome::Ok => {
                 let (command, check) = match &dialog {
                     UvDialog::Unwrap(f) => {
-                        let o = unwrap_options(&f.values, &self.editor.uv_unwrap_preset);
+                        let o = unwrap_options(
+                            &f.values,
+                            self.editor
+                                .presets
+                                .get::<operandi_core::uv_tools::UvUnwrapPreset>(),
+                        );
                         let check = o.validate();
                         (Command::UvUnwrap(o), check)
                     }

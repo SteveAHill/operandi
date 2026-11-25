@@ -47,8 +47,18 @@ fn uv_tab_unwrap_and_pack() {
         panic!("UV Unwrap didn't open: {}", a.status);
     };
     // The spec's starting values (UVW-01), from the remembered options.
-    let o = uv_dialogs::unwrap_options(&form.values, &a.editor.uv_unwrap_preset);
-    assert_eq!(o, a.editor.uv_unwrap_preset);
+    let o = uv_dialogs::unwrap_options(
+        &form.values,
+        a.editor
+            .presets
+            .get::<operandi_core::uv_tools::UvUnwrapPreset>(),
+    );
+    assert_eq!(
+        o,
+        *a.editor
+            .presets
+            .get::<operandi_core::uv_tools::UvUnwrapPreset>()
+    );
     assert_eq!(o.iterations, 100);
     // OK.
     a.uv_dialog = None;
@@ -65,7 +75,12 @@ fn uv_tab_unwrap_and_pack() {
         panic!("Pack UVs didn't open: {}", a.status);
     };
     let p = uv_dialogs::pack_options(&form.values);
-    assert_eq!(p, a.editor.uv_pack_preset);
+    assert_eq!(
+        p,
+        *a.editor
+            .presets
+            .get::<operandi_core::uv_tools::UvPackPreset>()
+    );
     assert!(p.stretch && !p.orient);
     a.uv_dialog = None;
     a.run(Command::PackUvs(p));

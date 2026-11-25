@@ -629,10 +629,14 @@ pub fn built_in(e: &mut Editor, name: &str, a: &Map<String, Value>) -> Result<Op
             name: req_str(a, "name")?.into(),
             expected: None,
         }),
-        "uv.unwrap" => Command::UvUnwrap(crate::uv_tools::unwrap_args(a, &e.uv_unwrap_preset)?),
-        "operandi.uv.atlas" => {
-            Command::UvAtlas(crate::uv_atlas::atlas_args(a, &e.uv_atlas_preset)?)
-        }
+        "uv.unwrap" => Command::UvUnwrap(crate::uv_tools::unwrap_args(
+            a,
+            e.presets.get::<crate::uv_tools::UvUnwrapPreset>(),
+        )?),
+        "operandi.uv.atlas" => Command::UvAtlas(crate::uv_atlas::atlas_args(
+            a,
+            e.presets.get::<crate::uv_atlas::UvAtlasPreset>(),
+        )?),
         "uv.relax" => Command::UvRelax(crate::uv_tools::relax_args(a)?),
         // BRQ-110: Hide and Unhide as the H / Shift+H / Ctrl+H / U keys run them.
         "hide.sel" | "hide.unsel" | "hide.invert" | "unhide" => Command::EditElements {
@@ -644,7 +648,10 @@ pub fn built_in(e: &mut Editor, name: &str, a: &Map<String, Value>) -> Result<Op
                 _ => crate::ElementOp::Clear,
             },
         },
-        "uv.pack" => Command::PackUvs(crate::uv_tools::pack_args(a, &e.uv_pack_preset)?),
+        "uv.pack" => Command::PackUvs(crate::uv_tools::pack_args(
+            a,
+            e.presets.get::<crate::uv_tools::UvPackPreset>(),
+        )?),
         // UV editing stage 1 (uv-editing-2026-11-16); `operandi.*` names
         // are placeholders (docs/NAMES-NEEDED.md).
         "operandi.uv.fit" => Command::UvIsland(crate::uv_edit::fit_args(a, &e.uv_island_memory)?),

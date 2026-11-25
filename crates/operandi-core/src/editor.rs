@@ -236,11 +236,6 @@ pub struct Editor {
     pub duplicate_preset: Box<crate::DuplicateParameters>,
     /// Relax Mesh's last-used options (UIC-95).
     pub relax_mesh_preset: crate::RelaxMeshOptions,
-    /// UV Unwrap's and Pack UVs' last-used values (the Pack dialog keeps
-    /// them between uses, UV-Q10).
-    pub uv_unwrap_preset: crate::uv_tools::UnwrapOptions,
-    /// Atlas Unwrap's last settings (uv_atlas.rs).
-    pub uv_atlas_preset: crate::uv_atlas::AtlasOptions,
     /// The UV map clipboard: a whole map copied from the map list (UVE-1
     /// section 1).
     pub uv_map_clipboard: Option<crate::uv_maps::UvMapClipboard>,
@@ -255,7 +250,6 @@ pub struct Editor {
     pub uv_seam_map: String,
     /// The UV Symmetry layer (UVT-70): mirrors UV edits in a UV view.
     pub uv_symmetry: crate::uv_symmetry::UvSymmetry,
-    pub uv_pack_preset: crate::uv_tools::PackOptions,
     /// Automatic Retopology's, Voxel Remesh's and the octree Remesh's
     /// last-used options (remesh.rs).
     pub retopo_preset: crate::remesh::RetopoOptions,

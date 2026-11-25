@@ -107,9 +107,6 @@ impl Editor {
         self.freeze_preset = fresh.freeze_preset;
         self.duplicate_preset = fresh.duplicate_preset;
         self.relax_mesh_preset = fresh.relax_mesh_preset;
-        self.uv_unwrap_preset = fresh.uv_unwrap_preset;
-        self.uv_atlas_preset = fresh.uv_atlas_preset;
-        self.uv_pack_preset = fresh.uv_pack_preset;
         self.retopo_preset = fresh.retopo_preset;
         self.voxel_remesh_preset = fresh.voxel_remesh_preset;
         self.octree_remesh_preset = fresh.octree_remesh_preset;

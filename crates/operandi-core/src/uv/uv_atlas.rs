@@ -338,7 +338,7 @@ impl Editor {
     pub(crate) fn uv_atlas(&mut self, options: AtlasOptions) -> Result<()> {
         self.edge_insert_target("Atlas Unwrap")?;
         options.validate()?;
-        self.uv_atlas_preset = AtlasOptions {
+        *self.presets.get_mut::<crate::uv_atlas::UvAtlasPreset>() = AtlasOptions {
             uv_map: None,
             ..options.clone()
         };
@@ -351,6 +351,12 @@ impl Editor {
         let (out, _) = atlas_mesh(mesh, &map, &hidden, &options)?;
         self.publish_uv_edit(out, "Atlas Unwrap")
     }
+}
+
+/// Atlas Unwrap's last settings (uv_atlas.rs).
+pub enum UvAtlasPreset {}
+impl crate::PresetKey for UvAtlasPreset {
+    type Value = AtlasOptions;
 }
 
 #[cfg(test)]

@@ -151,7 +151,12 @@ impl Operandi {
         if !self.bake_dialog_free("Atlas Unwrap") {
             return;
         }
-        let rows = atlas_rows(&self.editor.uv_atlas_preset, uv_maps(self));
+        let rows = atlas_rows(
+            self.editor
+                .presets
+                .get::<operandi_core::uv_atlas::UvAtlasPreset>(),
+            uv_maps(self),
+        );
         self.bake_dialog = Some(BakeDialog::Atlas(self.form_dialog("Atlas Unwrap", rows)));
     }
 
