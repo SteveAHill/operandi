@@ -1068,7 +1068,10 @@ pub fn built_in(e: &mut Editor, name: &str, a: &Map<String, Value>) -> Result<Op
                 Command::FreezeTransform { items, part }
             }
         }
-        "poly.freeze" => Command::Freeze(freeze_args(a, &e.freeze_preset)?),
+        "poly.freeze" => Command::Freeze(freeze_args(
+            a,
+            e.presets.get::<crate::freeze::FreezePreset>(),
+        )?),
         // BRQ-60: every switch defaults on, the dialog's Reset values.
         "mesh.cleanup" => {
             const KEYS: [&str; 12] = [

@@ -155,7 +155,6 @@ fn every_field_is_sorted(e: Editor) {
         cylinder_shape: _,
         sphere_shape: _,
         primitive_uvs_off: _,
-        freeze_preset: _,
         uv_island_memory: _,
         uv_texel: _,
         uv_seam_map: _,

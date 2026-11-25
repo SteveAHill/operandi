@@ -366,7 +366,14 @@ impl crate::Editor {
         let before = std::mem::replace(&mut self.scene, candidate);
         self.record("Freeze".into(), before);
         // A script's bare poly.freeze reuses these (command_exec).
-        self.freeze_preset = options.clone();
+        *self.presets.get_mut::<crate::freeze::FreezePreset>() = options.clone();
         Ok(())
     }
+}
+
+/// Freeze's last-used options (FRZ-03): what a script's `poly.freeze`
+/// starts from (the app's dialog keeps its own copy too).
+pub enum FreezePreset {}
+impl crate::PresetKey for FreezePreset {
+    type Value = FreezeOptions;
 }

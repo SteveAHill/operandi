@@ -224,9 +224,6 @@ pub struct Editor {
     /// that needs more (`Editor::subdivide_estimate`). The app sets it;
     /// without it (scripts, tests) nothing is checked.
     pub free_memory: FreeMemory,
-    /// Freeze's last-used options (FRZ-03): what a script's `poly.freeze`
-    /// starts from (the app's dialog keeps its own copy too).
-    pub freeze_preset: crate::freeze::FreezeOptions,
     /// The UV map clipboard: a whole map copied from the map list (UVE-1
     /// section 1).
     pub uv_map_clipboard: Option<crate::uv_maps::UvMapClipboard>,

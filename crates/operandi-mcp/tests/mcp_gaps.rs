@@ -72,7 +72,10 @@ fn freeze_turns_a_subd_cube_into_plain_polygons() {
     // A successful Freeze's options are remembered for the next bare call.
     command(&mut b, "poly.freeze", json!({"face": 1, "cangle": 0.1})).unwrap();
     assert_eq!(faces(&mut b), 24);
-    let preset = &b.editor.freeze_preset;
+    let preset = b
+        .editor
+        .presets
+        .get::<operandi_core::freeze::FreezePreset>();
     assert_eq!(
         preset.curves_as,
         operandi_core::freeze::FreezeCurves::Polylines
