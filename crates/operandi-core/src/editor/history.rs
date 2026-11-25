@@ -192,12 +192,7 @@ impl Editor {
         }));
         // Max Undo Level: the oldest steps go once a new one exceeds it.
         // A lowered limit trims here, on the next step (UND-Q2, provisional).
-        let excess = self
-            .history
-            .undo
-            .len()
-            .saturating_sub(self.history.settings.max_undo_level.max(1));
-        self.history.undo.drain(..excess);
+        self.history.trim_to_max_undo_level();
         self.trim_undo_memory();
         self.history.redo.clear();
         self.history.selection_run = 0;
@@ -252,19 +247,14 @@ impl Editor {
     pub fn history_mark(&self) -> u64 {
         self.history.history_mark
     }
-    /// Whether recording changed the undo history since `mark`: a new step,
-    /// an edit folded into the newest one, or a joined selection change.
+    /// Whether recording changed the undo history since `mark`
+    /// (`History::recorded_since`).
     pub fn recorded_since(&self, mark: u64) -> bool {
-        self.history.history_mark != mark
+        self.history.recorded_since(mark)
     }
-    /// How many undo steps are newer than `mark` (still in the history).
+    /// How many undo steps are newer than `mark` (`History::steps_since`).
     pub fn steps_since(&self, mark: u64) -> usize {
-        self.history
-            .undo
-            .iter()
-            .rev()
-            .take_while(|c| c.mark > mark)
-            .count()
+        self.history.steps_since(mark)
     }
     /// For a command that sets its result selection after recording its
     /// step: the step recorded since `mark` ends with that selection, so

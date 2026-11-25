@@ -48,3 +48,24 @@ pub struct History {
     /// shift the steps it is about to join (Astra P9-001).
     pub undo_trim_paused: bool,
 }
+
+impl History {
+    /// Whether recording changed the undo history since `mark`: a new step,
+    /// an edit folded into the newest one, or a joined selection change.
+    pub fn recorded_since(&self, mark: u64) -> bool {
+        self.history_mark != mark
+    }
+    /// How many undo steps are newer than `mark` (still in the history).
+    pub fn steps_since(&self, mark: u64) -> usize {
+        self.undo.iter().rev().take_while(|c| c.mark > mark).count()
+    }
+    /// Max Undo Level: drops the oldest steps past it (at least one step
+    /// is always allowed).
+    pub(crate) fn trim_to_max_undo_level(&mut self) {
+        let excess = self
+            .undo
+            .len()
+            .saturating_sub(self.settings.max_undo_level.max(1));
+        self.undo.drain(..excess);
+    }
+}
