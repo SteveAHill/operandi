@@ -681,7 +681,7 @@ fn editor_subdivide_undo_selection_and_preset() {
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 96);
     assert!(e.scene.selection.faces.is_empty());
     assert_eq!(e.history.undo.last().unwrap().label, "Subdivide Polygons");
-    assert_eq!(e.subdivide_preset, options);
+    assert_eq!(*e.presets.get::<operandi_core::SubdividePreset>(), options);
     e.dispatch(Command::Undo).unwrap();
     assert_eq!(e.scene.active().unwrap().mesh.faces.len(), 6);
     // SUB-15: a selection is replaced by exactly the new polygons.

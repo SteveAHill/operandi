@@ -848,7 +848,7 @@ mod frozen_traces {
             "{name} stage allocation"
         );
         assert_eq!(
-            e.extrude_preset.extent.z,
+            e.presets.get::<operandi_core::ExtrudePreset>().extent.z,
             s["preset_world_z"].as_f64().unwrap(),
             "{name} preset"
         );

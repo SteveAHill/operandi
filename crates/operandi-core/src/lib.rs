@@ -306,7 +306,8 @@ pub use absolute_scaling::*;
 #[path = "polygons/polygon_subdivide.rs"]
 pub mod polygon_subdivide;
 pub use polygon_subdivide::{
-    SubdivideBoundary, SubdivideMethod, SubdivideOptions, SubdivideOutcome, UnsubdivideOptions,
+    SubdivideBoundary, SubdivideMethod, SubdivideOptions, SubdivideOutcome, SubdividePreset,
+    UnsubdivideOptions, UnsubdividePreset,
 };
 #[path = "polygons/polygon_triple.rs"]
 pub mod polygon_triple;
@@ -385,7 +386,7 @@ pub mod uv_seams;
 pub mod uv_symmetry;
 #[path = "uv/uv_tools.rs"]
 pub mod uv_tools;
-pub use detriangulate::DetriangulateOptions;
+pub use detriangulate::{DetriangulateOptions, DetriangulatePreset};
 #[path = "anim/anim_camera_channels.rs"]
 pub mod anim_camera_channels;
 #[path = "anim/anim_commands.rs"]

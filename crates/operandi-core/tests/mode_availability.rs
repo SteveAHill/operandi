@@ -92,8 +92,14 @@ fn mv03_surface_drop_then_mode_matches_existing_nested_boundary() {
             assert_eq!(e.scene, manual.scene);
             assert!(e.history.undo == manual.history.undo);
             assert!(e.history.redo == manual.history.redo);
-            assert_eq!(e.smooth_shift_preset, manual.smooth_shift_preset);
-            assert_eq!(e.thicken_preset, manual.thicken_preset);
+            assert_eq!(
+                *e.presets.get::<operandi_core::SmoothShiftPreset>(),
+                *manual.presets.get::<operandi_core::SmoothShiftPreset>()
+            );
+            assert_eq!(
+                *e.presets.get::<operandi_core::ThickenPreset>(),
+                *manual.presets.get::<operandi_core::ThickenPreset>()
+            );
             assert!(e.live.is_none());
             assert_eq!(e.revision, manual.revision);
             assert_eq!(e.identities.publication, manual.identities.publication + 1);

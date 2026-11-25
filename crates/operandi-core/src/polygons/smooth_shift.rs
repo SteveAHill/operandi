@@ -1142,3 +1142,15 @@ pub(crate) fn compact(source: &Mesh, out: &mut Mesh) -> Vec<Option<u32>> {
         .collect();
     new_of_old
 }
+
+/// SmoothShift's last-used values (preset_store.rs).
+pub enum SmoothShiftPreset {}
+impl crate::PresetKey for SmoothShiftPreset {
+    type Value = SmoothShiftParameters;
+}
+
+/// Thicken's last-used values (preset_store.rs).
+pub enum ThickenPreset {}
+impl crate::PresetKey for ThickenPreset {
+    type Value = Option<SmoothShiftParameters>;
+}

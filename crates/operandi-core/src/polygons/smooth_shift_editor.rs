@@ -122,9 +122,9 @@ impl Editor {
     }
     pub(crate) fn retain_surface(&mut self, tool: Tool, p: SmoothShiftParameters) {
         if tool == Tool::Thicken {
-            self.thicken_preset = Some(p);
+            *self.presets.get_mut::<crate::ThickenPreset>() = Some(p);
         } else {
-            self.smooth_shift_preset = p;
+            *self.presets.get_mut::<crate::SmoothShiftPreset>() = p;
         }
     }
     pub(crate) fn configure_surface(&mut self, p: SmoothShiftParameters) -> Result<()> {

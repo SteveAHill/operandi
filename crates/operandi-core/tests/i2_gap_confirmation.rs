@@ -189,7 +189,10 @@ fn check(e: &Editor, name: &str) {
             );
         }
     }
-    exact(&parameters(&e.extrude_preset), &v["extrude_preset"]);
+    exact(
+        &parameters(e.presets.get::<operandi_core::ExtrudePreset>()),
+        &v["extrude_preset"],
+    );
     assert_eq!(
         format!("{:?}", e.action_context.center),
         v["action_context"]["center"].as_str().unwrap()

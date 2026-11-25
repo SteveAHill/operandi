@@ -301,7 +301,10 @@ fn detriangulate_opens_its_dialog_and_ok_is_one_step() {
     assert!(a.detriangulate.is_some(), "{}", a.status);
     // The dialog's values are the remembered options.
     let o = a.detriangulate.as_ref().unwrap().options();
-    assert_eq!(o, a.editor.detriangulate_preset);
+    assert_eq!(
+        o,
+        *a.editor.presets.get::<operandi_core::DetriangulatePreset>()
+    );
     // While it is open, the viewport shows the edges OK would remove:
     // the four diagonals, as the edit itself pairs them.
     let preview = a.detriangulate.as_ref().unwrap().preview.clone();

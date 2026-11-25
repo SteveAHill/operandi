@@ -806,3 +806,15 @@ fn set_profile_supported(
     }
     Ok(true)
 }
+
+/// PolyHaul's last-used values (preset_store.rs).
+pub enum PolyHaulPreset {}
+impl crate::PresetKey for PolyHaulPreset {
+    type Value = f64;
+}
+
+/// SketchPrecision's last-used values (preset_store.rs).
+pub enum SketchPrecisionPreset {}
+impl crate::PresetKey for SketchPrecisionPreset {
+    type Value = Option<f64>;
+}

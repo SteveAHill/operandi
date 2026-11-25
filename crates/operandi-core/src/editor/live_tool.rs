@@ -391,7 +391,7 @@ impl Editor {
         } else {
             self.live.as_mut().unwrap().params = p.clone();
         }
-        self.extrude_preset = p;
+        *self.presets.get_mut::<crate::ExtrudePreset>() = p;
         Ok(())
     }
 

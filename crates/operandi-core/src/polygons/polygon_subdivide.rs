@@ -1897,7 +1897,7 @@ impl crate::Editor {
                 Vec::new()
             };
         }
-        self.subdivide_preset = options;
+        *self.presets.get_mut::<crate::SubdividePreset>() = options;
         self.publish_polygon_edit(item, mesh, "Subdivide Polygons", selected)
     }
 
@@ -2008,7 +2008,7 @@ impl crate::Editor {
             self.identities.current = ids_before;
             return Err(e);
         }
-        self.subdivide_preset = options;
+        *self.presets.get_mut::<crate::SubdividePreset>() = options;
         self.record("Subdivide Polygons".into(), before);
         Ok(())
     }
@@ -2016,7 +2016,7 @@ impl crate::Editor {
     /// SUB-40..44 UnSubdivide as one undo step. Iterations 0 does nothing.
     pub(crate) fn unsubdivide(&mut self, options: UnsubdivideOptions) -> Result<()> {
         let (item, selected) = self.subdivide_target("UnSubdivide")?;
-        self.unsubdivide_preset = options.clone();
+        *self.presets.get_mut::<crate::UnsubdividePreset>() = options.clone();
         if options.iterations == 0 {
             return Ok(());
         }
@@ -2069,4 +2069,17 @@ impl crate::Editor {
         self.record("Center".into(), before);
         Ok(())
     }
+}
+
+/// Subdivide Polygons' last-used options (SUB-05): the buttons set only
+/// the Method and reuse the rest.
+pub enum SubdividePreset {}
+impl crate::PresetKey for SubdividePreset {
+    type Value = SubdivideOptions;
+}
+
+/// UnSubdivide's last-used options (SUB-40).
+pub enum UnsubdividePreset {}
+impl crate::PresetKey for UnsubdividePreset {
+    type Value = UnsubdivideOptions;
 }

@@ -223,7 +223,11 @@ mod tests {
         frame(&mut a);
         a.run(Command::Mode(Mode::Polygon));
         for _ in 0..5 {
-            let options = a.editor.subdivide_preset.clone();
+            let options = a
+                .editor
+                .presets
+                .get::<operandi_core::SubdividePreset>()
+                .clone();
             a.run(Command::SubdividePolygons { options, times: 1 });
             frame(&mut a);
         }

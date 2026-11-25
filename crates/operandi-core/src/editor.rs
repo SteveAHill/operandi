@@ -144,12 +144,9 @@ pub struct Editor {
     /// Last Linear and Radial settings, offered on reactivation (FAL-M-03).
     pub linear_falloff_preset: crate::LinearFalloff,
     pub radial_falloff_preset: crate::RadialFalloff,
-    pub smooth_shift_preset: crate::SmoothShiftParameters,
     pub chamfer_preset: crate::ChamferParameters,
     pub edge_bevel_preset: crate::EdgeBevelPreset,
     pub edge_chamfer_preset: crate::EdgeBevelPreset,
-    pub poly_haul_preset: f64,
-    pub sketch_precision_preset: Option<f64>,
     /// Merge Tool's last Distance; `None` is the recorded default 0.001
     /// (VTO-T04).
     pub vertex_merge_preset: Option<f64>,
@@ -173,7 +170,6 @@ pub struct Editor {
     /// 3D painting's saved-image record and last-made image and layer.
     #[cfg(feature = "painting")]
     pub paint: crate::paint::PaintSession,
-    pub thicken_preset: Option<crate::SmoothShiftParameters>,
     pub surface_states: std::collections::BTreeMap<
         String,
         std::collections::BTreeMap<String, crate::SmoothShiftParameters>,
@@ -216,7 +212,6 @@ pub struct Editor {
     pub next_item_id: u64,
     /// Boxed to keep `Editor` small: the app state is near the stack limit.
     pub selection_start: Option<Box<Scene>>,
-    pub extrude_preset: Parameters,
     pub extrude_moved_caps: Vec<u32>,
     /// Extrude on several meshes: each mesh's moving caps and the caps it
     /// selects on Drop (multi_tools.rs). Boxed like `selection_start`.
@@ -241,18 +236,11 @@ pub struct Editor {
     /// that needs more (`Editor::subdivide_estimate`). The app sets it;
     /// without it (scripts, tests) nothing is checked.
     pub free_memory: FreeMemory,
-    /// Subdivide Polygons' last-used options (SUB-05): the buttons set only
-    /// the Method and reuse the rest.
-    pub subdivide_preset: crate::SubdivideOptions,
-    /// UnSubdivide's last-used options (SUB-40).
-    pub unsubdivide_preset: crate::UnsubdivideOptions,
     /// Freeze's last-used options (FRZ-03): what a script's `poly.freeze`
     /// starts from (the app's dialog keeps its own copy too).
     pub freeze_preset: crate::freeze::FreezeOptions,
     /// The Duplicate tools' settings from their last session.
     pub duplicate_preset: Box<crate::DuplicateParameters>,
-    /// Detriangulate's last-used options (DT-10, UIC-95).
-    pub detriangulate_preset: crate::DetriangulateOptions,
     /// Relax Mesh's last-used options (UIC-95).
     pub relax_mesh_preset: crate::RelaxMeshOptions,
     /// UV Unwrap's and Pack UVs' last-used values (the Pack dialog keeps

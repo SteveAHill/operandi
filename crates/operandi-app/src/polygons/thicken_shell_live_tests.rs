@@ -316,7 +316,10 @@ fn thicken_on_live_checkboxes_drop_undo_redo_and_save_load() {
     );
     assert!(a.editor.history.redo.is_empty());
     // Retained Thicken settings are session state, untouched by history.
-    assert_eq!(a.editor.thicken_preset, Some(final_params));
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::ThickenPreset>(),
+        Some(final_params)
+    );
 
     // Existing application Save route into this test's private data root.
     let root = a.environment.paths().data_root().to_path_buf();

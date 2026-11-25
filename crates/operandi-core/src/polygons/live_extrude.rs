@@ -434,7 +434,7 @@ impl Editor {
             stage.cursor = 2;
         }
         if configure {
-            self.extrude_preset = p;
+            *self.presets.get_mut::<crate::ExtrudePreset>() = p;
         }
         self.i2.selected = Some(stage);
         Ok(())
@@ -578,7 +578,7 @@ impl Editor {
         self.identities.current.validate(&self.scene)?;
         self.i2.prior = None;
         self.identities.record_before = Some(stage.base.identities);
-        self.extrude_preset = live.params.clone();
+        *self.presets.get_mut::<crate::ExtrudePreset>() = live.params.clone();
         if !continuing {
             self.select_extrude_caps(&live);
         }
@@ -752,6 +752,12 @@ impl Editor {
         }
         Ok(false)
     }
+}
+
+/// Extrude's last-used values (preset_store.rs).
+pub enum ExtrudePreset {}
+impl crate::PresetKey for ExtrudePreset {
+    type Value = crate::Parameters;
 }
 
 #[cfg(test)]

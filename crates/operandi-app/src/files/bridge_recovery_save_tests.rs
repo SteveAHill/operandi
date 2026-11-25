@@ -256,8 +256,6 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         bevel_state,
         bevel_profile,
         spatial_falloff,
-        smooth_shift_preset,
-        thicken_preset,
         surface_states,
         surface_state,
         bridge,
@@ -274,7 +272,6 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         revision,
         next_item_id,
         selection_start,
-        extrude_preset,
         extrude_moved_caps,
         sphere_unit_resolution,
         cylinder_unit_resolution

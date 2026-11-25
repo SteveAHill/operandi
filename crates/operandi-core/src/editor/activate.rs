@@ -438,7 +438,7 @@ impl Editor {
         };
         let params = if t == Tool::PolyHaul {
             Parameters {
-                poly_haul_offset: self.poly_haul_preset,
+                poly_haul_offset: *self.presets.get::<crate::PolyHaulPreset>(),
                 ..params
             }
         } else {
@@ -456,14 +456,17 @@ impl Editor {
         };
         let params = if t == Tool::SketchExtrude {
             Parameters {
-                sketch_precision: self.sketch_precision_preset.unwrap_or(30.),
+                sketch_precision: self
+                    .presets
+                    .get::<crate::SketchPrecisionPreset>()
+                    .unwrap_or(30.),
                 ..params
             }
         } else {
             params
         };
         let params = if t == Tool::Extrude {
-            self.extrude_preset.clone()
+            self.presets.get::<crate::ExtrudePreset>().clone()
         } else {
             params
         };
@@ -494,10 +497,11 @@ impl Editor {
         let params = if t.is_smooth_shift() {
             Parameters {
                 smooth_shift: if t == Tool::Thicken {
-                    self.thicken_preset
+                    self.presets
+                        .get::<crate::ThickenPreset>()
                         .unwrap_or_else(crate::SmoothShiftParameters::thicken_initial)
                 } else {
-                    self.smooth_shift_preset
+                    *self.presets.get::<crate::SmoothShiftPreset>()
                 },
                 ..params
             }

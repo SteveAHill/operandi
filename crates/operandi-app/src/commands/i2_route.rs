@@ -115,7 +115,14 @@ mod app_boundary_tests {
         a.fields.insert("extent2".into(), "250 mm".into());
         assert!(a.confirm_fields());
         assert_eq!(a.editor.live.as_ref().unwrap().params.extent.z, 0.25);
-        assert_eq!(a.editor.extrude_preset.extent.z, 0.25);
+        assert_eq!(
+            a.editor
+                .presets
+                .get::<operandi_core::ExtrudePreset>()
+                .extent
+                .z,
+            0.25
+        );
         a.fields.insert("extent2".into(), "abc".into());
         let before = a.editor.clone();
         a.run(Command::Undo);

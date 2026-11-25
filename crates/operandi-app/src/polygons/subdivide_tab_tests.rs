@@ -130,7 +130,7 @@ fn sub_01_sub_51_tab_order() {
 #[test]
 fn sub_05_buttons_set_only_the_method() {
     let (mut a, ctx) = cube_app();
-    a.editor.subdivide_preset = SubdivideOptions {
+    *a.editor.presets.get_mut::<operandi_core::SubdividePreset>() = SubdivideOptions {
         max_angle_degrees: 30.,
         linear_uvs: true,
         ..Default::default()
@@ -138,9 +138,26 @@ fn sub_05_buttons_set_only_the_method() {
     let r = rect(&a, "Faceted Subdivide").center();
     click(&mut a, &ctx, r, Modifiers::NONE);
     assert_eq!(faces(&a), 24, "{}", a.status);
-    assert_eq!(a.editor.subdivide_preset.method, SubdivideMethod::Faceted);
-    assert_eq!(a.editor.subdivide_preset.max_angle_degrees, 30.);
-    assert!(a.editor.subdivide_preset.linear_uvs);
+    assert_eq!(
+        a.editor
+            .presets
+            .get::<operandi_core::SubdividePreset>()
+            .method,
+        SubdivideMethod::Faceted
+    );
+    assert_eq!(
+        a.editor
+            .presets
+            .get::<operandi_core::SubdividePreset>()
+            .max_angle_degrees,
+        30.
+    );
+    assert!(
+        a.editor
+            .presets
+            .get::<operandi_core::SubdividePreset>()
+            .linear_uvs
+    );
     // Faceted: the cube's corners didn't move.
     let m = &a.editor.scene.active().unwrap().mesh;
     assert!(m.vertices[..8].iter().all(|p| p.abs() == DVec3::splat(0.5)));
@@ -166,7 +183,10 @@ fn sub_06_alt_click_sds_subdivide_runs_twice_as_one_step() {
     click(&mut a, &ctx, r, Modifiers::NONE);
     assert_eq!(faces(&a), 24);
     assert_eq!(
-        a.editor.subdivide_preset.method,
+        a.editor
+            .presets
+            .get::<operandi_core::SubdividePreset>()
+            .method,
         SubdivideMethod::CatmullClark
     );
 }
@@ -190,7 +210,13 @@ fn sub_03_d_and_options() {
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert!(a.subdivide_ui.options.is_none());
     assert_eq!(faces(&a), 96, "{}", a.status);
-    assert_eq!(a.editor.subdivide_preset.method, SubdivideMethod::Faceted);
+    assert_eq!(
+        a.editor
+            .presets
+            .get::<operandi_core::SubdividePreset>()
+            .method,
+        SubdivideMethod::Faceted
+    );
     // D in Edge mode stays Edge Subdivide.
     a.run(Command::Mode(Mode::Edge));
     let edge = a.editor.scene.active().unwrap().mesh.edges()[0];
@@ -253,7 +279,13 @@ fn sub_40_unsubdivide_opens_its_dialog_first() {
     frame(&mut a, &ctx, Modifiers::NONE, vec![]);
     press(&mut a, &ctx, Key::Enter, Modifiers::NONE);
     assert_eq!(faces(&a), 24);
-    assert_eq!(a.editor.unsubdivide_preset.iterations, 0);
+    assert_eq!(
+        a.editor
+            .presets
+            .get::<operandi_core::UnsubdividePreset>()
+            .iterations,
+        0
+    );
     click(&mut a, &ctx, r, Modifiers::NONE);
     assert_eq!(
         a.subdivide_ui
@@ -391,8 +423,14 @@ fn script_arguments_use_fractions_and_radians() {
 fn settings_survive_a_restart() {
     let (mut a, _) = cube_app();
     a.load_subdivide_settings();
-    a.editor.subdivide_preset.max_angle_degrees = 42.;
-    a.editor.unsubdivide_preset.flat = true;
+    a.editor
+        .presets
+        .get_mut::<operandi_core::SubdividePreset>()
+        .max_angle_degrees = 42.;
+    a.editor
+        .presets
+        .get_mut::<operandi_core::UnsubdividePreset>()
+        .flat = true;
     a.save_subdivide_settings();
     let saved = subdivide_ui::SavedSettings::load(&a.environment.paths().subdivide_settings());
     assert_eq!(saved.subdivide.max_angle_degrees, 42.);

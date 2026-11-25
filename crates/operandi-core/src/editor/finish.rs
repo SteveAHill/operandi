@@ -68,7 +68,7 @@ impl Editor {
                 staged.record(staged.live.as_ref().unwrap().tool.label().into(), before);
             }
             if staged.live.as_ref().unwrap().tool == Tool::Extrude {
-                staged.extrude_preset = p;
+                *staged.presets.get_mut::<crate::ExtrudePreset>() = p;
             }
             let base = staged.scene.clone();
             let l = staged.live.as_mut().unwrap();
@@ -248,10 +248,11 @@ impl Editor {
                 }
             }
             if l.tool == Tool::PolyHaul {
-                self.poly_haul_preset = l.params.poly_haul_offset;
+                *self.presets.get_mut::<crate::PolyHaulPreset>() = l.params.poly_haul_offset;
             }
             if l.tool == Tool::SketchExtrude {
-                self.sketch_precision_preset = Some(l.params.sketch_precision);
+                *self.presets.get_mut::<crate::SketchPrecisionPreset>() =
+                    Some(l.params.sketch_precision);
             }
             if l.tool == Tool::VertexMerge {
                 self.vertex_merge_preset = Some(l.params.shift);
@@ -266,7 +267,7 @@ impl Editor {
                 *self.duplicate_preset = l.params.duplicate.options_only();
             }
             if l.tool == Tool::Extrude {
-                self.extrude_preset = l.params.clone();
+                *self.presets.get_mut::<crate::ExtrudePreset>() = l.params.clone();
                 if let Some(multi) = self.multi_extrude.take() {
                     // Several meshes: each selects its own caps.
                     if l.applied {

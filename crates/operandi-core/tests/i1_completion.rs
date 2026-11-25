@@ -233,7 +233,7 @@ fn refusal(name: &str, scene: Scene, context: ActionContext) {
         parameters.extrude_uv_selected = false;
         // No-map fixture starts with the already chosen None preset. Changing
         // Make UVs from the legacy U default requires a selected map by design.
-        e.extrude_preset = parameters.clone();
+        *e.presets.get_mut::<operandi_core::ExtrudePreset>() = parameters.clone();
     }
     e.dispatch(Command::Activate(Tool::Extrude)).unwrap();
     e.dispatch(Command::ConfigureExtrude(parameters)).unwrap();

@@ -1012,7 +1012,11 @@ fn armed_identity_switches_keep_separate_retained_values_and_tool_states() {
     // 2. Smooth Shift: its own namespace shows nothing of Thicken's.
     menu_activate(&mut a, &ctx, Tool::SmoothShift);
     armed(&a, Tool::SmoothShift, "Smooth Shift activated");
-    assert_eq!(a.editor.thicken_preset, Some(p_t), "Thicken retained pT");
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::ThickenPreset>(),
+        Some(p_t),
+        "Thicken retained pT"
+    );
     unchanged(&a, "Smooth Shift activated");
     open_tool_states(&mut a, &ctx);
     assert_eq!(displayed(&mut a, &ctx).state, "(none)");
@@ -1045,7 +1049,8 @@ fn armed_identity_switches_keep_separate_retained_values_and_tool_states() {
     menu_activate(&mut a, &ctx, Tool::Thicken);
     assert_eq!(armed(&a, Tool::Thicken, "back to Thicken"), p_t);
     assert_eq!(
-        a.editor.smooth_shift_preset, p_s,
+        *a.editor.presets.get::<operandi_core::SmoothShiftPreset>(),
+        p_s,
         "Smooth Shift retained pS"
     );
     open_tool_states(&mut a, &ctx);
@@ -1079,7 +1084,11 @@ fn armed_identity_switches_keep_separate_retained_values_and_tool_states() {
 
     menu_activate(&mut a, &ctx, Tool::SmoothShift);
     assert_eq!(armed(&a, Tool::SmoothShift, "Smooth Shift after pT2"), p_s);
-    assert_eq!(a.editor.thicken_preset, Some(p_t2), "current pT2 retained");
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::ThickenPreset>(),
+        Some(p_t2),
+        "current pT2 retained"
+    );
     open_tool_states(&mut a, &ctx);
     assert_shows(&mut a, &ctx, p_s, &name_s, true);
     both(&a, Some(name_t.as_str()), "Smooth Shift after pT2");
@@ -1103,7 +1112,11 @@ fn armed_identity_switches_keep_separate_retained_values_and_tool_states() {
     assert_eq!(armed(&a, Tool::Thicken, "recall T"), p_t);
     assert_shows(&mut a, &ctx, p_t, &name_t, true);
     both(&a, Some(name_t.as_str()), "recall T");
-    assert_eq!(a.editor.smooth_shift_preset, p_s, "Smooth Shift untouched");
+    assert_eq!(
+        *a.editor.presets.get::<operandi_core::SmoothShiftPreset>(),
+        p_s,
+        "Smooth Shift untouched"
+    );
     unchanged(&a, "recall T");
 
     menu_activate(&mut a, &ctx, Tool::SmoothShift);

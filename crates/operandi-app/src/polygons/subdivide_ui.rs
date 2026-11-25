@@ -460,10 +460,19 @@ impl Operandi {
     /// Restore the saved settings (at launch).
     pub(super) fn load_subdivide_settings(&mut self) {
         let saved = SavedSettings::load(&self.environment.paths().subdivide_settings());
-        self.editor.subdivide_preset = saved.subdivide.clone();
-        self.editor.unsubdivide_preset = saved.unsubdivide.clone();
+        *self
+            .editor
+            .presets
+            .get_mut::<operandi_core::SubdividePreset>() = saved.subdivide.clone();
+        *self
+            .editor
+            .presets
+            .get_mut::<operandi_core::UnsubdividePreset>() = saved.unsubdivide.clone();
         self.subdivide_ui.freeze_options = saved.freeze.clone();
-        self.editor.detriangulate_preset = saved.detriangulate.clone();
+        *self
+            .editor
+            .presets
+            .get_mut::<operandi_core::DetriangulatePreset>() = saved.detriangulate.clone();
         self.subdivide_ui.saved = Some(saved);
     }
 
@@ -473,10 +482,22 @@ impl Operandi {
             return;
         };
         let now = SavedSettings {
-            subdivide: self.editor.subdivide_preset.clone(),
-            unsubdivide: self.editor.unsubdivide_preset.clone(),
+            subdivide: self
+                .editor
+                .presets
+                .get::<operandi_core::SubdividePreset>()
+                .clone(),
+            unsubdivide: self
+                .editor
+                .presets
+                .get::<operandi_core::UnsubdividePreset>()
+                .clone(),
             freeze: self.subdivide_ui.freeze_options.clone(),
-            detriangulate: self.editor.detriangulate_preset.clone(),
+            detriangulate: self
+                .editor
+                .presets
+                .get::<operandi_core::DetriangulatePreset>()
+                .clone(),
         };
         if *saved != now {
             if let Err(e) = now.save(&self.environment.paths().subdivide_settings()) {
@@ -491,7 +512,11 @@ impl Operandi {
     pub(super) fn subdivide_with(&mut self, method: SubdivideMethod, times: u32) {
         let options = SubdivideOptions {
             method,
-            ..self.editor.subdivide_preset.clone()
+            ..self
+                .editor
+                .presets
+                .get::<operandi_core::SubdividePreset>()
+                .clone()
         };
         self.run_subdivide(options, times);
     }
@@ -560,7 +585,8 @@ impl Operandi {
             self.status = "Close the open dialog before Subdivide".into();
             return;
         }
-        let rows = SubdivideDialog::rows(&self.editor.subdivide_preset);
+        let rows =
+            SubdivideDialog::rows(self.editor.presets.get::<operandi_core::SubdividePreset>());
         self.subdivide_ui.options = Some(SubdivideDialog {
             form: self.form_dialog("Subdivide", rows),
         });
@@ -568,7 +594,11 @@ impl Operandi {
 
     /// UnSubdivide with its remembered options (the dialog's OK, scripts).
     pub(super) fn run_unsubdivide(&mut self) {
-        let options = self.editor.unsubdivide_preset.clone();
+        let options = self
+            .editor
+            .presets
+            .get::<operandi_core::UnsubdividePreset>()
+            .clone();
         if self.run_ok(Command::UnsubdividePolygons(options.clone())) {
             self.status = if options.iterations == 0 {
                 "UnSubdivide: Iterations is 0; nothing changed".into()
@@ -592,7 +622,12 @@ impl Operandi {
             .active()
             .map(|i| i.mesh.attributes.polygon_sets.keys().cloned().collect())
             .unwrap_or_default();
-        let rows = UnsubdivideDialog::rows(&self.editor.unsubdivide_preset, sets);
+        let rows = UnsubdivideDialog::rows(
+            self.editor
+                .presets
+                .get::<operandi_core::UnsubdividePreset>(),
+            sets,
+        );
         self.subdivide_ui.unsubdivide = Some(UnsubdivideDialog {
             form: self.form_dialog("UnSubdivide", rows),
         });
@@ -684,7 +719,10 @@ impl Operandi {
             }
             form::Outcome::Ok => {
                 // The Iteration field keeps itself in 0..=max.
-                self.editor.unsubdivide_preset = dialog.options();
+                *self
+                    .editor
+                    .presets
+                    .get_mut::<operandi_core::UnsubdividePreset>() = dialog.options();
                 self.run_unsubdivide();
             }
             _ => self.subdivide_ui.unsubdivide = Some(dialog),
@@ -753,7 +791,10 @@ impl Operandi {
                     self.open_subdivide_options();
                     return true;
                 }
-                match parse_subdivide(&self.editor.subdivide_preset, &args) {
+                match parse_subdivide(
+                    self.editor.presets.get::<operandi_core::SubdividePreset>(),
+                    &args,
+                ) {
                     Ok(options) => {
                         self.run_subdivide(options, 1);
                     }
@@ -762,9 +803,17 @@ impl Operandi {
             }
             // Bare: the dialog, like the button (SUB-40 corrected).
             "poly.unsubdiv" if args.is_empty() => self.open_unsubdivide_options(),
-            "poly.unsubdiv" => match parse_unsubdivide(&self.editor.unsubdivide_preset, &args) {
+            "poly.unsubdiv" => match parse_unsubdivide(
+                self.editor
+                    .presets
+                    .get::<operandi_core::UnsubdividePreset>(),
+                &args,
+            ) {
                 Ok(options) => {
-                    self.editor.unsubdivide_preset = options;
+                    *self
+                        .editor
+                        .presets
+                        .get_mut::<operandi_core::UnsubdividePreset>() = options;
                     self.run_unsubdivide();
                 }
                 Err(e) => self.status = e,

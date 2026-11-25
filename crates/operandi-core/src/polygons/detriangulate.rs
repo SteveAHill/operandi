@@ -316,7 +316,7 @@ impl Editor {
     pub(crate) fn detriangulate(&mut self, options: DetriangulateOptions) -> Result<()> {
         let item = self.edge_insert_target("Detriangulate")?;
         options.validate()?;
-        self.detriangulate_preset = options.clone();
+        *self.presets.get_mut::<crate::DetriangulatePreset>() = options.clone();
         let polygon_mode = self.scene.selection.mode == Mode::Polygon;
         let chosen = self.detriangulate_chosen();
         let mesh = &self.scene.active().ok_or("Select a mesh")?.mesh;
@@ -328,6 +328,12 @@ impl Editor {
         };
         self.publish_polygon_edit(item, out, "Detriangulate", faces)
     }
+}
+
+/// Detriangulate's last-used options (DT-10, UIC-95).
+pub enum DetriangulatePreset {}
+impl crate::PresetKey for DetriangulatePreset {
+    type Value = DetriangulateOptions;
 }
 
 #[cfg(test)]

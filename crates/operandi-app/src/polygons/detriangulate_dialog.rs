@@ -81,7 +81,11 @@ impl Operandi {
             self.status = "Close the open dialog before Detriangulate".into();
             return;
         }
-        let rows = DetriangulateDialog::rows(&self.editor.detriangulate_preset);
+        let rows = DetriangulateDialog::rows(
+            self.editor
+                .presets
+                .get::<operandi_core::DetriangulatePreset>(),
+        );
         let mut dialog = DetriangulateDialog {
             form: self.form_dialog("Detriangulate", rows),
             preview: Vec::new(),
@@ -93,7 +97,11 @@ impl Operandi {
 
     /// Detriangulate with the remembered options.
     pub(super) fn run_detriangulate(&mut self) {
-        let options = self.editor.detriangulate_preset.clone();
+        let options = self
+            .editor
+            .presets
+            .get::<operandi_core::DetriangulatePreset>()
+            .clone();
         let before = self.editor.scene.active().map_or(0, |i| i.mesh.faces.len());
         if self.run_ok(Command::Detriangulate(options)) {
             let after = self.editor.scene.active().map_or(0, |i| i.mesh.faces.len());
@@ -118,7 +126,10 @@ impl Operandi {
                 let options = dialog.options();
                 match options.validate() {
                     Ok(()) => {
-                        self.editor.detriangulate_preset = options;
+                        *self
+                            .editor
+                            .presets
+                            .get_mut::<operandi_core::DetriangulatePreset>() = options;
                         self.run_detriangulate();
                     }
                     Err(e) => {
