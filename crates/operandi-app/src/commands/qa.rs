@@ -212,6 +212,45 @@ pub fn offscreen(environment: app_environment::AppEnvironment) -> Result<()> {
             app.execute(command);
         }
     }
+    // OPERANDI_QA_SELECT: "edges:0,3", "points:2" or "polygons:0", the
+    // active mesh's edges (in `Mesh::edges` order), points or polygons by
+    // number (use with OPERANDI_QA_KEEP_SELECTION). A JSON value is the
+    // MCP-select form, read at frame 4 below.
+    if let Ok(spec) = std::env::var("OPERANDI_QA_SELECT")
+        && !spec.trim_start().starts_with('{')
+    {
+        let (kind, list) = spec.split_once(':').ok_or("QA select is kind:numbers")?;
+        let numbers: Vec<usize> = list
+            .split(',')
+            .map(|n| n.trim().parse().map_err(|_| "Invalid QA select number"))
+            .collect::<std::result::Result<_, _>>()?;
+        let mesh = &app
+            .editor
+            .scene
+            .active()
+            .ok_or("QA select needs a mesh")?
+            .mesh;
+        let edges = mesh.edges();
+        let selection = &mut app.editor.scene.selection;
+        match kind {
+            "edges" => {
+                selection.mode = Mode::Edge;
+                selection.edges = numbers
+                    .iter()
+                    .map(|&n| edges.get(n).copied().ok_or("No such QA edge"))
+                    .collect::<std::result::Result<_, _>>()?;
+            }
+            "points" => {
+                selection.mode = Mode::Vertex;
+                selection.vertices = numbers.iter().map(|&n| n as u32).collect();
+            }
+            "polygons" => {
+                selection.mode = Mode::Polygon;
+                selection.faces = numbers.iter().map(|&n| n as u32).collect();
+            }
+            _ => return Err("QA select kind is edges, points or polygons".into()),
+        }
+    }
     // OPERANDI_QA_BACKGROUND=Environment: the view shows the environment
     // (HDRI stage 2); its picture is decoded before the first frame.
     if std::env::var("OPERANDI_QA_BACKGROUND").as_deref() == Ok("Environment") {
@@ -403,6 +442,7 @@ pub fn offscreen(environment: app_environment::AppEnvironment) -> Result<()> {
         // pictures).
         if frame == 4
             && let Ok(arguments) = std::env::var("OPERANDI_QA_SELECT")
+            && arguments.trim_start().starts_with('{')
         {
             let arguments: serde_json::Value = serde_json::from_str(&arguments)
                 .map_err(|e| format!("QA select must be JSON: {e}"))?;
@@ -498,6 +538,8 @@ pub fn offscreen(environment: app_environment::AppEnvironment) -> Result<()> {
                     Ok("Scale") => Tool::Scale,
                     Ok("Transform") => Tool::Transform,
                     Ok("Bevel") => Tool::Bevel,
+                    Ok("Edge Bevel") => Tool::EdgeBevel,
+                    Ok("Vertex Bevel") => Tool::VertexBevel,
                     Ok("Twist Bevel") => Tool::TwistBevel,
                     Ok("Extrude") => Tool::Extrude,
                     Ok("Smooth Shift") => Tool::SmoothShift,
@@ -511,6 +553,14 @@ pub fn offscreen(environment: app_environment::AppEnvironment) -> Result<()> {
                     }))?;
                 }
                 app.activate(tool);
+                // OPERANDI_QA_TOOL_COMMAND: commands run once the tool is
+                // live, separated by ";" (e.g. "tool.attr edge.bevel
+                // mitering 0.2" to capture a set value).
+                if let Ok(commands) = std::env::var("OPERANDI_QA_TOOL_COMMAND") {
+                    for command in commands.split(';').map(str::trim).filter(|c| !c.is_empty()) {
+                        app.execute(command);
+                    }
+                }
                 if let Ok(stage) = std::env::var("OPERANDI_QA_POLYGON_STAGE") {
                     let mut p = app
                         .editor

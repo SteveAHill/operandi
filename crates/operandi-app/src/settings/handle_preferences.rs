@@ -318,6 +318,9 @@ mod tests {
     #[test]
     fn handle_scale_lengthens_the_handles_on_screen() {
         let (mut a, _) = moving();
+        // Seen from the front, X is side-on: arrows are drawn in
+        // perspective, so only a side-on arrow is the full 72 px.
+        a.camera.view = crate::camera::View::Front;
         let r = a.viewport_rect;
         let length = |a: &Operandi| {
             let (_, origin, end, _) = a.handles(r).into_iter().find(|h| h.0 == 0).unwrap();

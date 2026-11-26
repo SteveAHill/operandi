@@ -330,6 +330,7 @@ impl Operandi {
         self.edge_slide_frame_memo = Default::default();
         self.vertex_frame_memo = Default::default();
         self.edge_frame_memo = Default::default();
+        self.selection_normal_memo = Default::default();
         self.twist_bevel_frame_memo = Default::default();
         self.whole_mesh_basis_memo = Default::default();
         self.editor.revision = self.editor.revision.wrapping_add(1);

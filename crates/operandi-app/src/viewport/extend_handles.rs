@@ -23,25 +23,20 @@ impl Operandi {
         let mut out = Vec::new();
         for axis in 0..3 {
             let direction = self.handle_axis(axis);
-            if let Some((unit, _)) = self
-                .camera
-                .project(center + direction * self.camera.distance * 0.1, r)
-                && unit.distance(origin) > 1.
-            {
-                let screen = (unit - origin).normalized();
+            if let Some((_, arrow)) = self.handle_arrow(center, direction, 72. * s, r) {
                 if shown.moves {
                     out.push((
                         axis,
                         origin,
-                        origin + screen * 72. * s,
+                        origin + arrow,
                         format!("Offset {}", ["X", "Y", "Z"][axis]),
                     ));
                 }
                 if shown.scale {
                     out.push((
                         6 + axis,
-                        origin + screen * 30. * s,
-                        origin + screen * 44. * s,
+                        origin + arrow * (30. / 72.),
+                        origin + arrow * (44. / 72.),
                         format!("Scale {}", ["X", "Y", "Z"][axis]),
                     ));
                 }

@@ -2170,9 +2170,15 @@ impl Operandi {
                         .live
                         .as_ref()
                         .is_some_and(|l| l.tool == Tool::Scale);
+                // A blue scale handle (square end) instead of an arrow.
+                let scale_look = self
+                    .editor
+                    .live
+                    .as_ref()
+                    .is_some_and(|l| scale_look_handle(l.tool, axis));
                 let color = if hovered || dragging {
                     palette::handle_active()
-                } else if uniform {
+                } else if uniform || scale_look {
                     palette::handles()[2]
                 } else {
                     palette::handles()[if self.editor.live.as_ref().is_some_and(|l| {
@@ -2239,6 +2245,7 @@ impl Operandi {
                         };
                         self.draw_scale_center(&painter, end, rim, fade);
                     } else if axis >= 3
+                        || scale_look
                         || self.editor.live.as_ref().is_some_and(|l| {
                             l.tool == Tool::Scale
                                 || (axis == 1 && l.tool.card().handles.kind == HandleKind::Pair)
@@ -2593,4 +2600,11 @@ pub(super) fn depth_gradient(camera: &crate::Camera, r: Rect, points: &[(Pos2, f
         (z1 * d2.y - z2 * d1.y) / determinant,
         (d1.x * z2 - d2.x * z1) / determinant,
     )
+}
+
+/// Whether `tool`'s handle `axis` is drawn as a blue scale handle (a line
+/// with a square end) rather than an arrow: Vertex Bevel's Inset, which
+/// grows the cap the way a scale does (the maintainer, 2026-11-26).
+pub(crate) fn scale_look_handle(tool: Tool, axis: usize) -> bool {
+    tool == Tool::VertexBevel && axis == 0
 }

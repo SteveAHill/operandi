@@ -57,15 +57,15 @@ fn cs05_the_flag_table() {
         assert!(!auto_activate(t, None), "{t:?} waits for a click");
     }
     // CS-07 (CS-Q01 decided 2026-11-16, an approved deviation).
+    assert!(
+        !auto_activate(Tool::EdgeChamfer, None),
+        "Edge Chamfer waits for a click (CS-07)"
+    );
     for t in [
+        // CS-Q01 revisited 2026-11-23: the Bevels show their gizmo at once.
         Tool::Bevel,
         Tool::EdgeBevel,
         Tool::VertexBevel,
-        Tool::EdgeChamfer,
-    ] {
-        assert!(!auto_activate(t, None), "{t:?} waits for a click (CS-07)");
-    }
-    for t in [
         Tool::Move,
         Tool::Rotate,
         Tool::Scale,

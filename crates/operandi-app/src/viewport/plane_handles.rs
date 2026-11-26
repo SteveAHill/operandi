@@ -168,17 +168,14 @@ impl Operandi {
         } else {
             self.camera.distance
         } / (r.height() as f64 * 0.9);
-        // The arrows are drawn a fixed length along each axis's on-screen
-        // direction; the circle sits where the two arrows' square closes.
-        let direction = |axis: usize| -> Option<Vec2> {
-            let (tip, _) = self.camera.project(
-                center + self.handle_axis(axis) * self.camera.distance * 0.1,
-                r,
-            )?;
-            (tip.distance(origin) > 1.).then(|| (tip - origin).normalized())
+        // The circle sits where the two arrows' square closes. The arrows
+        // are drawn in perspective (`handle_arrow`), so the corner is too.
+        let arrow = |axis: usize| -> Option<Vec2> {
+            let (_, v) =
+                self.handle_arrow(center, self.handle_axis(axis), self.arrow_pixels(), r)?;
+            Some(v)
         };
-        let reach = self.arrow_pixels() * PLANE_HANDLE_PLACEMENT;
-        let at = origin + (direction(a)? + direction(b)?) * reach;
+        let at = origin + (arrow(a)? + arrow(b)?) * PLANE_HANDLE_PLACEMENT;
         // The circle's radius along each world axis, as the camera sees it.
         let radius = (self.plane_handle_size() / 2.) as f64 * per_pixel;
         let along = |axis: usize| -> Option<Vec2> {

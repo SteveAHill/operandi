@@ -62,16 +62,11 @@ impl<T> Default for BaseMemo<T> {
     }
 }
 
-impl<T: Clone> BaseMemo<(HandleMemoKey, T)> {
+impl<K: PartialEq + Clone, T: Clone> BaseMemo<(K, T)> {
     /// `get` for a value that also reads the Symmetry setting (handle
-    /// frames pick the primary side, ACS-01): Symmetry switched on or off
-    /// with the tool open recomputes it.
-    pub(crate) fn get_with(
-        &self,
-        base: &Scene,
-        symmetry: HandleMemoKey,
-        compute: impl FnOnce() -> T,
-    ) -> T {
+    /// frames pick the primary side, ACS-01), or another key: Symmetry
+    /// switched on or off with the tool open recomputes it.
+    pub(crate) fn get_with(&self, base: &Scene, symmetry: K, compute: impl FnOnce() -> T) -> T {
         let stale = matches!(&*self.0.borrow(), Some((_, (at, _))) if *at != symmetry);
         if stale {
             *self.0.borrow_mut() = None;

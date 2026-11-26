@@ -171,6 +171,10 @@ impl Operandi {
                 let span = (self.camera.distance * 0.25).max(1e-9);
                 params.shift = (params.shift + amount / span).clamp(-1., 1.);
             }
+            // Edge Bevel's second handle: Support Edges (2026-11-23).
+            Tool::EdgeBevel if axis == 1 => {
+                params.edge_bevel.support = (params.edge_bevel.support + amount).max(0.);
+            }
             Tool::EdgeBevel | Tool::EdgeChamfer => {
                 params.chamfer.offset = (params.chamfer.offset + amount).max(0.);
             }

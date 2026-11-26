@@ -499,21 +499,25 @@ auto_activate = false
 tool = "EdgeExtend"
 auto_activate = false
 
-# Approved deviation (CS-07, CS-Q01 decided 2026-11-16, Jason: consistency
-# over the reference): the reference starts these four at once; here they
-# wait for the first click like the other tools.
+# The Bevels (polygon, edge and vertex) start at once, as the spec's table
+# has it (CS-01): picking one (B) shows its handles on the selection
+# straight away (CS-Q01 revisited 2026-11-23: waiting for a click hid the
+# gizmo for no gain).
 [[tool]]
 tool = "Bevel"
-auto_activate = false
+auto_activate = true
 
 [[tool]]
 tool = "EdgeBevel"
-auto_activate = false
+auto_activate = true
 
 [[tool]]
 tool = "VertexBevel"
-auto_activate = false
+auto_activate = true
 
+# Approved deviation (CS-07, CS-Q01 decided 2026-11-16, Jason: consistency
+# over the reference): the reference starts it at once; here it waits for
+# the first click like the other tools.
 [[tool]]
 tool = "EdgeChamfer"
 auto_activate = false

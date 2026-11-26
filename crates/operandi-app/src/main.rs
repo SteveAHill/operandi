@@ -144,6 +144,8 @@ mod create_utility;
 #[cfg(test)]
 #[path = "tools/ctrl_constrain_tests.rs"]
 mod ctrl_constrain_tests;
+#[path = "view/cursor_wrap.rs"]
+mod cursor_wrap;
 #[path = "create_tools/curve_hands_on.rs"]
 mod curve_hands_on;
 #[path = "create_tools/curve_tab.rs"]
@@ -794,6 +796,12 @@ struct Operandi {
     edge_slide_frame_memo: viewport::SymmetryMemo<Option<(DVec3, DVec3, f64)>>,
     vertex_frame_memo: viewport::SymmetryMemo<Option<(DVec3, DVec3, DVec3, f64)>>,
     edge_frame_memo: viewport::SymmetryMemo<Option<(DVec3, DVec3, DVec3)>>,
+    /// The Bevels' gizmo direction: the selection's average normal, once
+    /// per drag (`operandi_core::selection_normal`).
+    selection_normal_memo: viewport::BaseMemo<(
+        (operandi_core::Symmetry, operandi_core::NormalOf),
+        Option<DVec3>,
+    )>,
     /// Twist Bevel's first tube frame, Group off and on (twist_bevel_handles.rs).
     twist_bevel_frame_memo: viewport::BaseMemo<[Option<operandi_core::TubeFrame>; 2]>,
     /// A twist or Bend Direction ring drag's turn so far, in degrees, so
@@ -894,6 +902,8 @@ struct Operandi {
     modal_owned_input: bool,
     layout_owned_input: bool,
     navigation: Option<input::Navigation>,
+    /// Free Cursor: the current drag's put-backs.
+    cursor_wrap: cursor_wrap::Wrap,
     i2_gesture_ticket: Option<operandi_core::ExtrudeStageTicket>,
     bindings_draft: BTreeMap<String, String>,
     rename_item: Option<u64>,
@@ -1710,6 +1720,7 @@ impl Operandi {
             edge_slide_frame_memo: Default::default(),
             vertex_frame_memo: Default::default(),
             edge_frame_memo: Default::default(),
+            selection_normal_memo: Default::default(),
             twist_bevel_frame_memo: Default::default(),
             twist_bevel_turn: None,
             whole_mesh_basis_memo: Default::default(),
@@ -1761,6 +1772,7 @@ impl Operandi {
             modal_owned_input: false,
             layout_owned_input: false,
             navigation: None,
+            cursor_wrap: Default::default(),
             i2_gesture_ticket: None,
             bindings_draft: BTreeMap::new(),
             rename_item: None,
@@ -4322,6 +4334,8 @@ mod absolute_scaling_tests;
 #[path = "view/active_mesh_pick_tests.rs"]
 mod active_mesh_pick_tests;
 #[cfg(test)]
+mod bevel_gizmo_tests;
+#[cfg(test)]
 #[path = "window_layout/button_variants_tests.rs"]
 mod button_variants_tests;
 #[cfg(test)]
@@ -4414,6 +4428,8 @@ mod file_error_tests;
 #[cfg(test)]
 #[path = "graphics/grid_depth_tests.rs"]
 mod grid_depth_tests;
+#[cfg(test)]
+mod handle_arrow_tests;
 #[cfg(test)]
 #[path = "menus/handle_style_menu_tests.rs"]
 mod handle_style_menu_tests;

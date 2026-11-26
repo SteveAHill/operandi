@@ -61,9 +61,9 @@ fn old_no_handles(tool: Tool) -> bool {
             | Tool::LinearAlign
             | Tool::Bend
             | Tool::SymmetryTool
-            // No handle drawn (ACS-Q-HANDLE1).
+            // No handle drawn (ACS-Q-HANDLE1). Vertex Bevel has its Inset
+            // arrow now (2026-11-23), so every Bevel shows a gizmo.
             | Tool::EdgeRelax
-            | Tool::VertexBevel
             // Contour draws its own line (contour_ui.rs).
             | Tool::Contour
     ) || tool == Tool::VertexCreate
@@ -108,7 +108,6 @@ fn old_axis_count(tool: Tool) -> usize {
         Tool::Chamfer
             | Tool::EdgeSlide
             | Tool::EdgeCrease
-            | Tool::EdgeBevel
             | Tool::EdgeChamfer
             | Tool::EdgeRelax
             | Tool::VertexBevel
@@ -118,8 +117,11 @@ fn old_axis_count(tool: Tool) -> usize {
             | Tool::Shift
     ) {
         1
-    } else if matches!(tool, Tool::Bevel | Tool::EdgeExtrude | Tool::VertexExtrude)
-        || tool.is_smooth_shift()
+    } else if matches!(
+        tool,
+        // Edge Bevel's second handle sets Support Edges (2026-11-23).
+        Tool::Bevel | Tool::EdgeBevel | Tool::EdgeExtrude | Tool::VertexExtrude
+    ) || tool.is_smooth_shift()
     {
         2
     } else {
@@ -131,13 +133,16 @@ fn old_axis_count(tool: Tool) -> usize {
 fn old_blue_first(tool: Tool) -> bool {
     matches!(
         tool,
-        Tool::Bevel | Tool::Chamfer | Tool::EdgeExtrude | Tool::VertexExtrude
+        Tool::Bevel | Tool::Chamfer | Tool::EdgeBevel | Tool::EdgeExtrude | Tool::VertexExtrude
     ) || tool.is_smooth_shift()
 }
 
 /// The handle painter: tools whose handle 1 is a line with a square end.
 fn old_second_is_line(tool: Tool) -> bool {
-    matches!(tool, Tool::Bevel | Tool::EdgeExtrude | Tool::VertexExtrude) || tool.is_smooth_shift()
+    matches!(
+        tool,
+        Tool::Bevel | Tool::EdgeBevel | Tool::EdgeExtrude | Tool::VertexExtrude
+    ) || tool.is_smooth_shift()
 }
 
 /// `handles()`: where each tool's handles sit (`None` for the general
@@ -148,9 +153,11 @@ fn old_anchor(tool: Tool) -> Option<HandleAnchor> {
         Tool::EdgeSlide => HandleAnchor::EdgeRail,
         Tool::EdgeBevel | Tool::EdgeChamfer => HandleAnchor::Edge,
         Tool::EdgeCrease => HandleAnchor::Edge,
-        Tool::VertexExtrude | Tool::VertexMerge | Tool::VertexTear | Tool::VertexSlide => {
-            HandleAnchor::Vertex
-        }
+        Tool::VertexBevel
+        | Tool::VertexExtrude
+        | Tool::VertexMerge
+        | Tool::VertexTear
+        | Tool::VertexSlide => HandleAnchor::Vertex,
         Tool::Chamfer => HandleAnchor::ChamferStrip,
         Tool::Box => HandleAnchor::Position,
         Tool::Bevel | Tool::TwistBevel | Tool::Extrude | Tool::SmoothShift | Tool::Thicken => {
@@ -168,9 +175,13 @@ fn old_local_origin(tool: Tool) -> bool {
 
 /// `handle_axis()`'s frame-based tools.
 fn old_axes(tool: Tool) -> HandleAxes {
+    // The Bevels follow the selection's normal (2026-11-23).
+    if matches!(tool, Tool::EdgeBevel | Tool::VertexBevel) {
+        return HandleAxes::SelectionNormal;
+    }
     if matches!(
         tool,
-        Tool::VertexBevel | Tool::VertexExtrude | Tool::VertexMerge | Tool::VertexSlide
+        Tool::VertexExtrude | Tool::VertexMerge | Tool::VertexSlide
     ) {
         return if tool == Tool::VertexExtrude {
             HandleAxes::VertexNormal
@@ -181,7 +192,7 @@ fn old_axes(tool: Tool) -> HandleAxes {
     if tool == Tool::EdgeSlide {
         return HandleAxes::EdgeRail;
     }
-    if matches!(tool, Tool::EdgeBevel | Tool::EdgeChamfer | Tool::EdgeRelax) {
+    if matches!(tool, Tool::EdgeChamfer | Tool::EdgeRelax) {
         return HandleAxes::EdgeSide;
     }
     if matches!(tool, Tool::EdgeExtrude | Tool::EdgeCrease) {

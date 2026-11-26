@@ -1585,7 +1585,7 @@ pub(super) fn interpolation(key: &str) -> tf::Field<Parameters> {
 /// Edge Bevel / Edge Chamfer properties (EBC-D-01/02). Options the specs
 /// haven't measured are shown greyed out at their Reset values.
 fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
-    use operandi_core::{EdgeBevelMode, EdgeBevelShape, EdgeEnd};
+    use operandi_core::{CornerPattern, EdgeBevelMode, EdgeBevelShape, EdgeEnd};
     f.field(
         pick(
             "edge-bevel-mode",
@@ -1610,38 +1610,46 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
         |p| p.chamfer.offset,
         |p, v| p.chamfer.offset = v,
     ));
+    if bevel {
+        // Mitering, the second handle (2026-11-23): the drag-layer spec
+        // gives Edge Bevel's second handle as Mitering; this is the
+        // tester's reading of it (an edge added on each side), live
+        // instead of the greyed EBC-Q03 placeholder. Labelled Mitering
+        // Offset (the tester, 2026-11-24) so it isn't taken for the
+        // Corner Pattern's mitering.
+        f.field(
+            dist(
+                "ebc_mitering",
+                "Mitering Offset",
+                |p| p.edge_bevel.support,
+                |p, v| p.edge_bevel.support = v.max(0.),
+            )
+            .tip("Adds an edge this far beyond the bevel on each side of the selected edges; with Inset 0 it adds them beside the edge itself. 0 adds none"),
+        );
+    }
     // UIC-92 / UIC-117: rows that don't apply grey in place. Square and
     // Sharp ignore Level, Segments and Depth (EBS-03); Depth only moves the
     // middle points, which Round Level 0 / Segments 1 doesn't have (EBS-02).
     let round = p.edge_bevel.shape == EdgeBevelShape::Round;
     let corner_shape = "Square and Sharp ignore this; they always run through the original edge";
-    if bevel {
-        // EBC-B3-02: Round Level L gives 2·L segments (level 0 is one
-        // flat segment), measured for levels 0–4.
-        f.field(
-            whole(
-                "edge_round_level",
-                "Round Level",
-                (0., 32.),
-                "Round Level requires an integer from 0 to 32",
-                |p| (p.chamfer.segments / 2) as f64,
-                |p, n| p.chamfer.segments = (2 * n).max(1),
-            )
-            .enabled_if(round, corner_shape),
-        );
-    } else {
-        f.field(
-            whole(
-                "chamfer_segments",
-                "Segments",
-                (1., 64.),
-                "Chamfer segments require an integer from 1 to 64",
-                |p| p.chamfer.segments as f64,
-                |p, n| p.chamfer.segments = n,
-            )
-            .enabled_if(round, corner_shape),
-        );
-    }
+    // Segments (the tester, 2026-11-25, Round Level replaced by Segments;
+    // counting fixed by the maintainer, 2026-11-26): the rows of polygons
+    // across the strip, 1 to 64, 1 being one flat strip. Edge Chamfer's
+    // Segments always counted this way (EBC-D-02), so the two tools and
+    // their scripts agree. Round Level L is 2·L rows (EBC-B3-02); scripts
+    // can still set `level`.
+    f.field(
+        whole(
+            "chamfer_segments",
+            "Segments",
+            (1., 64.),
+            "Segments requires an integer from 1 to 64",
+            |p| p.chamfer.segments as f64,
+            |p, n| p.chamfer.segments = n,
+        )
+        .enabled_if(round, corner_shape)
+        .tip("Rows of polygons across the bevel. 1 is one flat strip"),
+    );
     let shape = pick(
         "edge-bevel-shape",
         "Edge Shape",
@@ -1656,10 +1664,8 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
     .tip("Square and Sharp: two flat strips meeting at the original edge, at any Level. Sharp is measured the same as Square so far (EBS-05).");
     let depth_why = if !round {
         corner_shape
-    } else if bevel {
-        "Round Level 0 is one flat strip; raise Round Level to use Depth"
     } else {
-        "One segment is a flat strip; raise Segments to use Depth"
+        "Segments 1 is one flat strip; raise Segments to use Depth"
     };
     f.field(shape).field(
         plain(
@@ -1671,6 +1677,41 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
         .enabled_if(round && p.chamfer.segments >= 2, depth_why)
         .tip("100% is the full round profile; lower values flatten it toward a straight chamfer"),
     );
+    if bevel {
+        // A tester's request (2026-11-24), on by default: the measured
+        // result (EBC-Q-LS1, EBC-B3-03).
+        f.field(
+            check(
+                "edge_bevel_loop_slide",
+                "Loop Slide",
+                |p| p.edge_bevel.loop_slide,
+                |p, on| p.edge_bevel.loop_slide = on,
+            )
+            .tip("On: where an unbevelled edge runs between two bevelled edges, the new point slides along it, keeping the edge flow. Off: the point goes an even width from both edges and that edge bends to reach it"),
+        )
+        // How corners where rounded strips meet are filled (a tester's
+        // request, 2026-11-24; EBC-Q-CP1). Named Mitering Style, with No
+        // Mitering as Neutral and Balanced as Default, by the tester
+        // (2026-11-25).
+        .field(
+            pick(
+                "edge-bevel-corner",
+                "Mitering Style",
+                // Default first and the default; Patch and Radial are left
+                // out until they're finished (the tester, 2026-11-26).
+                &[
+                    (CornerPattern::Balanced, "Default"),
+                    (CornerPattern::NoMitering, "Neutral"),
+                    (CornerPattern::Uniform, "Uniform"),
+                    (CornerPattern::Pinch, "Pinch"),
+                ],
+                |p| p.edge_bevel.corner,
+                |p, c| p.edge_bevel.corner = c,
+            )
+            .enabled_if(round && p.chamfer.segments >= 2, "Mitering Style fills corners of rounded strips: use Round with Segments 2 or more")
+            .tip("How bevelled strips meet at a corner. Default: a rounded corner, rows wrapping around in an even grid. Neutral: a rounded corner whose lines run straight up into it. Uniform: rows nest as smooth arches under a pointed arch. Pinch: rows meet in V seams under an arch pinched to a spike"),
+        );
+    }
     if !bevel {
         f.field(
             check(
@@ -1739,9 +1780,12 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
         greyed_check("ebc_sharp", "Sharp", false, why)
     } else {
         greyed_check("ebc_sharp", "Sharp Corner", false, why)
-    })
-    .field(tf::value("ebc_mitering", "Mitering", "0").enabled_if(false, why))
-    .field(greyed_check("ebc_coplanar", "Coplanar", false, why));
+    });
+    if !bevel {
+        // Edge Bevel's Mitering is live (above); Edge Chamfer's isn't yet.
+        f.field(tf::value("ebc_mitering", "Mitering", "0").enabled_if(false, why));
+    }
+    f.field(greyed_check("ebc_coplanar", "Coplanar", false, why));
     if !bevel {
         f.field(tf::value("ebc_flatness", "Flatness", "0.00001").enabled_if(false, why))
             .field(greyed_check("ebc_reverse_x", "Reverse X", false, why))

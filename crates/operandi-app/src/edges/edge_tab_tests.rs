@@ -867,13 +867,10 @@ fn edge_bevel_shape_and_depth_follow_ebc_q12() {
     for tool in ["edge.bevel", "edge.chamfer"] {
         a.execute(&format!("tool.set {tool} on"));
         let bevel = tool == "edge.bevel";
-        let (rows_label, rows) = if bevel {
-            ("Round Level", "level")
-        } else {
-            ("Segments", "segments")
-        };
+        // Both show Segments, 1 flat (2026-11-26).
+        let (rows_label, rows) = ("Segments", "segments");
         a.execute(&format!("tool.attr {tool} offset 0.1"));
-        // Which of Round Level (Segments) / Edge Shape / Depth are greyed.
+        // Which of Segments / Edge Shape / Depth are greyed.
         let greyed = |a: &Operandi| {
             let p = LiveFields::params(a).unwrap();
             let form = LiveFields::form(a, &p);
@@ -918,10 +915,7 @@ fn edge_bevel_shape_and_depth_follow_ebc_q12() {
                 assert_eq!((counts(&a), middle(&a)), (caps, Some(0.5)), "{change}");
             }
             a.execute(&format!("tool.attr {tool} depth 1"));
-            a.execute(&format!(
-                "tool.attr {tool} {rows} {}",
-                if bevel { 0 } else { 1 }
-            ));
+            a.execute(&format!("tool.attr {tool} {rows} 1"));
         }
         // EBS-04 end caps: Edge Bevel one 6-sided end face, Edge Chamfer a
         // triangle and a 5-sided face.
@@ -943,10 +937,7 @@ fn edge_bevel_shape_and_depth_follow_ebc_q12() {
         );
         // Round with a middle point: on the arc at 100%, halfway at 50%.
         a.execute(&format!("tool.attr {tool} shape round"));
-        a.execute(&format!(
-            "tool.attr {tool} {rows} {}",
-            if bevel { 1 } else { 2 }
-        ));
+        a.execute(&format!("tool.attr {tool} {rows} 2"));
         assert_eq!(greyed(&a), [false, false, false], "{tool}");
         let arc = 0.4 + 0.1 * 0.5f64.sqrt();
         assert!((middle(&a).unwrap() - arc).abs() < 1e-6, "{tool}");

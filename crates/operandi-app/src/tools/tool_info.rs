@@ -169,7 +169,7 @@ pub(super) const TOOLS: [ToolInfo; 63] = [
     ToolInfo {
         tool: Tool::EdgeBevel,
         icon: icons::Icon::EdgeBevel,
-        tooltip: "Widen selected edges into a strip; neighbours shrink by Inset · Round Level rounds it",
+        tooltip: "Widen selected edges into a strip; neighbours shrink by Inset · Segments rounds it",
         command_id: "edge.bevel",
         names: &["edge bevel"],
     },

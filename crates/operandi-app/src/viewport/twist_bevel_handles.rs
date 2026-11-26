@@ -206,14 +206,9 @@ impl Operandi {
         };
         let mut out = Vec::new();
         let arrow = |from: DVec3, direction: DVec3, pixels: f32| -> Option<(Pos2, Pos2)> {
-            let (a, _) = self.camera.project(from, r)?;
-            let (b, _) = self
-                .camera
-                .project(from + direction * self.camera.distance * 0.1, r)?;
-            (a.distance(b) > 2.).then(|| {
-                let s = self.handle_scale_at(from);
-                (a, a + (b - a).normalized() * pixels * s)
-            })
+            let s = self.handle_scale_at(from);
+            let (a, v) = self.handle_arrow(from, direction, pixels * s, r)?;
+            Some((a, a + v))
         };
         let cap = view.cap();
         if let Some((a, b)) = arrow(cap, view.tangent(), ARROW_PIXELS) {

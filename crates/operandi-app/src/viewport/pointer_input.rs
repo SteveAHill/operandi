@@ -99,6 +99,26 @@ impl Operandi {
         {
             self.release_pointer();
         }
+        // Free Cursor (the tester, 2026-11-25): during a drag the pointer
+        // is put back in at the opposite edge when it reaches one, and the
+        // drag reads on as if it had kept going.
+        let mut events = events;
+        if self.navigation.is_none() {
+            self.cursor_wrap.reset();
+        }
+        let real_latest = crate::cursor_wrap::latest(&events);
+        self.cursor_wrap.read_events(&mut events);
+        // Whatever the Input Device (the tester, 2026-11-26): with a pen,
+        // whose place can't be moved, the drag simply goes on unwrapped.
+        if self.input_preferences.options.unrestricted_cursor
+            && self.navigation.as_ref().is_some_and(|g| wraps(&g.kind))
+            && ui.input(|i| i.pointer.any_down())
+            && let Some(real) = real_latest
+            && let Some(to) = self.cursor_wrap.put_back(real, r)
+        {
+            ui.ctx()
+                .send_viewport_cmd(egui::ViewportCommand::CursorPosition(to));
+        }
         // A real mouse reports several moves per frame. A move followed by
         // another before any button change is superseded: gestures that
         // read only the start and the latest position skip it, so a drag
@@ -1725,6 +1745,37 @@ impl Operandi {
 /// pointer is now, so intermediate pointer moves in a frame can be skipped.
 /// Paths (lasso, sketch, pen, draw), painting and navigation keep every
 /// move.
+/// Drags that go on past the view's edge with Free Cursor: navigation and
+/// the value drags (tool handles, the drag layer, counts and sizes). Not
+/// those that draw or pick under the pointer (selection, lasso, strokes,
+/// drawing shapes, tweaking a point).
+fn wraps(kind: &input::GestureKind) -> bool {
+    use input::GestureKind as G;
+    match kind {
+        G::Navigate(k) => *k != input::NavigationKind::BoxZoom,
+        G::Numeric(n) => matches!(
+            n,
+            input::NumericDrag::Spike(_)
+                | input::NumericDrag::Bridge(_)
+                | input::NumericDrag::Reduction(..)
+        ),
+        G::Handle(..)
+        | G::ItemHandle(_)
+        | G::PolyHaul(_)
+        | G::Haul(_)
+        | G::Falloff(..)
+        | G::FalloffSteps { .. }
+        | G::FalloffRadius { .. }
+        | G::AirbrushSize { .. }
+        | G::SculptSize { .. }
+        | G::SculptStrength { .. }
+        | G::PaintSize { .. }
+        | G::Bend(_)
+        | G::Duplicate(_) => true,
+        _ => false,
+    }
+}
+
 pub(super) fn latest_position_only(kind: &input::GestureKind) -> bool {
     matches!(
         kind,

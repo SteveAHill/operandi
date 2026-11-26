@@ -20,6 +20,20 @@ The **Input** page sets **Mouse Navigation** (which mouse gestures orbit,
 pan and zoom; the rows under it show the current ones), opens the **Input
 Map...** to change keys, and sets up a pen tablet.
 
+## Free Orbit and Free Cursor
+
+Two mouse options on the **Remapping** page, both off at first. Each
+applies to every view.
+
+- **Free Orbit**: orbiting up or down keeps going over the top and all the
+  way round, instead of stopping just short of looking straight down or up.
+  Past the top the view is upside down. A view looking through a camera or
+  a light still stops.
+- **Free Cursor**: while you drag in a view, the pointer jumps to the
+  opposite edge when it reaches one, so the drag never runs out of room.
+  It works for orbit, pan, zoom, tool handles and the drags that change a
+  value; selecting, drawing and brush strokes stay under the pointer.
+
 ## Common tasks
 
 - **Change a setting**: pick a page on the left and change the row. It

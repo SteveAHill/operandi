@@ -160,6 +160,18 @@ mod duplicate_tools;
 mod duplicate_transform;
 #[path = "edge_bevel.rs"]
 mod edge_bevel;
+#[path = "edge_bevel_bend.rs"]
+mod edge_bevel_bend;
+#[path = "edge_bevel_cap_edges.rs"]
+mod edge_bevel_cap_edges;
+#[path = "edge_bevel_corner_pattern.rs"]
+mod edge_bevel_corner_pattern;
+#[path = "edge_bevel_hole.rs"]
+mod edge_bevel_hole;
+#[path = "edge_bevel_l_shape.rs"]
+mod edge_bevel_l_shape;
+#[path = "edge_bevel_loop_slide.rs"]
+mod edge_bevel_loop_slide;
 #[cfg(operandi_specs)]
 #[path = "edge_bevel_measured.rs"]
 mod edge_bevel_measured;
@@ -167,6 +179,10 @@ mod edge_bevel_measured;
 mod edge_bevel_normal_map;
 #[path = "edge_bevel_options.rs"]
 mod edge_bevel_options;
+#[path = "edge_bevel_stuck.rs"]
+mod edge_bevel_stuck;
+#[path = "edge_bevel_support.rs"]
+mod edge_bevel_support;
 #[path = "edge_commands.rs"]
 mod edge_commands;
 #[path = "edge_delete_border_points.rs"]

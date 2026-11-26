@@ -17,7 +17,7 @@
 //! are refused for now.
 use crate::topology::edge_key;
 use crate::{Mesh, Result};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// How the width is measured (EBC-D-01/02, EBC-P-04, EBC-B3-01).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -51,6 +51,47 @@ pub enum EdgeEnd {
     TriangleFan,
 }
 
+/// Edge Bevel's Mitering Style (a tester's request, 2026-11-24, named
+/// Corner Pattern until 2026-11-25; proposal, EBC-Q-CP1): how the opening
+/// is filled where strips of two or more rows meet at a point. The panel
+/// shows `NoMitering` as Neutral and `Balanced` as Default.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum CornerPattern {
+    /// Balanced's layout with nothing bent sideways (the tester's Maya No
+    /// Mitering picture, 2026-11-24; shown as Neutral): the
+    /// strips that end on the rounded outline end in a round standing
+    /// upright, so the corner's lines run straight up to the outline and
+    /// its rows are plain chevrons.
+    NoMitering,
+    /// Where two split lines run into the corner, the outline between them
+    /// is rounded around the old point and the corner is an even grid, the
+    /// rows wrapping across (the tester's pick, 2026-11-24, formerly None).
+    /// Elsewhere, Patch's grid. Shown as Default, and the default (the
+    /// tester, 2026-11-26).
+    #[default]
+    Balanced,
+    /// EBC-J-05: a grid of quads per strip corner, each strip's rows bending
+    /// around into the next (the measured fill).
+    Patch,
+    /// The third strip's lines close in on one pole like a pointed (gothic)
+    /// arch, and the rows nest under it as smooth arches shaped like that
+    /// strip's end (Maya's Uniform; smoothed for the tester, 2026-11-25).
+    Uniform,
+    /// A narrow arch pinched to a sharp spike, its rows meeting in straight
+    /// V seams (the tester's request, 2026-11-24, from an earlier build).
+    Pinch,
+    /// Rings around one pole point, one per row pair, closed at the pole.
+    Radial,
+}
+
+impl CornerPattern {
+    /// Balanced and No Mitering: the outline between two split lines is
+    /// rounded instead of closed to one mitre point.
+    pub fn rounds_outline(self) -> bool {
+        matches!(self, Self::Balanced | Self::NoMitering)
+    }
+}
+
 /// The options of Edge Bevel and Edge Chamfer besides width, rows and Depth.
 /// Defaults are the values after Reset (EBC-D-01/02).
 #[derive(Clone, Debug, PartialEq)]
@@ -72,6 +113,22 @@ pub struct EdgeBevelOptions {
     /// The new polygons get `material` (provisional, EBC-Q05).
     pub use_material: bool,
     pub material: String,
+    /// Edge Bevel's Mitering field and second handle (a tester's request,
+    /// 2026-11-23; called Support Edges in this module): one more row of
+    /// edges this far beyond the bevel on each side, in the neighbouring
+    /// polygons' planes; 0 adds none. Edge Chamfer ignores it.
+    pub support: f64,
+    /// Edge Bevel's Loop Slide (a tester's request, 2026-11-24; on by
+    /// default). Where an unbevelled edge runs between two bevelled edges
+    /// into a point (an inset's diagonal between two rim edges), on: the
+    /// new point slides along that edge, so it stays straight and the edge
+    /// flow is kept. Off: the new point goes where the two strips' sides
+    /// meet, an even width from both, and that edge bends to it. Edge
+    /// Chamfer ignores it.
+    pub loop_slide: bool,
+    /// Edge Bevel: how corners where strips meet are filled (Patch, the
+    /// measured fill, by default). Edge Chamfer ignores it.
+    pub corner: CornerPattern,
 }
 impl Default for EdgeBevelOptions {
     fn default() -> Self {
@@ -84,6 +141,9 @@ impl Default for EdgeBevelOptions {
             edge_end: EdgeEnd::Profile,
             use_material: false,
             material: "Default".into(),
+            support: 0.,
+            loop_slide: true,
+            corner: CornerPattern::Balanced,
         }
     }
 }
@@ -201,6 +261,28 @@ pub fn edge_bevel_with(
     if selected.is_empty() {
         return Err(format!("Select edges for {what}"));
     }
+    let support = settings.options.support;
+    if !support.is_finite() || support < 0. {
+        return Err(format!(
+            "{what}: Mitering Offset must be a distance of 0 or more"
+        ));
+    }
+    if width == 0. && support > 0. && !settings.chamfer {
+        // No bevel, only the inset: an edge on each side of each selected
+        // edge, `support` away in its polygons' planes, the edge itself kept
+        // (the Square shape does exactly this, EBC-P-02).
+        let square = EdgeBevelSettings {
+            width: support,
+            rows: 1,
+            options: EdgeBevelOptions {
+                shape: EdgeBevelShape::Square,
+                support: 0.,
+                ..settings.options.clone()
+            },
+            ..settings.clone()
+        };
+        return edge_bevel_with(mesh, edges, &square, weights);
+    }
     if width == 0. {
         let edges: Vec<_> = selected.into_iter().collect();
         return Ok(EdgeBevelResult {
@@ -227,5 +309,169 @@ pub fn edge_bevel_with(
     if weights.is_some_and(|w| w.len() != mesh.vertices.len()) {
         return Err(format!("{what}: falloff weights are out of date"));
     }
-    crate::edge_bevel_junctions::general(mesh, &selected, settings, weights, what)
+    if settings.chamfer || support == 0. {
+        return crate::edge_bevel_junctions::general(mesh, &selected, settings, weights, what);
+    }
+    let plain = EdgeBevelSettings {
+        options: EdgeBevelOptions {
+            support: 0.,
+            ..settings.options.clone()
+        },
+        ..settings.clone()
+    };
+    let bevelled = crate::edge_bevel_junctions::general(mesh, &selected, &plain, weights, what)?;
+    // The polygons beside the bevelled edges get the rows (the bevel keeps
+    // their slots); the polygons at the strips' ends don't.
+    let beside: BTreeSet<usize> = (0..mesh.faces.len())
+        .filter(|&f| {
+            let v = &mesh.faces[f].vertices;
+            (0..v.len()).any(|i| selected.contains(&edge_key(v[i], v[(i + 1) % v.len()])))
+        })
+        .collect();
+    add_support_edges(bevelled, &beside, support, what)
+}
+
+/// Support Edges on a finished bevel: in each polygon `beside` a bevelled
+/// edge, next to each side of a strip (a strip edge on it), a row of
+/// edges `support` further along that polygon's side edges, cut through
+/// the shared slice engine so every polygon on those side edges takes the
+/// new points and corner data follows. A side edge too short for the
+/// distance gets no row there.
+fn add_support_edges(
+    bevel: EdgeBevelResult,
+    beside: &BTreeSet<usize>,
+    support: f64,
+    what: &str,
+) -> Result<EdgeBevelResult> {
+    use crate::slice_cut::{Chord, EdgeCut, InnerPoint, Node};
+    let mesh = &bevel.mesh;
+    let strip: BTreeSet<(u32, u32)> = bevel
+        .strip_edges
+        .iter()
+        .map(|&(a, b)| edge_key(a, b))
+        .collect();
+    let ring = |f: usize| {
+        let v = &mesh.faces[f].vertices;
+        (0..v.len()).map(move |i| (v[i], v[(i + 1) % v.len()]))
+    };
+    // A strip polygon: every one of its edges is a strip edge.
+    let is_strip: Vec<bool> = (0..mesh.faces.len())
+        .map(|f| !mesh.is_polyline(f) && ring(f).all(|(a, b)| strip.contains(&edge_key(a, b))))
+        .collect();
+    let mut on_strip_polygon: BTreeSet<(u32, u32)> = BTreeSet::new();
+    for f in (0..mesh.faces.len()).filter(|&f| is_strip[f]) {
+        on_strip_polygon.extend(ring(f).map(|(a, b)| edge_key(a, b)));
+    }
+    let at = |v: u32| mesh.vertices[v as usize];
+    let unit = |from: u32, to: u32| (at(to) - at(from)).normalize_or_zero();
+    let mut cuts: Vec<EdgeCut> = Vec::new();
+    let mut inner: Vec<InnerPoint> = Vec::new();
+    let mut chords: Vec<Chord> = Vec::new();
+    for (f, &strip_polygon) in is_strip.iter().enumerate() {
+        if strip_polygon || mesh.is_polyline(f) || !beside.contains(&f) {
+            continue;
+        }
+        let v = &mesh.faces[f].vertices;
+        let n = v.len();
+        // Which of the polygon's sides lie on a strip (side i runs from
+        // corner i to corner i + 1).
+        let on: Vec<bool> = (0..n)
+            .map(|i| on_strip_polygon.contains(&edge_key(v[i], v[(i + 1) % n])))
+            .collect();
+        if on.iter().all(|&o| o) {
+            continue;
+        }
+        // Each run of strip sides gets one row: it starts and ends on the
+        // side edges leaving the run, and turns each corner inside the run at
+        // `support` from both of its strip sides (an inset corner).
+        for first in (0..n).filter(|&i| on[i] && !on[(i + n - 1) % n]) {
+            let mut last = first;
+            while on[(last + 1) % n] {
+                last = (last + 1) % n;
+            }
+            let start = v[first];
+            let end = v[(last + 1) % n];
+            let (from_side, to_side) = (v[(first + n - 1) % n], v[(last + 2) % n]);
+            let along = |from: u32, to: u32| {
+                let length = at(from).distance(at(to));
+                (length > support * (1. + 1e-9)).then(|| support / length)
+            };
+            let (Some(t0), Some(t1)) = (along(start, from_side), along(end, to_side)) else {
+                continue;
+            };
+            let mut through = Vec::new();
+            let mut i = first;
+            while i != last {
+                let corner = (i + 1) % n;
+                let (c, back, ahead) = (v[corner], v[i], v[(corner + 1) % n]);
+                inner.push(InnerPoint {
+                    face: f,
+                    at: at(c) + (unit(c, back) + unit(c, ahead)) * support,
+                });
+                through.push(inner.len() - 1);
+                i = corner;
+            }
+            cuts.push(EdgeCut {
+                a: start,
+                b: from_side,
+                t: t0,
+                at: None,
+            });
+            cuts.push(EdgeCut {
+                a: end,
+                b: to_side,
+                t: t1,
+                at: None,
+            });
+            chords.push(Chord {
+                face: f,
+                from: Node::Cut(cuts.len() - 2),
+                to: Node::Cut(cuts.len() - 1),
+                through,
+            });
+        }
+    }
+    if chords.is_empty() {
+        return Ok(bevel);
+    }
+    let cut = crate::slice_cut::cut(mesh, &cuts, &inner, &chords)
+        .map_err(|e| format!("{what}: Mitering Offset: {e}"))?;
+    // The rows split some of the bevel's own edges (where a strip's end
+    // lies along a side edge, as at the open ends of three sides of a
+    // square). The strips and the selection name the pieces instead: the
+    // old edges no longer exist, and a selection naming them was refused
+    // on the next change ("Invalid component selection").
+    let mut on_edge: BTreeMap<(u32, u32), Vec<u32>> = BTreeMap::new();
+    for (c, &point) in cuts.iter().zip(&cut.cut_points) {
+        let points = on_edge.entry(edge_key(c.a, c.b)).or_default();
+        if !points.contains(&point) {
+            points.push(point);
+        }
+    }
+    let split = |edges: &[(u32, u32)]| -> Vec<(u32, u32)> {
+        let mut out = Vec::new();
+        for &(a, b) in edges {
+            let Some(points) = on_edge.get(&edge_key(a, b)) else {
+                out.push((a, b));
+                continue;
+            };
+            let from = cut.mesh.vertices[a as usize];
+            let mut chain = points.clone();
+            chain.sort_by(|&p, &q| {
+                let d = |v: u32| cut.mesh.vertices[v as usize].distance_squared(from);
+                d(p).total_cmp(&d(q))
+            });
+            chain.insert(0, a);
+            chain.push(b);
+            out.extend(chain.windows(2).map(|w| edge_key(w[0], w[1])));
+        }
+        out.sort_unstable();
+        out.dedup();
+        out
+    };
+    Ok(EdgeBevelResult {
+        strip_edges: split(&bevel.strip_edges),
+        selected_after: split(&bevel.selected_after),
+        mesh: cut.mesh,
+    })
 }

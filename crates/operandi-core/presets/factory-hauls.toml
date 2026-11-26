@@ -35,14 +35,16 @@ right = { sideways = "extrude_sides" }
 
 [[tool]]
 tool = "EdgeBevel"
-# Edge Bevel counts its rows as Round Level (segments = 2 x level).
+# Edge Bevel's Segments (0 is flat; Round Level until 2026-11-25). A right
+# drag either way changes them: right or up for more (the tester's
+# up/down drag did nothing, 2026-11-25).
 middle = { sideways = "chamfer_depth" }
-right = { sideways = "edge_round_level" }
+right = { sideways = "chamfer_segments", up = "chamfer_segments" }
 
 [[tool]]
 tool = "EdgeChamfer"
 middle = { sideways = "chamfer_depth" }
-right = { sideways = "chamfer_segments" }
+right = { sideways = "chamfer_segments", up = "chamfer_segments" }
 
 [[tool]]
 tool = "Chamfer"
@@ -51,7 +53,7 @@ right = { sideways = "chamfer_segments", up = "chamfer_source_segments" }
 
 [[tool]]
 tool = "VertexBevel"
-right = { sideways = "vertex_round_level" }
+right = { sideways = "vertex_segments", up = "vertex_segments" }
 
 [[tool]]
 tool = "SmoothShift"

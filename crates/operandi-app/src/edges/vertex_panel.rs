@@ -676,18 +676,26 @@ pub(super) fn vertex_tool_form(tool: Tool, p: &Parameters, f: &mut ToolForm<Para
         Tool::VertexBevel => {
             f.field(dist("inset", "Inset", |p| p.inset, |p, v| p.inset = v));
             vertex_material_fields(p, f);
-            // VX-B02: Round Level L rounds each side of the cap into 2·L
-            // segments; 0 is one flat cap.
+            // Segments, as on Edge Bevel and Edge Chamfer (the maintainer,
+            // 2026-11-26): the segments along each side of the cap, 1 being
+            // flat. VX-B02's Round Level L gives 2·L, and the cap's grid
+            // needs an even count above 1, so an odd count steps on to the
+            // next even one in the direction it was changed
+            // (`vertex_bevel_segments_to_level`). Scripts can still set
+            // `level` (Round Level).
             f.field(
                 whole(
-                    "vertex_round_level",
-                    "Round Level",
-                    (0., operandi_core::VERTEX_BEVEL_MAX_ROUND_LEVEL as f64),
-                    "Round Level requires an integer from 0 to 32",
-                    |p| p.vertex_round_level as f64,
-                    |p, n| p.vertex_round_level = n,
+                    "vertex_segments",
+                    "Segments",
+                    (1., 2. * operandi_core::VERTEX_BEVEL_MAX_ROUND_LEVEL as f64),
+                    "Segments requires an integer from 1 to 64",
+                    |p| vertex_bevel_level_to_segments(p.vertex_round_level) as f64,
+                    |p, n| {
+                        p.vertex_round_level =
+                            vertex_bevel_segments_to_level(n, p.vertex_round_level)
+                    },
                 )
-                .tip("Rounds each side of the cap into 2 × Round Level segments"),
+                .tip("Segments along each side of the cap: 1 is flat, then 2, 4, 6 ..."),
             )
             .note("An Inset longer than an edge stops at its far end; border points keep their open side.");
         }
@@ -830,4 +838,72 @@ fn unmeasured<P>(
     basis: Basis,
 ) -> tf::Item<P> {
     tf::unbuilt(label, value, unmeasured_note(question, basis))
+}
+
+/// Vertex Bevel's Segments for Round Level `level`: 2·L, and 1 (flat) for
+/// level 0 (VX-B02).
+pub(crate) fn vertex_bevel_level_to_segments(level: u32) -> u32 {
+    (2 * level).max(1)
+}
+
+/// The Round Level for Segments `n`, given the current `level`. Even counts
+/// map straight back; an odd count above 1 has no cap grid, so it steps on
+/// to the next even count in the direction it moved (3 from 2 gives 4, 3
+/// from 4 gives 2), and a field's arrows or a haul never stick.
+pub(crate) fn vertex_bevel_segments_to_level(n: u32, level: u32) -> u32 {
+    if n <= 1 {
+        0
+    } else if n.is_multiple_of(2) || n > vertex_bevel_level_to_segments(level) {
+        n.div_ceil(2)
+    } else {
+        n / 2
+    }
+    .min(operandi_core::VERTEX_BEVEL_MAX_ROUND_LEVEL)
+}
+
+#[cfg(test)]
+mod vertex_bevel_segments_tests {
+    use super::*;
+
+    #[test]
+    fn segments_count_the_cap_sides_and_odd_counts_step_on() {
+        assert_eq!(vertex_bevel_level_to_segments(0), 1);
+        assert_eq!(vertex_bevel_level_to_segments(3), 6);
+        assert_eq!(vertex_bevel_segments_to_level(1, 2), 0);
+        assert_eq!(vertex_bevel_segments_to_level(4, 0), 2);
+        // Up from 2 (level 1) to 3: on to 4. Down from 4 (level 2) to 3: 2.
+        assert_eq!(vertex_bevel_segments_to_level(3, 1), 2);
+        assert_eq!(vertex_bevel_segments_to_level(3, 2), 1);
+        // Up from flat to 2.
+        assert_eq!(vertex_bevel_segments_to_level(2, 0), 1);
+        assert_eq!(vertex_bevel_segments_to_level(64, 0), 32);
+    }
+}
+
+#[cfg(test)]
+mod vertex_bevel_level_script_tests {
+    use crate::Operandi;
+    use operandi_core::{Command, Mode};
+
+    /// Scripts still set and read Vertex Bevel's Round Level as `level`,
+    /// and `segments` sets the panel's Segments (2026-11-26).
+    #[test]
+    fn level_still_sets_vertex_bevel_round_level() {
+        let mut a = Operandi::empty();
+        a.run(Command::NewMesh);
+        a.editor.scene.active_mut().unwrap().mesh =
+            operandi_core::cube_geometry(glam::DVec3::ZERO, glam::DVec3::ONE)
+                .unwrap()
+                .into();
+        a.run(Command::Mode(Mode::Vertex));
+        a.editor.scene.selection.vertices = vec![0];
+        a.execute("tool.set vert.bevel on");
+        a.execute("tool.attr vert.bevel level 2");
+        let level = |a: &Operandi| a.editor.live.as_ref().unwrap().params.vertex_round_level;
+        assert_eq!(level(&a), 2, "{}", a.status);
+        a.execute("tool.attr vert.bevel segments 6");
+        assert_eq!(level(&a), 3, "{}", a.status);
+        a.execute("tool.attr vert.bevel level ?");
+        assert!(a.status.contains('3'), "{}", a.status);
+    }
 }

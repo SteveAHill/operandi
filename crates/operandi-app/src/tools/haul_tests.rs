@@ -306,6 +306,53 @@ fn bevel_right_drag_sets_segments_and_left_keeps_its_own_drag() {
     assert!(!haul::claims(Tool::Bevel, Button::Left), "DL-09");
 }
 
+/// The tester (2026-11-25): after Round Level became Segments, a right
+/// drag in the view no longer changed Edge Bevel's segments (the table
+/// still named the old field). Right/left adds or removes one per step,
+/// down to 0, a flat strip.
+#[test]
+fn edge_bevel_right_drag_sets_segments() {
+    let ctx = Context::default();
+    let mut a = strip_app(&ctx);
+    a.run(Command::Mode(Mode::Edge));
+    a.editor.scene.selection.edges = vec![(1, 5)];
+    draw(&mut a, &ctx, SIZE, vec![]);
+    a.activate(Tool::EdgeBevel);
+    draw(&mut a, &ctx, SIZE, vec![]);
+    let rows = |a: &Operandi| a.editor.live.as_ref().unwrap().params.chamfer.segments;
+    let before = rows(&a);
+    let from = open_space(&a);
+    let step = feel::WHOLE_STEP_PX;
+    haul(
+        &mut a,
+        &ctx,
+        PointerButton::Secondary,
+        from,
+        from + vec2(step * 2. + 1., 0.),
+        Modifiers::NONE,
+    );
+    assert_eq!(rows(&a), before + 2, "{}", a.status);
+    haul(
+        &mut a,
+        &ctx,
+        PointerButton::Secondary,
+        from,
+        from - vec2(step * 40., 0.),
+        Modifiers::NONE,
+    );
+    assert_eq!(rows(&a), 1, "Segments 0, a flat strip: {}", a.status);
+    // Up/down works too: up adds.
+    haul(
+        &mut a,
+        &ctx,
+        PointerButton::Secondary,
+        from,
+        from - vec2(0., step * 3. + 1.),
+        Modifiers::NONE,
+    );
+    assert_eq!(rows(&a), 4, "up adds: {}", a.status);
+}
+
 #[test]
 fn every_table_value_is_a_number_field_on_its_tools_panel() {
     // A haul writes through the tool's Tool Properties field; a typo in the

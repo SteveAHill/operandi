@@ -71,17 +71,10 @@ impl Operandi {
                 let s = s_at(l.params.position);
                 for axis in 0..3 {
                     let direction = [DVec3::X, DVec3::Y, DVec3::Z][axis];
-                    if let Some((b, _)) = self.camera.project(
-                        l.params.position + direction * self.camera.distance * 0.1,
-                        r,
-                    ) && center.distance(b) > 5.
+                    if let Some((_, arrow)) =
+                        self.handle_arrow(l.params.position, direction, 72. * s, r)
                     {
-                        out.push((
-                            axis,
-                            center,
-                            center + (b - center).normalized() * 72. * s,
-                            ["X", "Y", "Z"][axis].into(),
-                        ));
+                        out.push((axis, center, center + arrow, ["X", "Y", "Z"][axis].into()));
                     }
                 }
             }
@@ -142,22 +135,17 @@ impl Operandi {
             let mut out = Vec::new();
             for axis in 0..3 {
                 let direction = self.handle_axis(axis);
-                if let Some((unit, _)) = self
-                    .camera
-                    .project(center + direction * self.camera.distance * 0.1, r)
-                    && unit.distance(origin) > 1.
-                {
-                    let screen = (unit - origin).normalized();
+                if let Some((_, arrow)) = self.handle_arrow(center, direction, 72. * s, r) {
                     out.push((
                         axis,
                         origin,
-                        origin + screen * 72. * s,
+                        origin + arrow,
                         format!("Move {}", ["X", "Y", "Z"][axis]),
                     ));
                     out.push((
                         6 + axis,
-                        origin + screen * 30. * s,
-                        origin + screen * 44. * s,
+                        origin + arrow * (30. / 72.),
+                        origin + arrow * (44. / 72.),
                         format!("Scale {}", ["X", "Y", "Z"][axis]),
                     ));
                 }
@@ -194,6 +182,18 @@ impl Operandi {
             .symmetry_handle_centre()
             .filter(|_| card.anchor == HandleAnchor::PolygonStage);
         let origin = match card.anchor {
+            // Edge Bevel's handles ride on the bevel as it grows (2026-11-23),
+            // as Polygon Bevel's ride on the moved cap: once the mesh has
+            // changed, the centre of the live selection (the new strips'
+            // edges). Before that, the selected edges themselves.
+            HandleAnchor::Edge
+                if l.tool == Tool::EdgeBevel
+                    && (l.params.chamfer.offset > 0. || l.params.edge_bevel.support > 0.) =>
+            {
+                self.edge_bevel_centre()
+                    .or_else(|| self.edge_handle_frame().map(|f| f.0))
+                    .unwrap_or(DVec3::ZERO)
+            }
             HandleAnchor::Edge => self.edge_handle_frame().map(|f| f.0).unwrap_or(DVec3::ZERO),
             HandleAnchor::EdgeRail => self.edge_slide_frame().map(|f| f.0).unwrap_or(DVec3::ZERO),
             HandleAnchor::Vertex => self.vertex_frame().map(|f| f.0).unwrap_or(DVec3::ZERO),
@@ -296,28 +296,26 @@ impl Operandi {
                 continue;
             }
             let direction = self.handle_axis(axis);
-            let length = self.camera.distance * 0.1;
-            if let (Some((a, _)), Some((b, _))) = (
-                self.camera.project(origin, r),
-                self.camera.project(origin + direction * length, r),
-            ) && a.distance(b) > 5.
-            {
+            if let Some((a, arrow)) = self.handle_arrow(origin, direction, 72. * s, r) {
                 // ACS-Q-HANDLE1: the box-centre tools' arms start about
-                // 25 px out from the centre.
+                // 25 px out from the centre. The Bevels' arrows start on the
+                // selection (2026-11-23): set off, an edge's arrows floated
+                // beside the edge and read as pointing the wrong way.
+                // The gap shortens with the arrow, as part of the same 3D line.
                 let gap = if operandi_core::handle_pick(l.tool)
                     == operandi_core::HandlePick::BoxCentre
                     && card.anchor != HandleAnchor::PolygonStage
+                    && card.axes != HandleAxes::SelectionNormal
                 {
-                    25. * s
+                    25. / 72.
                 } else {
                     0.
                 };
-                let dir = (b - a).normalized();
-                let a = a + dir * gap;
+                let a = a + arrow * gap;
                 out.push((
                     axis,
                     a,
-                    a + dir * 72. * s,
+                    a + arrow,
                     if l.tool == Tool::Chamfer {
                         "Offset".into()
                     } else if l.tool.is_smooth_shift() {
@@ -331,7 +329,14 @@ impl Operandi {
                     } else if l.tool == Tool::EdgeCrease {
                         "Weight".into()
                     } else if l.tool == Tool::EdgeBevel {
-                        "Inset".into()
+                        if axis == 1 {
+                            "Mitering Offset"
+                        } else if l.params.edge_bevel.mode == operandi_core::EdgeBevelMode::Width {
+                            "Width"
+                        } else {
+                            "Inset"
+                        }
+                        .into()
                     } else if matches!(l.tool, Tool::EdgeChamfer | Tool::EdgeRelax) {
                         "Offset".into()
                     } else if l.tool == Tool::VertexBevel {
@@ -433,6 +438,30 @@ impl Operandi {
                         .map(|(_, up, side)| if axis == 0 { up } else { side })
                         .unwrap_or(DVec3::Z);
                 }
+                // The Bevels: the selection's average normal; the handle
+                // element's own normal when the normals cancel out.
+                HandleAxes::SelectionNormal => {
+                    let points = l.tool.card().handles.anchor == HandleAnchor::Vertex;
+                    let of = if points {
+                        operandi_core::NormalOf::Points
+                    } else {
+                        operandi_core::NormalOf::Edges
+                    };
+                    let normal = self.bevel_normal(of).unwrap_or_else(|| {
+                        if points {
+                            self.vertex_frame().map_or(DVec3::Z, |f| f.1)
+                        } else {
+                            self.edge_handle_frame().map_or(DVec3::Z, |f| f.1)
+                        }
+                    });
+                    if axis == 0 || points {
+                        return normal;
+                    }
+                    // Edge Bevel's Support Edges handle: into the first
+                    // edge's polygon, square to the bevel arrow.
+                    let side = self.edge_handle_frame().map_or(DVec3::X, |f| f.2);
+                    return side.reject_from(normal).normalize_or(side);
+                }
             }
         }
         if axis > 2
@@ -520,11 +549,19 @@ impl Operandi {
                         .normalize_or_zero()
                 };
                 // Face-local directions shown in world space for moved items.
-                return l
+                let world = l
                     .base
                     .world_matrix(i.id)
                     .map(|m| m.transform_vector3(local).normalize_or_zero())
                     .unwrap_or(local);
+                // The normal arrow follows the whole selection's average
+                // normal (2026-11-23), not only the first polygon's; the
+                // Inset arrow stays square to it.
+                return match self.bevel_normal(operandi_core::NormalOf::Polygons) {
+                    Some(normal) if axis == 0 => normal,
+                    Some(normal) => world.reject_from(normal).normalize_or(world),
+                    None => world,
+                };
             }
             a
         } else if let Some(basis) = self.local_handle_basis() {
@@ -550,6 +587,45 @@ impl Operandi {
     /// Handle Scale: Standard times `handle_zoom_at(center)`.
     pub(crate) fn handle_scale_at(&self, center: DVec3) -> f32 {
         self.handle_preferences.scale * self.handle_zoom_at(center)
+    }
+    /// A handle arrow along `direction` from `origin`, drawn in perspective
+    /// (tester's request, 2026-11-24): it has a fixed length in the scene,
+    /// chosen so it is `pixels` long on screen when seen side-on at
+    /// `origin` (so still constant at any zoom, PH-04), and it shortens as
+    /// it turns toward the camera. Before, every arrow was stretched to
+    /// `pixels` along its on-screen direction, so one pointing nearly at
+    /// the camera was drawn full length along an unstable direction and
+    /// swung around as the view turned. Returns the arrow's on-screen
+    /// start and full vector, or `None` when it points so nearly at the
+    /// camera that it would be a stub too short to see or grab, or its
+    /// tip is behind the camera. Drags don't use this length; they measure
+    /// along the axis themselves (`update_handle`).
+    pub(super) fn handle_arrow(
+        &self,
+        origin: DVec3,
+        direction: DVec3,
+        pixels: f32,
+        r: Rect,
+    ) -> Option<(Pos2, Vec2)> {
+        /// Shorter than this share of its side-on length, an arrow hides.
+        const SHORTEST: f32 = 0.1;
+        let direction = direction.try_normalize()?;
+        let (a, _) = self.camera.project(origin, r)?;
+        // Pixels per scene unit at the origin's depth, measured across the
+        // view where nothing is foreshortened.
+        let probe = self.camera.distance * 0.01;
+        let (side, _) = self
+            .camera
+            .project(origin + self.camera.basis().1 * probe, r)?;
+        let per_unit = a.distance(side) as f64 / probe;
+        if !per_unit.is_finite() || per_unit <= 0. {
+            return None;
+        }
+        let (b, _) = self
+            .camera
+            .project(origin + direction * (pixels as f64 / per_unit), r)?;
+        let v = b - a;
+        (v.length() >= pixels * SHORTEST).then_some((a, v))
     }
     /// The live transform handle's frame before the drag's delta: where
     /// the handle sits at `delta = 0` and the axes a unit of `delta` moves
@@ -769,6 +845,33 @@ impl Operandi {
                 operandi_core::vertex_handle_frame(&l.base, symmetry, pick)
             })
     }
+    /// The selection's average normal (`operandi_core::selection_normal`)
+    /// for the live tool's base, once per drag: the Bevels' gizmo direction.
+    fn bevel_normal(&self, of: operandi_core::NormalOf) -> Option<DVec3> {
+        let l = self.editor.live.as_ref()?;
+        let key = (self.editor.active_symmetry(), of);
+        self.selection_normal_memo.get_with(&l.base, key, || {
+            operandi_core::selection_normal(&l.base, key.0, of)
+        })
+    }
+    /// Where Edge Bevel's handles sit once it has bevelled: the middle of
+    /// the live selected edges (the bevel strips' edges), in world space.
+    /// With Symmetry on, `handles` still moves it to the primary pivot.
+    fn edge_bevel_centre(&self) -> Option<DVec3> {
+        let item = self.editor.scene.active()?;
+        let edges = &self.editor.scene.selection.edges;
+        if edges.is_empty() {
+            return None;
+        }
+        let v = &item.mesh.vertices;
+        let sum = edges.iter().try_fold(DVec3::ZERO, |sum, e| {
+            Some(sum + (*v.get(e.0 as usize)? + *v.get(e.1 as usize)?) / 2.)
+        })?;
+        let centre = sum / edges.len() as f64;
+        let world = self.editor.scene.world_matrix(item.id).ok()?;
+        Some(world.transform_point3(centre))
+    }
+
     /// The edge tools' handle frame (`HandleAnchor::Edge`), once per drag;
     /// see `operandi_core::edge_handle_frame`.
     pub(super) fn edge_handle_frame(&self) -> Option<(DVec3, DVec3, DVec3)> {

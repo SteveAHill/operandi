@@ -65,6 +65,15 @@ impl InputDevice {
     }
 }
 
+/// The two unrestricted options' labels and tooltips. They live only in
+/// Preferences: they are app-wide, not a view's own (the maintainer,
+/// 2026-11-26).
+/// Named Free Orbit and Free Cursor by the tester (2026-11-25).
+pub const UNRESTRICTED_ROTATION_LABEL: &str = "Free Orbit";
+pub const UNRESTRICTED_ROTATION_TIP: &str = "Orbit up and down without stopping at straight up or down: keep going over the top and all the way round";
+pub const UNRESTRICTED_CURSOR_LABEL: &str = "Free Cursor";
+pub const UNRESTRICTED_CURSOR_TIP: &str = "While dragging in a view, the pointer jumps to the opposite edge when it reaches one, so the drag never runs out of room";
+
 pub const WHEEL_ACCELERATION_RANGE: std::ops::RangeInclusive<u32> = 10..=1000;
 pub const TOOLTIP_DELAY_RANGE: std::ops::RangeInclusive<f32> = 0.0..=5.0;
 pub const TRACKBALL_SPEED_RANGE: std::ops::RangeInclusive<f32> = 0.1..=10.0;
@@ -112,6 +121,17 @@ pub struct NavigationOptions {
     /// middle of the window. Provisional default off.
     pub dialogs_under_mouse: bool,
     pub input_device: InputDevice,
+    /// Free Orbit (the tester, 2026-11-25): a two-axis
+    /// orbit tilts on over the top and under the bottom instead of stopping
+    /// just short of straight up or down, so it can turn round and round.
+    /// Default off. Camera and Light view keep the stop (a camera item has
+    /// no roll to stand upside down with).
+    pub unrestricted_rotation: bool,
+    /// Free Cursor (the tester, 2026-11-25, as Blender
+    /// does): during a drag in a view, a pointer that reaches the view's
+    /// edge comes back in at the opposite edge and the drag carries on, so
+    /// it never runs out of room. Default off.
+    pub unrestricted_cursor: bool,
 }
 impl Default for NavigationOptions {
     fn default() -> Self {
@@ -131,6 +151,8 @@ impl Default for NavigationOptions {
             keypad_enter_as_tab: false,
             dialogs_under_mouse: false,
             input_device: InputDevice::Mouse,
+            unrestricted_rotation: false,
+            unrestricted_cursor: false,
         }
     }
 }
@@ -309,6 +331,20 @@ impl super::Operandi {
                 &mut n.dialogs_under_mouse,
                 d.dialogs_under_mouse,
                 "Dialogs open at the pointer instead of mid-window",
+            );
+            rows::check_d(
+                ui,
+                UNRESTRICTED_ROTATION_LABEL,
+                &mut n.unrestricted_rotation,
+                d.unrestricted_rotation,
+                UNRESTRICTED_ROTATION_TIP,
+            );
+            rows::check_d(
+                ui,
+                UNRESTRICTED_CURSOR_LABEL,
+                &mut n.unrestricted_cursor,
+                d.unrestricted_cursor,
+                UNRESTRICTED_CURSOR_TIP,
             );
             rows::check_d(
                 ui,
@@ -563,6 +599,53 @@ mod tests {
         assert!(a.input_preferences.options.trackball_in(Some(false)));
         let o = NavigationOptions::default();
         assert!(o.trackball_in(Some(true)) && !o.trackball_in(None));
+    }
+    /// The tester (2026-11-25): Free Orbit lets a
+    /// two-axis orbit go on over the top instead of stopping short of it.
+    #[test]
+    fn unrestricted_rotation_orbits_over_the_top_and_round() {
+        let mut a = Operandi::empty();
+        a.run(Command::NewMesh);
+        let ctx = Context::default();
+        for _ in 0..2 {
+            draw(&mut a, &ctx, vec2(1440., 900.), vec![]);
+        }
+        let c = a.viewport_rect.center();
+        a.camera.pitch = 0.;
+        drag_orbit(&mut a, &ctx, c, c + vec2(0., 300.));
+        assert!(a.camera.pitch <= 1.5 + 1e-9, "off: stops short of the pole");
+        a.input_preferences.options.unrestricted_rotation = true;
+        a.camera.pitch = 0.;
+        // 250 points tilt 2 radians: past straight down, upside down.
+        drag_orbit(&mut a, &ctx, c, c + vec2(0., 250.));
+        assert!((a.camera.pitch - 2.).abs() < 1e-6, "{}", a.camera.pitch);
+        let (_, right, up, forward) = a.camera.basis();
+        assert!(right.dot(up).abs() < 1e-9 && up.dot(forward).abs() < 1e-9);
+        assert!(
+            (right.cross(up) - (-forward)).length() < 1e-9,
+            "right-handed"
+        );
+        // Round the rest of the way: back where it started (a full turn).
+        drag_orbit(&mut a, &ctx, c, c + vec2(0., 785.398_16));
+        assert!(a.camera.pitch.abs() <= std::f64::consts::PI);
+        let turned = a.camera.basis().3;
+        a.camera.pitch = 2. + 785.398_16 * 0.008 - std::f64::consts::TAU;
+        assert!(turned.distance(a.camera.basis().3) < 1e-6);
+    }
+    /// Within ±90° the view is what it always was (forward × world up).
+    #[test]
+    fn the_view_basis_is_unchanged_short_of_the_poles() {
+        let mut c = crate::camera::Camera::default();
+        for yaw in [-2.5, -0.3, 0., 0.7, 3.] {
+            for pitch in [-1.5, -0.6, 0., 0.4, 1.5] {
+                (c.yaw, c.pitch, c.roll) = (yaw, pitch, 0.);
+                let (_, right, up, forward) = c.basis();
+                let frame = crate::camera::up_frame();
+                let old_right = forward.cross(frame * glam::DVec3::Y).normalize();
+                assert!((right - old_right).length() < 1e-12, "{yaw} {pitch}");
+                assert!((up - old_right.cross(forward)).length() < 1e-12);
+            }
+        }
     }
     #[test]
     fn trackball_speed_scales_the_turn() {

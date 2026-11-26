@@ -114,21 +114,61 @@ fn apply_runs_once_and_drop_changes_nothing() {
     assert!(a.editor.is_armed());
 }
 
-/// CS-07 (approved deviation): Bevel waits for the click too; that press
-/// then drags the bevel anywhere as before.
+/// Edge Bevel and Vertex Bevel start at once too (2026-11-23): picked on a
+/// selection, each shows its gizmo with no click and leaves the mesh as it
+/// was until a drag.
 #[test]
-fn bevel_waits_then_its_first_press_drags_the_bevel() {
+fn edge_and_vertex_bevel_show_their_gizmo_at_once() {
+    let ctx = Context::default();
+    for (mode, tool) in [
+        (Mode::Edge, Tool::EdgeBevel),
+        (Mode::Vertex, Tool::VertexBevel),
+    ] {
+        let mut a = app(&ctx, mode);
+        let edge = a.editor.scene.active().unwrap().mesh.edges()[0];
+        match mode {
+            Mode::Edge => a.editor.scene.selection.edges = vec![edge],
+            _ => a.editor.scene.selection.vertices = vec![edge.0],
+        }
+        let before = points(&a);
+        a.activate(tool);
+        assert!(
+            a.editor.live.is_some() && !a.editor.is_armed(),
+            "{tool:?}: {}",
+            a.status
+        );
+        draw(&mut a, &ctx, SIZE, vec![]);
+        assert!(
+            !a.handles(a.viewport_rect).is_empty(),
+            "{tool:?}: the gizmo shows without a click"
+        );
+        assert_eq!(points(&a), before, "{tool:?}: picking it changed nothing");
+    }
+}
+
+/// Polygon Bevel starts at once (CS-Q01 revisited 2026-11-23): picking it
+/// shows its handles on the selection with no click and no change to the
+/// mesh, and a drag anywhere then bevels as before.
+#[test]
+fn bevel_shows_its_handles_at_once_and_drags_the_bevel() {
     let ctx = Context::default();
     let mut a = app(&ctx, Mode::Polygon);
     a.editor.scene.selection.faces = [0].into_iter().collect();
     let before = points(&a);
     a.activate(Tool::Bevel);
-    assert_eq!(a.editor.armed_tool(), Some(Tool::Bevel), "{}", a.status);
+    assert!(
+        a.editor.live.is_some() && !a.editor.is_armed(),
+        "{}",
+        a.status
+    );
     draw(&mut a, &ctx, SIZE, vec![]);
-    assert!(a.handles(a.viewport_rect).is_empty());
+    assert!(
+        !a.handles(a.viewport_rect).is_empty(),
+        "the gizmo shows without a click"
+    );
+    assert_eq!(points(&a), before, "picking Bevel changed nothing yet");
     let from = a.viewport_rect.left_top() + vec2(120., 120.);
     drag(&mut a, &ctx, from, vec2(0., -60.));
-    assert!(!a.editor.is_armed(), "{}", a.status);
     assert_eq!(a.editor.live_tool_label(), Some("Bevel"));
     assert_ne!(points(&a), before, "the drag bevelled: {}", a.status);
     // Vertex Extrude still starts at once.

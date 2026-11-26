@@ -1155,6 +1155,31 @@ impl Operandi {
             .is_some_and(|l| l.tool == Tool::EdgeExtend)
         {
             live_fields::edge_extend_attr(attr, value)
+        } else if let Some(l) = self
+            .editor
+            .live
+            .as_ref()
+            .filter(|l| l.tool == Tool::VertexBevel)
+            && ["level", "roundlevel"].contains(&attr.to_ascii_lowercase().as_str())
+        {
+            // Vertex Bevel's Round Level (VX-B02) is shown as Segments
+            // (2026-11-26); `level` still reads and sets it.
+            if value == "?" {
+                return Some(Ok(Some(l.params.vertex_round_level.to_string())));
+            }
+            let level = match value.parse::<u32>() {
+                Ok(n) if n <= operandi_core::VERTEX_BEVEL_MAX_ROUND_LEVEL => n,
+                _ => {
+                    return Some(Err(format!(
+                        "Round Level is a whole number 0–{}",
+                        operandi_core::VERTEX_BEVEL_MAX_ROUND_LEVEL
+                    )));
+                }
+            };
+            (
+                "vertex_segments".to_owned(),
+                crate::vertex_panel::vertex_bevel_level_to_segments(level).to_string(),
+            )
         } else {
             (attr.to_owned(), value.to_owned())
         };

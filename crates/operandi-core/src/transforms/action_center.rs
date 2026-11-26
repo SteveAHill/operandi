@@ -1087,6 +1087,101 @@ pub fn vertex_handle_frame(
     ))
 }
 
+/// What [`selection_normal`] averages.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum NormalOf {
+    /// The selected polygons' normals.
+    Polygons,
+    /// Each selected edge's normal: the average of its polygons' (the
+    /// diagonal on a box's edge).
+    Edges,
+    /// Each selected point's normal: the average of its polygons'.
+    Points,
+}
+
+/// The Bevels' handle direction (2026-11-23): the selection's average
+/// normal in world space, so the gizmo follows a polygon's normal, an
+/// edge's diagonal or a point's normal, and the average over a group. Under
+/// Symmetry only the primary side counts, as for the handle's place.
+/// `None` with nothing selected or when the normals cancel out (opposite
+/// polygons), so callers keep their single-element direction.
+pub fn selection_normal(base: &Scene, symmetry: crate::Symmetry, of: NormalOf) -> Option<DVec3> {
+    let item = base.active()?;
+    let mesh = &item.mesh;
+    let n = mesh.vertices.len() as u32;
+    let sel = &base.selection;
+    // Every point the selection touches, cut to the primary side.
+    let touched: Vec<u32> = match of {
+        NormalOf::Polygons => sel
+            .faces
+            .iter()
+            .filter(|&&f| (f as usize) < mesh.faces.len())
+            .flat_map(|&f| mesh.faces[f as usize].vertices.iter().copied())
+            .collect(),
+        NormalOf::Edges => sel.edges.iter().flat_map(|&(a, b)| [a, b]).collect(),
+        NormalOf::Points => sel.vertices.clone(),
+    };
+    let touched: Vec<u32> = touched.into_iter().filter(|&v| v < n).collect();
+    let side: std::collections::HashSet<u32> = handle_side_points(base, symmetry, &touched)
+        .into_iter()
+        .collect();
+    if side.is_empty() {
+        return None;
+    }
+    let sum = match of {
+        NormalOf::Polygons => sel
+            .faces
+            .iter()
+            .filter(|&&f| (f as usize) < mesh.faces.len())
+            .filter(|&&f| {
+                mesh.faces[f as usize]
+                    .vertices
+                    .iter()
+                    .all(|v| side.contains(v))
+            })
+            .map(|&f| mesh.normal(f as usize))
+            .sum::<DVec3>(),
+        NormalOf::Edges | NormalOf::Points => {
+            // The polygons around each point the selection touches, found in
+            // one pass over the mesh.
+            let mut around: std::collections::HashMap<u32, Vec<usize>> =
+                side.iter().map(|&v| (v, Vec::new())).collect();
+            for (f, face) in mesh.faces.iter().enumerate() {
+                for v in &face.vertices {
+                    if let Some(list) = around.get_mut(v) {
+                        list.push(f);
+                    }
+                }
+            }
+            let unit = |faces: &mut dyn Iterator<Item = usize>| {
+                faces
+                    .map(|f| mesh.normal(f))
+                    .sum::<DVec3>()
+                    .normalize_or_zero()
+            };
+            if of == NormalOf::Edges {
+                sel.edges
+                    .iter()
+                    .filter(|(a, b)| side.contains(a) && side.contains(b))
+                    .map(|(a, b)| {
+                        let b_faces = &around[b];
+                        unit(&mut around[a].iter().copied().filter(|f| b_faces.contains(f)))
+                    })
+                    .sum::<DVec3>()
+            } else {
+                sel.vertices
+                    .iter()
+                    .filter(|v| side.contains(v))
+                    .map(|v| unit(&mut around[v].iter().copied()))
+                    .sum::<DVec3>()
+            }
+        }
+    };
+    let world = base.world_matrix(item.id).ok()?;
+    let normal = world.transform_vector3(sum);
+    (normal.length() > 1e-9).then(|| normal.normalize())
+}
+
 /// The edge tools' handle frame (Edge Extrude, Weight, Bevel, Chamfer,
 /// Relax): the handle edge's midpoint ([`handle_edge`]), its neighbours'
 /// average normal and the in-plane direction into its first neighbour

@@ -7816,6 +7816,12 @@ hand-written (menu_forms.rs).
   them at once. An approved deviation, marked in the flag table. Vertex
   Extrude still starts at once. Once live, their drag anywhere and re-drag
   work as before.
+  - **Revisited 2026-11-23, approved 2026-11-26 (UIC-77):**
+    Polygon, Edge and Vertex Bevel start at once again, as the spec's
+    table has it. Pressing B showed the Tool Properties but no gizmo on the
+    selection until a click in the view, which a tester reported as a bug.
+    Vertex Bevel also gets its Inset arrow (see ACS-Q-HANDLE1), so all
+    three show a gizmo when picked. Edge Chamfer still waits for the click.
 - **CS-Q02** The first click lands on the mesh surface under the pointer
   even with snapping off (snapping on: the snapped point; off the mesh:
   the work plane). *Provisional.*
@@ -9550,7 +9556,7 @@ each question holds back are in `tests/ac_symmetry_rulebook.rs`
 
 | ID | Starting state and actions | What's unclear / what Operandi does |
 |---|---|---|
-| ACS-Q-HANDLE1 | Edge or vertex tool, several edges or points selected, picked in different orders; Symmetry on or off | **Answered (spec side, 2026-11-21):** Edge Bevel, Edge Extrude, Edge Chamfer and Vertex Extrude put the handle at the selection's bounding-box centre (pick order doesn't matter; under Symmetry, the primary side's box), arms starting about 25 px out. Edge Slide: one arrow across the first-picked edge at its midpoint; Vertex Slide: arrows along each edge leaving the first-picked point (pick order matters). Edge Relax and Vertex Bevel draw no handle (drag anywhere). *Built:* all of it except Vertex Slide still shows one rail arrow (from the first-picked point), not one per edge. Other vertex tools (Merge, Tear) keep the point nearest the box centre. |
+| ACS-Q-HANDLE1 | Edge or vertex tool, several edges or points selected, picked in different orders; Symmetry on or off | **Answered (spec side, 2026-11-21):** Edge Bevel, Edge Extrude, Edge Chamfer and Vertex Extrude put the handle at the selection's bounding-box centre (pick order doesn't matter; under Symmetry, the primary side's box), arms starting about 25 px out. Edge Slide: one arrow across the first-picked edge at its midpoint; Vertex Slide: arrows along each edge leaving the first-picked point (pick order matters). Edge Relax and Vertex Bevel draw no handle (drag anywhere). *Revisited 2026-11-23, approved 2026-11-26:* Vertex Bevel shows one Inset handle on the handle point along the selection's normal, drawn as a blue scale handle (a square end) rather than an arrow (the maintainer), so every Bevel shows a gizmo when picked; its drag off the arrow is unchanged. *Built:* all of it except Vertex Slide still shows one rail arrow (from the first-picked point), not one per edge. Other vertex tools (Merge, Tear) keep the point nearest the box centre. |
 | SNH-Q01 | Pen or Pen Slice, Snapping on with World Axis / Straight Line / Right Angle ticked | **Answered (spec side, 2026-11-21):** a dragged point locks when it is within Inner Range screen pixels of a lock line through the previous point, whatever the segment length; Snap Angle has no effect; locks act only while a point is dragged (press-drag to place, or moving one), never on a plain click; the point is projected onto the line; a point target in range still wins (SN2-37). *Built* (`snap_kinds::lock_segment`). |
 | SNH-Q02 | Solid Sketch, Symmetry on, a new node near the plane and near a snap target | **Answered (spec side, 2026-11-21):** the seam pulls within about 8 px (none with Symmetry off), snap targets pull within 8 px on node creation, and when both are in range the nearer on screen wins, the seam on a tie. *Built.* Moving a node still snaps with Inner Range and has no seam pull. |
 
@@ -9902,6 +9908,42 @@ Built without a behaviour spec (Jason approved the feature; none of this was obs
 - MR-Q06 Topology changes (any tool adding or removing polygons) while the mesh is multiresolution leave the detail unable to follow: stepping and Add Level refuse with a reason, the read-out says "polygons changed", Apply Multiresolution keeps the mesh as it is; undo restores.
 - MR-Q07 Attenuate (SCT-43) fades the current level's detail toward the smoothed level below (the level with no detail of its own); greyed at level 0 and on plain meshes. Its Amount (25 %) is the share of the remaining detail removed per full-weight dab.
 - MR-Q08 Command names are Operandi's own (`operandi.multires.*`) until the name map has the reference's; Convert to Multiresolution and Background to Multiresolution on the painting Utilities tab stay greyed (their behaviour is unknown). Render uses the level you are at (no separate render level). No sculpt layers, no default shortcuts for stepping.
+
+## Edge Bevel: Segments, Mitering, Loop Slide (2026-11-24 to 26, branch bevel-gizmos-mitering, proposed)
+
+A Windows tester's reports and requests, built from their screenshots; no
+Modo material. **Approved by the maintainer 2026-11-26** as built, with the
+Segments counting, Vertex Bevel's handle and Free Orbit/Free Cursor's place
+changed as noted.
+
+- **EBC-Q-CAP1 (changes N08 for one case).** At a strip's single end where
+  more polygons meet than its two sides and one end polygon, the edges
+  between them now end where they cross the end's profile and the old point
+  goes (it spiked back before). Concave corners, where they miss the
+  profile, keep N08. Edge Chamfer unchanged.
+- **EBC-Q-SEG1 (changes EBC-B3-02's panel name; approved 2026-11-26).**
+  Round Level is shown as Segments: the rows of polygons across the strip,
+  1 to 64, 1 being flat, any count (odd counts aren't measured). Edge
+  Chamfer's Segments always counted this way (EBC-D-02) and are unchanged.
+  Scripts: `segments`; `level` still sets 2 x level rows. Vertex Bevel and
+  the Mesh Stack's Edge and Vertex Bevel ops show Segments too; Vertex
+  Bevel's cap needs an even count above 1 (VX-B02's 2 x Round Level), so
+  an odd count steps on to the next even one, and `level` still works.
+  Mesh Stack ops saved with `level` load as 2 x level Segments, and ones
+  saved before Loop Slide load with it on (as they were built).
+- **EBC-Q-MO1 (fills EBC-Q03's Mitering for Edge Bevel).** Mitering Offset:
+  an edge this far beyond the bevel on each side, with a second handle.
+- **EBC-Q-LS1 (new option).** Loop Slide, Edge Bevel only, on by default
+  (2026-11-26: on is the measured result, EBC-B3-03, at corners that
+  aren't square; off keeps the full width through them).
+  Off: points of the polygons around the strip that it would reach move out
+  of its way (along their edge, or across the polygon beyond), so it keeps
+  its full width. On: nothing moves; the strip slides along the edges beside
+  it and narrows. `tool.attr edge.bevel loopSlide`.
+- **EBC-Q-CP1 (new option).** Mitering Style, Edge Bevel only, for corners
+  where rounded strips meet: Default (the default), Neutral, Uniform, Pinch.
+  Patch and Radial are built but hidden until finished.
+  `tool.attr edge.bevel miteringStyle` (`cornerPattern` still works).
 
 ## MeshBlend B1 (2026-11-24, branch claude/project-thread-20fok5, provisional)
 

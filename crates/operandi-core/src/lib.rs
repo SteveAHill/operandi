@@ -347,8 +347,8 @@ pub mod edge_bevel;
 #[path = "edges/edge_bevel_junctions.rs"]
 mod edge_bevel_junctions;
 pub use edge_bevel::{
-    EdgeBevelMode, EdgeBevelOptions, EdgeBevelPreset, EdgeBevelResult, EdgeBevelSettings,
-    EdgeBevelShape, EdgeEnd, edge_bevel_geometry, edge_bevel_with,
+    CornerPattern, EdgeBevelMode, EdgeBevelOptions, EdgeBevelPreset, EdgeBevelResult,
+    EdgeBevelSettings, EdgeBevelShape, EdgeEnd, edge_bevel_geometry, edge_bevel_with,
 };
 #[path = "edges/edge_commands.rs"]
 pub mod edge_commands;

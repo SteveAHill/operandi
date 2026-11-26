@@ -23,6 +23,8 @@ use dense_box::{DENSE_BOX_POLYGONS, box_corner_strokes, box_strokes, too_dense_f
 use operandi_core::click_select::{self, Click, ClickHow};
 use operandi_core::tool_card::{HandleAnchor, HandleAxes, HandleKind};
 use plane_handles::is_plane_handle;
+#[cfg(test)]
+pub(crate) use view_ui::scale_look_handle;
 pub(crate) mod bend_view;
 pub(crate) mod click_start_view;
 pub(crate) mod falloff_screen_view;
