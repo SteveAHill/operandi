@@ -144,6 +144,8 @@ mod create_utility;
 #[cfg(test)]
 #[path = "tools/ctrl_constrain_tests.rs"]
 mod ctrl_constrain_tests;
+#[path = "view/cursor_wrap.rs"]
+mod cursor_wrap;
 #[path = "create_tools/curve_hands_on.rs"]
 mod curve_hands_on;
 #[path = "create_tools/curve_tab.rs"]
@@ -900,6 +902,8 @@ struct Operandi {
     modal_owned_input: bool,
     layout_owned_input: bool,
     navigation: Option<input::Navigation>,
+    /// Free Cursor: the current drag's put-backs.
+    cursor_wrap: cursor_wrap::Wrap,
     i2_gesture_ticket: Option<operandi_core::ExtrudeStageTicket>,
     bindings_draft: BTreeMap<String, String>,
     rename_item: Option<u64>,
@@ -1768,6 +1772,7 @@ impl Operandi {
             modal_owned_input: false,
             layout_owned_input: false,
             navigation: None,
+            cursor_wrap: Default::default(),
             i2_gesture_ticket: None,
             bindings_draft: BTreeMap::new(),
             rename_item: None,

@@ -170,6 +170,10 @@ pub(crate) mod key {
     pub const SYMMETRY_PLANE: &str = "symmetry_plane";
     pub const TRACKBALL: &str = "trackball";
     pub const ORBIT_SELECTED: &str = "orbit_selected";
+    /// Preferences > Input > Remapping's two unrestricted options, shown
+    /// here too (the tester, 2026-11-25): app-wide, not this view's own.
+    pub const UNRESTRICTED_ROTATION: &str = "unrestricted_rotation";
+    pub const UNRESTRICTED_CURSOR: &str = "unrestricted_cursor";
     pub const CAMERA_ITEM: &str = "camera_item";
     pub const AMBIENT_INTENSITY: &str = "ambient_intensity";
     pub const AMBIENT_COLOR: &str = "ambient_color";
@@ -509,6 +513,22 @@ fn panel_tabs(camera: bool, cameras: &[String]) -> Vec<panel::Tab> {
                         key::ORBIT_SELECTED,
                         "Orbit Selected",
                         "Orbit turns the view around the selection's centre instead of the view's centre",
+                    ),
+                    check(
+                        key::UNRESTRICTED_ROTATION,
+                        crate::navigation_preferences::UNRESTRICTED_ROTATION_LABEL,
+                        &format!(
+                            "{} (every view; also in Preferences > Input > Remapping)",
+                            crate::navigation_preferences::UNRESTRICTED_ROTATION_TIP
+                        ),
+                    ),
+                    check(
+                        key::UNRESTRICTED_CURSOR,
+                        crate::navigation_preferences::UNRESTRICTED_CURSOR_LABEL,
+                        &format!(
+                            "{} (every view; also in Preferences > Input > Remapping)",
+                            crate::navigation_preferences::UNRESTRICTED_CURSOR_TIP
+                        ),
                     ),
                 ],
             )],
@@ -1246,6 +1266,12 @@ impl Operandi {
         let rows = all_rows(&tabs);
         let view = (!self.camera.through).then_some(self.camera.view);
         let mut values = panel_values(&rows, &self.display.settings, view, camera);
+        let o = self.input_preferences.options;
+        values.set(
+            key::UNRESTRICTED_ROTATION,
+            Value::Bool(o.unrestricted_rotation),
+        );
+        values.set(key::UNRESTRICTED_CURSOR, Value::Bool(o.unrestricted_cursor));
         // Camera Item: the camera this view looks through when it was
         // chosen here (or by a script), else (Current Selection).
         let chosen = self
@@ -1279,6 +1305,11 @@ impl Operandi {
         p.tab = Tab::ALL.get(state.tab).copied().unwrap_or_default();
         p.collapsed = state.folded;
         for k in &changes.keys {
+            // The unrestricted options are preferences (every view).
+            if let Some(pref) = unrestricted_pref(k) {
+                self.execute(&format!("pref.value {pref} {}", values.bool(k)));
+                continue;
+            }
             // The matcap rows run operandi.view3d.matcap (UIC-164).
             if let Some(line) = matcap_line(&values, k) {
                 self.execute(&line);
@@ -1730,7 +1761,23 @@ pub(crate) fn view3d_for_label(label: &str) -> Option<&'static str> {
     if [key::MATCAP, key::MATCAP_IMAGE, key::MATCAP_LOAD].contains(&row.key.as_str()) {
         return Some(MATCAP_COMMAND);
     }
+    if let Some(pref) = unrestricted_pref(&row.key) {
+        return Some(match pref {
+            "input.freeOrbit" => "pref.value input.freeOrbit ?",
+            _ => "pref.value input.freeCursor ?",
+        });
+    }
     view3d_command(&row.key).map(|(c, _)| c)
+}
+
+/// The preference an unrestricted row shows (Preferences > Input >
+/// Remapping's, the same for every view).
+fn unrestricted_pref(k: &str) -> Option<&'static str> {
+    match k {
+        key::UNRESTRICTED_ROTATION => Some("input.freeOrbit"),
+        key::UNRESTRICTED_CURSOR => Some("input.freeCursor"),
+        _ => None,
+    }
 }
 
 /// The Matcap style's command (an Operandi extra; UIC-165 marks it

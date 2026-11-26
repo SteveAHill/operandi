@@ -207,6 +207,8 @@ pub(crate) static PREFS: &[Pref] = &[
         "Open Dialogs under Mouse",
         dialogs_under_mouse
     ),
+    remap_bool!("input.freeOrbit", "Free Orbit", unrestricted_rotation),
+    remap_bool!("input.freeCursor", "Free Cursor", unrestricted_cursor),
     remap_bool!("input.trackball", "Trackball Rotation", trackball),
     remap_bool!(
         "input.trackballOverride",

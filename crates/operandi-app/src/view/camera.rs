@@ -290,14 +290,21 @@ impl Camera {
             View::Left => -DVec3::X,
         };
         let forward = -toward;
-        let up_seed = if self.view == View::Top {
-            -DVec3::Z
-        } else if self.view == View::Bottom {
-            DVec3::Z
+        let right = if matches!(self.view, View::Perspective | View::Orthographic) {
+            // Free Orbit (2026-11-25): the right vector
+            // follows the yaw alone, so a pitch over the top (past straight
+            // down or up) turns the view upside down smoothly instead of
+            // flipping it round. Within ±90° it is forward × world up, as
+            // before.
+            DVec3::new(self.yaw.cos(), 0., -self.yaw.sin())
         } else {
-            DVec3::Y
+            let up_seed = match self.view {
+                View::Top => -DVec3::Z,
+                View::Bottom => DVec3::Z,
+                _ => DVec3::Y,
+            };
+            forward.cross(up_seed).normalize()
         };
-        let right = forward.cross(up_seed).normalize();
         let up = right.cross(forward);
         let (right, up) =
             if self.roll != 0. && matches!(self.view, View::Perspective | View::Orthographic) {
@@ -391,6 +398,16 @@ impl Camera {
     pub fn orbit_by(&mut self, dx: f64, dy: f64) {
         self.yaw -= dx * ORBIT_SPEED;
         self.pitch = (self.pitch + dy * ORBIT_SPEED).clamp(-ORBIT_PITCH, ORBIT_PITCH);
+    }
+    /// Free Orbit (Preferences > Input > Remapping, the
+    /// tester 2026-11-25): `orbit_by` without the stop short of the poles.
+    /// The eye tilts on over the top and round; the pitch stays within
+    /// ±180° (a full turn is the same view).
+    pub fn orbit_free_by(&mut self, dx: f64, dy: f64) {
+        use std::f64::consts::{PI, TAU};
+        self.yaw -= dx * ORBIT_SPEED;
+        let pitch = (self.pitch + dy * ORBIT_SPEED + PI).rem_euclid(TAU) - PI;
+        self.pitch = pitch;
     }
     /// NAV-03 look around (Alt+right drag): the eye stays put and the view
     /// turns about it, by the same angles a drag of (`dx`, `dy`) orbits.

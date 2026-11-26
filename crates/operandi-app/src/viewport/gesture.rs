@@ -105,7 +105,16 @@ impl Operandi {
             }
             input::NavigationKind::Orbit => {
                 self.camera.unfix_for_orbit();
-                self.camera.orbit_by(delta.x as f64, delta.y as f64);
+                // Free Orbit (the tester, 2026-11-25). Camera and Light view
+                // keep the stop: a camera item has no roll to stand upside
+                // down with.
+                if self.input_preferences.options.unrestricted_rotation
+                    && !self.camera.looks_through()
+                {
+                    self.camera.orbit_free_by(delta.x as f64, delta.y as f64);
+                } else {
+                    self.camera.orbit_by(delta.x as f64, delta.y as f64);
+                }
             }
             // Handled above.
             input::NavigationKind::Look
