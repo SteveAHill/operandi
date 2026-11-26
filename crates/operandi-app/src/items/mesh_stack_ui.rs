@@ -533,6 +533,8 @@ pub(crate) fn op_icon(id: &str) -> Option<crate::icons::Icon> {
         "symmetry.tool.item" => "symmetry",
         "pmodel.workplane.item" => "workplane",
         "falloff.meshop.item" => "falloff",
+        "deform.bend.item" => "bend",
+        "deform.twist.item" => "twist",
         "uv.create.item" => "uv-project",
         "uv.relax.item" => "uv-relax",
         "uv.pelt.item" => "uv-pelt",

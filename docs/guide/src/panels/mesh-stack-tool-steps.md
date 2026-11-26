@@ -100,6 +100,19 @@ replaces it. Turn a step's eye off and it sets nothing.
 | **Set Work Plane** | Primitives and curve shapes are made on this plane: moved by **Offset X/Y/Z** and turned by **Angle X**, then **Y**, then **Z**, about the mesh's origin. Geometry that's already there doesn't move. |
 | **Falloff** | Steps that move points move each point only by the falloff's strength there: fully where it's 100%, not at all where it's 0%. The step keeps its own copy of the active falloff from when you add it; **Use Active Falloff** and **Clear Falloff** in its properties change it. Steps that add or remove points aren't shaped, and their row says so. A Falloff step with no falloff turns off the one below it. |
 
+## Deformer steps
+
+Deformers live in their own **Deformers** folder when you add a step. They
+only move points: they never add or remove any, so the mesh's polygons stay
+the same. Each one moves the points its **Selection** picked (every point
+with no Selection) by its **Strength**: 100% moves them fully, 50% half
+way. Put a **Falloff** step below a deformer to fade it out across the mesh.
+
+| Step | What it does |
+|---|---|
+| **Bend** | Curls the points into an arc. Points further along the **Spine** (from **Center**) turn further, up to the full **Angle** at the spine's end, around **Axis**. Points beyond the end turn with it; points behind the center stay, or mirror with **Both Sides**. |
+| **Twist** | Turns the points around a line through **Center** along **Axis**. Points at the center don't turn; points at **Length** along the axis, and beyond, turn by the full **Angle**. |
+
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through
 unchanged, so the rest of the stack still works.

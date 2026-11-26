@@ -8927,6 +8927,15 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   point count run unshaped with a note. Only positional falloffs (Linear,
   Radial, Cylinder, Noise); selection, element and vertex-map falloffs and
   per-op falloff override not built. An empty step clears the one below.
+- **MOQ-68 Deformer steps, provisional.** No deformer channels in
+  TYPE-IDS, so ids (`deform.bend.item`, `deform.twist.item`), values and
+  defaults are Operandi's own, in a "Deformers" Add folder. A deformer
+  moves only points (Selection by points; none = all) by Strength, in mesh
+  space; shaping comes from a Falloff step below (MOQ-67), not a falloff of
+  its own. Bend uses the Bend tool's kernel (Center = its base; an Axis
+  along the Spine leaves the points). Twist turns by Angle x clamp(distance
+  along Axis / Length, 0, 1). Angle starts at 90°. Plan:
+  /mnt/project-files/meshops-deformers-2026-11-26/DEFORMERS-PLAN.md.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

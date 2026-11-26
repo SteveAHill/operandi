@@ -442,6 +442,8 @@ pub mod meshblend_spike;
 mod meshop_arc;
 #[path = "meshops/meshop_assign_selection_set.rs"]
 mod meshop_assign_selection_set;
+#[path = "meshops/meshop_bend.rs"]
+mod meshop_bend;
 #[path = "meshops/meshop_bridge.rs"]
 mod meshop_bridge;
 #[path = "meshops/meshop_chamfer_edit.rs"]
@@ -468,6 +470,8 @@ mod meshop_curve_sweep;
 mod meshop_curve_winding;
 #[path = "meshops/meshop_cutter_common.rs"]
 mod meshop_cutter_common;
+#[path = "meshops/meshop_deformer_common.rs"]
+mod meshop_deformer_common;
 #[path = "meshops/meshop_edge_slide.rs"]
 mod meshop_edge_slide;
 #[path = "meshops/meshop_edges_to_curves.rs"]
@@ -510,6 +514,8 @@ mod meshop_text;
 mod meshop_thicken;
 #[path = "meshops/meshop_tool_pipe.rs"]
 pub mod meshop_tool_pipe;
+#[path = "meshops/meshop_twist.rs"]
+mod meshop_twist;
 #[path = "meshops/meshop_types.rs"]
 pub mod meshop_types;
 #[path = "meshops/meshop_uv_flip.rs"]

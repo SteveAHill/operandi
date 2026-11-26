@@ -658,6 +658,8 @@ pub(crate) fn builtin() -> Vec<Arc<dyn OpDef>> {
     table.extend(crate::meshop_tool_pipe::entries());
     // The Deform finish tools' ops (mesh_stack_deform.rs).
     table.extend(crate::mesh_stack_deform::entries());
+    table.extend(crate::meshop_bend::entries());
+    table.extend(crate::meshop_twist::entries());
     table.extend(crate::curve_ops::entries());
     table.extend(crate::meshop_curve_fill::entries());
     table.extend(crate::meshop_curve_rebuild::entries());
