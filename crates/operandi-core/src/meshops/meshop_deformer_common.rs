@@ -23,13 +23,22 @@ pub(crate) fn strength() -> Field {
 /// Moves the chosen points of the op's input to `to(p)`, by `strength`
 /// (0..1) of the way.
 pub(crate) fn deform(ctx: &OpContext, strength: f64, to: impl Fn(DVec3) -> DVec3) -> Result<Mesh> {
+    deform_points(ctx, strength, |_, p| to(p))
+}
+
+/// [`deform`] where the new place also depends on the point's number.
+pub(crate) fn deform_points(
+    ctx: &OpContext,
+    strength: f64,
+    to: impl Fn(usize, DVec3) -> DVec3,
+) -> Result<Mesh> {
     if !strength.is_finite() {
         return Err("Strength must be a number".into());
     }
     let mut out = ctx.input.clone();
     let mut moved = |i: usize| {
         if let Some(p) = out.vertices.get_mut(i) {
-            let q = to(*p);
+            let q = to(i, *p);
             if q.is_finite() {
                 *p += (q - *p) * strength;
             }
@@ -68,4 +77,21 @@ pub(crate) fn axis_of(axis: u32, what: &str) -> Result<DVec3> {
         2 => Ok(DVec3::Z),
         _ => Err(format!("{what} Axis must be 0 (X), 1 (Y) or 2 (Z)")),
     }
+}
+
+/// A Map Name row's weight map on `mesh`; an empty name means every
+/// point weighs 1.
+pub(crate) fn weights<'m>(
+    mesh: &'m Mesh,
+    name: &str,
+    what: &str,
+) -> Result<Option<&'m std::collections::BTreeMap<u32, f64>>> {
+    if name.trim().is_empty() {
+        return Ok(None);
+    }
+    mesh.attributes
+        .point_weights
+        .get(name)
+        .map(Some)
+        .ok_or_else(|| format!("{what}: the mesh has no weight map \u{201c}{name}\u{201d}"))
 }

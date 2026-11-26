@@ -884,7 +884,7 @@ pub enum TransferSampling {
 }
 
 /// The target points' normals: the average of their polygons'.
-fn point_normals(mesh: &Mesh) -> Vec<DVec3> {
+pub(crate) fn point_normals(mesh: &Mesh) -> Vec<DVec3> {
     let mut sums = vec![DVec3::ZERO; mesh.vertices.len()];
     for f in 0..mesh.faces.len() {
         if mesh.is_polyline(f) {

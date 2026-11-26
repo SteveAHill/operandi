@@ -486,6 +486,8 @@ mod meshop_hard_edge;
 mod meshop_loop_slice;
 #[path = "meshops/meshop_magnet.rs"]
 mod meshop_magnet;
+#[path = "meshops/meshop_morph_influence.rs"]
+mod meshop_morph_influence;
 #[path = "meshops/meshop_part_tag.rs"]
 mod meshop_part_tag;
 #[path = "meshops/meshop_pen_slice.rs"]
@@ -494,6 +496,8 @@ mod meshop_pen_slice;
 mod meshop_polygon_type;
 #[path = "meshops/meshop_primitive_slice.rs"]
 mod meshop_primitive_slice;
+#[path = "meshops/meshop_push_influence.rs"]
+mod meshop_push_influence;
 #[path = "meshops/meshop_radial_sweep.rs"]
 mod meshop_radial_sweep;
 #[path = "meshops/meshop_rotate_effector.rs"]
@@ -534,6 +538,8 @@ mod meshop_uv_to_mesh;
 mod meshop_uv_unwrap_relax;
 #[path = "meshops/meshop_vertex_map_common.rs"]
 mod meshop_vertex_map_common;
+#[path = "meshops/meshop_weight_influence.rs"]
+mod meshop_weight_influence;
 #[path = "rigging/pose_tool.rs"]
 pub mod pose_tool;
 #[path = "rigging/rig.rs"]

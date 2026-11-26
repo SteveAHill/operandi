@@ -8945,6 +8945,11 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   turn X/Y/Z, then move, about Center; starts as no change), Rotate
   Effector (`deform.rotate.item`), Magnet (`deform.magnet.item`: Offset
   times (1 - (d/Radius)^2)^2).
+  Batch 11: Weight Influence (`deform.weightInfluence.item`: Offset x
+  map weight, unmapped points stay), Push Influence
+  (`deform.pushInfluence.item`: along averaged polygon normals x Distance
+  x optional map weight), Morph Influence (`deform.morphInfluence.item`:
+  relative morph offsets x Strength). A missing map fails the step.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

@@ -115,6 +115,9 @@ way. Put a **Falloff** step below a deformer to fade it out across the mesh.
 | **Transform Effector** | Moves, turns and scales the points about **Center**: scaled by **Scale X/Y/Z** first, then turned by **Rotation X**, then **Y**, then **Z**, then moved by **Position X/Y/Z**. A new step changes nothing. |
 | **Rotate Effector** | Turns the points by **Angle** around a line through **Center** along **Axis**. |
 | **Magnet** | Pulls the points near **Center** by **Offset X/Y/Z**: fully at the center, fading smoothly to nothing at **Radius**. |
+| **Weight Influence** | Moves each point by **Offset X/Y/Z** times its value in the weight map named in **Map Name**, so painting the map paints the move. Points the map doesn't cover stay. |
+| **Push Influence** | Pushes each point out along its normal by **Distance**. With a **Map Name**, each point is pushed by its share of that weight map. |
+| **Morph Influence** | Moves each point by its offset in the morph map named in **Map Name**, times **Strength**, so you can dial a morph in partway, or past 100%. |
 
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through
