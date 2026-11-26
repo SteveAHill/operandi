@@ -486,3 +486,13 @@ mod panel_bevel_and_mitering {
         }
     }
 }
+
+/// Vertex Bevel's Inset handle is a blue scale handle, not an arrow (the
+/// maintainer, 2026-11-26); the other Bevels keep arrows.
+#[test]
+fn vertex_bevel_shows_a_scale_handle() {
+    use crate::viewport::scale_look_handle;
+    assert!(scale_look_handle(Tool::VertexBevel, 0));
+    assert!(!scale_look_handle(Tool::EdgeBevel, 0));
+    assert!(!scale_look_handle(Tool::Bevel, 0));
+}

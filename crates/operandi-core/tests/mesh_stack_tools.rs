@@ -600,3 +600,27 @@ pub(crate) fn quad() -> Mesh {
     m.validate().unwrap();
     m
 }
+
+/// Bevel ops saved with Round Level `level` (before 2026-11-26) load as
+/// 2 x level Segments, and an old Edge Bevel op keeps Loop Slide on, as it
+/// was built, so a saved scene reopens unchanged.
+#[test]
+fn bevel_ops_saved_with_round_level_load_as_segments() {
+    use operandi_core::mesh_stack_tools::{EdgeBevelOp, VertexBevelOp};
+    let old = json!({
+        "mode": 0, "inset": 0.1, "useMat": false, "matName": "", "level": 2,
+        "sharp": false, "shape": 0, "mitering": 0.0, "coplanar": false,
+        "depth": 1.0, "boundExtend": true
+    });
+    let op: EdgeBevelOp = serde_json::from_value(old).unwrap();
+    assert_eq!((op.segments, op.loop_slide), (4, true));
+    let saved = serde_json::to_value(&op).unwrap();
+    assert!(saved.get("level").is_none(), "{saved}");
+    assert_eq!(serde_json::from_value::<EdgeBevelOp>(saved).unwrap(), op);
+    // A new op starts flat with Loop Slide off, as the tool does.
+    let new = EdgeBevelOp::default();
+    assert_eq!((new.segments, new.loop_slide), (1, false));
+    let old = json!({ "inset": 0.1, "useMat": false, "matName": "", "level": 0 });
+    let op: VertexBevelOp = serde_json::from_value(old).unwrap();
+    assert_eq!(op.segments, 1);
+}

@@ -564,7 +564,7 @@ fn edge_bevel_chamfer_relax_rows_shortcut_handle_and_bridge() {
         Some(Tool::EdgeChamfer)
     );
     b.fields.insert("chamfer_offset".into(), "0.1 m".into());
-    b.fields.insert("chamfer_segments".into(), "2".into());
+    b.fields.insert("chamfer_segments".into(), "3".into());
     assert!(b.confirm_fields(), "{}", b.status);
     b.run(Command::Drop);
     assert_eq!(
@@ -681,7 +681,7 @@ fn edge_bevel_chamfer_options_by_command_and_fields() {
     assert!(a.field_rects.contains_key("chamfer_segments"));
     for command in [
         "tool.attr edge.chamfer offset 0.1",
-        "tool.attr edge.chamfer segments 2",
+        "tool.attr edge.chamfer segments 3",
         "tool.attr edge.chamfer shape square",
         "tool.attr edge.chamfer useMaterial on",
         "tool.attr edge.chamfer material Trim",
@@ -693,7 +693,7 @@ fn edge_bevel_chamfer_options_by_command_and_fields() {
     a.execute("tool.attr edge.chamfer shape bevelled");
     assert_eq!(a.status, "Shape: round, square or sharp");
     // The field shows what the command set.
-    assert_eq!(a.fields["chamfer_segments"], "2");
+    assert_eq!(a.fields["chamfer_segments"], "3");
     a.run(Command::Drop);
     let mesh = &a.editor.scene.active().unwrap().mesh;
     assert_eq!(
@@ -867,7 +867,7 @@ fn edge_bevel_shape_and_depth_follow_ebc_q12() {
     for tool in ["edge.bevel", "edge.chamfer"] {
         a.execute(&format!("tool.set {tool} on"));
         let bevel = tool == "edge.bevel";
-        // Both show Segments, 0 flat (2026-11-25).
+        // Both show Segments, 1 flat (2026-11-26).
         let (rows_label, rows) = ("Segments", "segments");
         a.execute(&format!("tool.attr {tool} offset 0.1"));
         // Which of Segments / Edge Shape / Depth are greyed.
@@ -915,7 +915,7 @@ fn edge_bevel_shape_and_depth_follow_ebc_q12() {
                 assert_eq!((counts(&a), middle(&a)), (caps, Some(0.5)), "{change}");
             }
             a.execute(&format!("tool.attr {tool} depth 1"));
-            a.execute(&format!("tool.attr {tool} {rows} 0"));
+            a.execute(&format!("tool.attr {tool} {rows} 1"));
         }
         // EBS-04 end caps: Edge Bevel one 6-sided end face, Edge Chamfer a
         // triangle and a 5-sided face.
@@ -937,7 +937,7 @@ fn edge_bevel_shape_and_depth_follow_ebc_q12() {
         );
         // Round with a middle point: on the arc at 100%, halfway at 50%.
         a.execute(&format!("tool.attr {tool} shape round"));
-        a.execute(&format!("tool.attr {tool} {rows} 1"));
+        a.execute(&format!("tool.attr {tool} {rows} 2"));
         assert_eq!(greyed(&a), [false, false, false], "{tool}");
         let arc = 0.4 + 0.1 * 0.5f64.sqrt();
         assert!((middle(&a).unwrap() - arc).abs() < 1e-6, "{tool}");

@@ -279,7 +279,7 @@ impl Operandi {
                 "inset" | "offset" | "width" => format!("{} m", p.chamfer.offset),
                 "mitering" | "miteringoffset" => format!("{} m", o.support),
                 "level" => (p.chamfer.segments / 2).to_string(),
-                "segments" => p.chamfer.segments.saturating_sub(1).to_string(),
+                "segments" => p.chamfer.segments.to_string(),
                 "shape" => format!("{:?}", o.shape).to_ascii_lowercase(),
                 "depth" => format!("{} %", p.chamfer.depth),
                 "parallel" => (o.parallel as u8).to_string(),
@@ -335,13 +335,14 @@ impl Operandi {
                     }
                     p.chamfer.segments = (2 * level as u32).max(1);
                 }
-                // Segments as the panel shows them: 0 is flat (2026-11-25).
+                // Segments as the panel shows them: the rows across the
+                // strip, 1 being flat (the maintainer, 2026-11-26).
                 "segments" => {
                     let n = numeric::parse_quantity(value, numeric::Quantity::Scalar)?;
-                    if n.fract() != 0. || !(0. ..=63.).contains(&n) {
-                        return Err("Segments is a whole number 0–63".into());
+                    if n.fract() != 0. || !(1. ..=64.).contains(&n) {
+                        return Err("Segments is a whole number 1–64".into());
                     }
-                    p.chamfer.segments = n as u32 + 1;
+                    p.chamfer.segments = n as u32;
                 }
                 "shape" => {
                     o.shape = match value.to_ascii_lowercase().as_str() {
@@ -406,7 +407,7 @@ impl Operandi {
             if bevel {
                 self.sync_numeric_value("ebc_mitering", mitering, " m");
             }
-            self.sync_numeric_value("chamfer_segments", segments.saturating_sub(1) as f64, "");
+            self.sync_numeric_value("chamfer_segments", segments as f64, "");
         }
     }
 

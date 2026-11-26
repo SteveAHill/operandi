@@ -522,15 +522,17 @@ pub(crate) fn new_polygons(ctx: &OpContext, mut mesh: Mesh) -> Mesh {
 pub(crate) const NEW_POLYGON: &[(&str, &str)] = &[("new", "New Polygon")];
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", from = "EdgeBevelOpSaved")]
 pub struct EdgeBevelOp {
     /// 0 Inset, 1 Width.
     pub mode: u32,
     pub inset: f64,
     pub use_mat: bool,
     pub mat_name: String,
-    /// Round Level: the profile has 2 × Level segments.
-    pub level: u32,
+    /// Rows of polygons across the strip, 1 being flat (the tool's
+    /// Segments, 2026-11-26). Saved before then as Round Level `level`
+    /// (2 × level rows), which still loads.
+    pub segments: u32,
     pub sharp: bool,
     /// 0 Round, 1 Square, 2 Sharp.
     pub shape: u32,
@@ -539,6 +541,10 @@ pub struct EdgeBevelOp {
     /// Fraction (1 = 100%).
     pub depth: f64,
     pub bound_extend: bool,
+    /// Edge Bevel's Loop Slide (EBC-Q-LS1), off for a new op as on the
+    /// tool. Ops saved before it existed load with it on, which is how
+    /// they were built, so a saved scene reopens unchanged.
+    pub loop_slide: bool,
 }
 impl Default for EdgeBevelOp {
     fn default() -> Self {
@@ -547,13 +553,57 @@ impl Default for EdgeBevelOp {
             inset: 0.,
             use_mat: false,
             mat_name: String::new(),
-            level: 0,
+            segments: 1,
             sharp: false,
             shape: 0,
             mitering: 0.,
             coplanar: false,
             depth: 1.,
             bound_extend: true,
+            loop_slide: false,
+        }
+    }
+}
+/// [`EdgeBevelOp`] as saved: older scenes have `level` and no `segments`
+/// or `loopSlide`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct EdgeBevelOpSaved {
+    mode: u32,
+    inset: f64,
+    use_mat: bool,
+    mat_name: String,
+    #[serde(default)]
+    level: Option<u32>,
+    #[serde(default)]
+    segments: Option<u32>,
+    sharp: bool,
+    shape: u32,
+    mitering: f64,
+    coplanar: bool,
+    depth: f64,
+    bound_extend: bool,
+    #[serde(default)]
+    loop_slide: Option<bool>,
+}
+impl From<EdgeBevelOpSaved> for EdgeBevelOp {
+    fn from(s: EdgeBevelOpSaved) -> Self {
+        Self {
+            mode: s.mode,
+            inset: s.inset,
+            use_mat: s.use_mat,
+            mat_name: s.mat_name,
+            segments: s
+                .segments
+                .unwrap_or_else(|| 2 * s.level.unwrap_or(0))
+                .max(1),
+            sharp: s.sharp,
+            shape: s.shape,
+            mitering: s.mitering,
+            coplanar: s.coplanar,
+            depth: s.depth,
+            bound_extend: s.bound_extend,
+            loop_slide: s.loop_slide.unwrap_or(true),
         }
     }
 }
@@ -580,7 +630,7 @@ impl TypedOp for EdgeBevelOp {
         }
         let settings = crate::EdgeBevelSettings {
             width: self.inset,
-            rows: (2 * self.level).max(1),
+            rows: self.segments.clamp(1, 64),
             depth: self.depth * 100.,
             chamfer: false,
             options: crate::EdgeBevelOptions {
@@ -588,6 +638,7 @@ impl TypedOp for EdgeBevelOp {
                 shape: bevel_shape(self.shape)?,
                 use_material: self.use_mat,
                 material: self.mat_name.clone(),
+                loop_slide: self.loop_slide,
                 ..Default::default()
             },
         };
@@ -827,9 +878,10 @@ pub(crate) fn edge_entries() -> Vec<Arc<dyn OpDef>> {
     let mut bevel = vec![
         choice("mode", "Mode", &["Inset", "Width"]),
         distance("inset", "Value"),
-        Field::new("level", "Round Level", FieldKind::Count { min: 0, max: 64 }),
+        Field::new("segments", "Segments", FieldKind::Count { min: 1, max: 64 }),
         choice("shape", "Edge Shape", &["Round", "Square", "Sharp"]),
         Field::new("depth", "Depth", FieldKind::Percent),
+        check("loopSlide", "Loop Slide"),
     ];
     bevel.extend(material());
     // Saved and kept, not built yet (MOQ-26).
@@ -949,13 +1001,52 @@ fn chosen_points(ctx: &OpContext) -> Vec<u32> {
     out.into_iter().collect()
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", from = "VertexBevelOpSaved")]
 pub struct VertexBevelOp {
     pub inset: f64,
     pub use_mat: bool,
     pub mat_name: String,
-    pub level: u32,
+    /// Segments along each side of the cap, 1 being flat (2026-11-26); an
+    /// odd count above 1 builds the next even one (the cap grid needs it).
+    /// Saved before then as Round Level `level` (2 × level), which still
+    /// loads.
+    pub segments: u32,
+}
+impl Default for VertexBevelOp {
+    fn default() -> Self {
+        Self {
+            inset: 0.,
+            use_mat: false,
+            mat_name: String::new(),
+            segments: 1,
+        }
+    }
+}
+/// [`VertexBevelOp`] as saved: older scenes have `level`, not `segments`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+struct VertexBevelOpSaved {
+    inset: f64,
+    use_mat: bool,
+    mat_name: String,
+    #[serde(default)]
+    level: Option<u32>,
+    #[serde(default)]
+    segments: Option<u32>,
+}
+impl From<VertexBevelOpSaved> for VertexBevelOp {
+    fn from(s: VertexBevelOpSaved) -> Self {
+        Self {
+            inset: s.inset,
+            use_mat: s.use_mat,
+            mat_name: s.mat_name,
+            segments: s
+                .segments
+                .unwrap_or_else(|| 2 * s.level.unwrap_or(0))
+                .max(1),
+        }
+    }
 }
 impl TypedOp for VertexBevelOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
@@ -967,7 +1058,10 @@ impl TypedOp for VertexBevelOp {
             ctx.input,
             &chosen_points(ctx),
             self.inset,
-            self.level,
+            // Round Level: half the segments, an odd count rounded up.
+            (self.segments.max(1) / 2
+                + u32::from(self.segments > 1 && !self.segments.is_multiple_of(2)))
+            .min(crate::VERTEX_BEVEL_MAX_ROUND_LEVEL),
             None,
         )?;
         Ok(mesh)
@@ -1131,7 +1225,7 @@ pub(crate) fn vertex_entries() -> Vec<Arc<dyn OpDef>> {
             true,
             vec![
                 distance("inset", "Value"),
-                Field::new("level", "Round Level", FieldKind::Count { min: 0, max: 64 }),
+                Field::new("segments", "Segments", FieldKind::Count { min: 1, max: 64 }),
                 // Vertex Bevel's kernel has no Use Material yet (MOQ-26).
                 hidden("useMat"),
                 hidden("matName"),

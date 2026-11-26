@@ -1632,21 +1632,23 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
     // middle points, which Round Level 0 / Segments 1 doesn't have (EBS-02).
     let round = p.edge_bevel.shape == EdgeBevelShape::Round;
     let corner_shape = "Square and Sharp ignore this; they always run through the original edge";
-    // Segments (the tester, 2026-11-25: Round Level replaced by Segments,
-    // "0 means flat"): the edges added across the strip from one side to
-    // the other, so Segments N gives N + 1 rows (`chamfer.segments`).
-    // Round Level L was 2·L rows (EBC-B3-02).
+    // Segments (the tester, 2026-11-25, Round Level replaced by Segments;
+    // counting fixed by the maintainer, 2026-11-26): the rows of polygons
+    // across the strip, 1 to 64, 1 being one flat strip. Edge Chamfer's
+    // Segments always counted this way (EBC-D-02), so the two tools and
+    // their scripts agree. Round Level L is 2·L rows (EBC-B3-02); scripts
+    // can still set `level`.
     f.field(
         whole(
             "chamfer_segments",
             "Segments",
-            (0., 63.),
-            "Segments requires an integer from 0 to 63",
-            |p| p.chamfer.segments.saturating_sub(1) as f64,
-            |p, n| p.chamfer.segments = n + 1,
+            (1., 64.),
+            "Segments requires an integer from 1 to 64",
+            |p| p.chamfer.segments as f64,
+            |p, n| p.chamfer.segments = n,
         )
         .enabled_if(round, corner_shape)
-        .tip("Edges added across the bevel, from one side to the other. 0 is one flat strip"),
+        .tip("Rows of polygons across the bevel. 1 is one flat strip"),
     );
     let shape = pick(
         "edge-bevel-shape",
@@ -1663,7 +1665,7 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
     let depth_why = if !round {
         corner_shape
     } else {
-        "Segments 0 is one flat strip; raise Segments to use Depth"
+        "Segments 1 is one flat strip; raise Segments to use Depth"
     };
     f.field(shape).field(
         plain(
@@ -1676,8 +1678,7 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
         .tip("100% is the full round profile; lower values flatten it toward a straight chamfer"),
     );
     if bevel {
-        // A tester's request (2026-11-24), on by default: a bevel follows
-        // the edges around it.
+        // A tester's request (2026-11-24), off by default (EBC-Q-LS1).
         f.field(
             check(
                 "edge_bevel_loop_slide",
@@ -1706,7 +1707,7 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
                 |p| p.edge_bevel.corner,
                 |p, c| p.edge_bevel.corner = c,
             )
-            .enabled_if(round && p.chamfer.segments >= 2, "Mitering Style fills corners of rounded strips: use Round with Segments 1 or more")
+            .enabled_if(round && p.chamfer.segments >= 2, "Mitering Style fills corners of rounded strips: use Round with Segments 2 or more")
             .tip("How bevelled strips meet at a corner. Default: a rounded corner, rows wrapping around in an even grid. Neutral: a rounded corner whose lines run straight up into it. Uniform: rows nest as smooth arches under a pointed arch. Pinch: rows meet in V seams under an arch pinched to a spike"),
         );
     }

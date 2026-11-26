@@ -3,7 +3,7 @@
 
 **Edge Bevel** rounds the selected edges off with new rows of polygons; **Edge Chamfer** cuts them flat.
 
-![The top front edge of a 1 m cube rounded with Edge Bevel: Inset 0.15 m, Segments 5](../images/edge-bevel.png)
+![The top front edge of a 1 m cube rounded with Edge Bevel: Inset 0.15 m, Segments 6](../images/edge-bevel.png)
 
 ## How to use
 
@@ -27,11 +27,11 @@
 | **Mode** | **Inset** measures along the sides; **Width** measures across the corner, so the sides move further on sharp corners. | Inset |
 | **Inset** (or **Width**) | How far the bevel reaches from the edge. | 0 m |
 | **Mitering Offset** | Edge Bevel: adds an edge this far beyond the bevel on each side, to hold its shape when smoothed. 0 adds none. | 0 m |
-| **Segments** | How many edges run across the bevel from one side to the other; 0 is a flat strip. | 0 |
+| **Segments** | How many rows of polygons run across the bevel; 1 is a flat strip. Edge Bevel and Edge Chamfer count the same way. | 1 |
 | **Edge Shape** | **Round**, or **Square** and **Sharp** (two flat strips meeting at the original edge). | Round |
-| **Depth** | 100% is the full round profile; lower values flatten it toward a chamfer. Needs **Segments** 1 or more. | 100% |
+| **Depth** | 100% is the full round profile; lower values flatten it toward a chamfer. Needs **Segments** 2 or more. | 100% |
 | **Loop Slide** | Edge Bevel. Off: points of the polygons around the bevel move out of its way, so it keeps its full width. On: nothing around it moves, and the bevel slides along the edges beside it and narrows where it has to. | Off |
-| **Mitering Style** | Edge Bevel: how strips meet where three or more come together. **Default**: a rounded corner, its rows wrapping around in an even grid. **Neutral**: a rounded corner whose lines run straight up into it. **Uniform**: rows nest as smooth arches under a pointed arch. **Pinch**: rows meet in V seams under an arch pinched to a point. Needs **Segments** 1 or more. | Default |
+| **Mitering Style** | Edge Bevel: how strips meet where three or more come together. **Default**: a rounded corner, its rows wrapping around in an even grid. **Neutral**: a rounded corner whose lines run straight up into it. **Uniform**: rows nest as smooth arches under a pointed arch. **Pinch**: rows meet in V seams under an arch pinched to a point. Needs **Segments** 2 or more. | Default |
 | **Parallel** | Edge Chamfer: keeps each new edge the offset away from the original edge. | — |
 | **Stop At Edge** | Edge Chamfer: side points stop at the far end of their edge instead of running past it. | — |
 | **Auto Weld** | Edge Chamfer: merges new points that land on another point. | — |

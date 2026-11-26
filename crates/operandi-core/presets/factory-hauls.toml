@@ -53,7 +53,7 @@ right = { sideways = "chamfer_segments", up = "chamfer_source_segments" }
 
 [[tool]]
 tool = "VertexBevel"
-right = { sideways = "vertex_round_level" }
+right = { sideways = "vertex_segments", up = "vertex_segments" }
 
 [[tool]]
 tool = "SmoothShift"
