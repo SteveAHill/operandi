@@ -90,9 +90,8 @@ You can also add a Cone as a step of a mesh's **Mesh Stack**: choose
 **Cone** under **Create > Primitives** in the stack's **Add Operator**
 list. It has the same properties as the tool, and the tool and the stack
 step build exactly the same cone from the same values, so you can
-change it later without rebuilding the mesh. If a falloff is on when you add it, the step keeps its own copy;
-its **Falloff** rows work as above, and **Use Active Falloff** and **Clear
-Falloff** copy one in or remove it. **Min** and **Max**
+change it later without rebuilding the mesh. A **Falloff** step below it in the stack shapes it (see Mesh Stack tool
+steps): its **Falloff** rows work as above, with that step's falloff. **Min** and **Max**
 aren't there. Scripts
 add it with `meshop.create type:prim.cone.item`.
 

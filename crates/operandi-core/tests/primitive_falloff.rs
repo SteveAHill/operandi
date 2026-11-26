@@ -131,12 +131,14 @@ fn fit_falloff_to_shape_ramps_from_base_to_top() {
 }
 
 #[test]
-fn the_cylinder_op_takes_a_copy_of_the_active_falloff_and_matches_the_tool() {
+fn the_cylinder_op_follows_the_falloff_step_below_and_matches_the_tool() {
     use crate::mesh_stack_tools::{add, ok, with_base};
     let (mut e, id) = with_base(Mesh::default());
     e.dispatch(Command::SpatialFalloff(Some(ramp(0.75))))
         .unwrap();
-    let op = add(
+    // The Falloff step takes a copy of the active falloff.
+    let op = add(&mut e, id, "falloff.meshop.item", serde_json::json!({}));
+    add(
         &mut e,
         id,
         "prim.cylinder.item",
@@ -150,10 +152,33 @@ fn the_cylinder_op_takes_a_copy_of_the_active_falloff_and_matches_the_tool() {
     live_cylinder(&mut t);
     assert_eq!(op_mesh.vertices, t.scene.active().unwrap().mesh.vertices);
 
-    // Clear: the op's own copy goes, and the shape is round again.
+    // Clear the step's copy: the shape is round again.
     e.dispatch(Command::SpatialFalloff(None)).unwrap();
     let mut values = serde_json::Map::new();
     values.insert("falloff".into(), serde_json::Value::Null);
     e.dispatch(Command::MeshOpSet { op, values }).unwrap();
     assert_ne!(ok(&e, id).vertices, op_mesh.vertices);
+}
+
+#[test]
+fn an_old_primitive_ops_own_falloff_copy_is_read_and_ignored() {
+    use operandi_core::meshop_types::{OpContext, op_def};
+    let def = op_def("prim.cylinder.item").unwrap();
+    let run = |values: &serde_json::Value| {
+        let ctx = OpContext {
+            input: &Mesh::default(),
+            op: 1,
+            selection: None,
+            element: Default::default(),
+            links: &[],
+            time: Default::default(),
+            notes: Default::default(),
+            falloff: None,
+        };
+        def.run(&ctx, values).unwrap()
+    };
+    let plain = def.defaults();
+    let mut old = plain.clone();
+    old["falloff"] = serde_json::json!({ "first": serde_json::to_value(ramp(0.75)).unwrap() });
+    assert_eq!(run(&old).vertices, run(&plain).vertices);
 }

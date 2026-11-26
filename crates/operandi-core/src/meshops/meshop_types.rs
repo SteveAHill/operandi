@@ -194,6 +194,9 @@ pub struct OpContext<'a> {
     pub time: crate::time_tick::Tick,
     /// Lines for the op's row ([`OpContext::note`]).
     pub notes: std::cell::RefCell<Vec<OpNote>>,
+    /// The falloff a Falloff step below set (meshop_tool_pipe.rs); the
+    /// primitives build their shape with it.
+    pub falloff: Option<&'a crate::ShapeWeights>,
 }
 impl OpContext<'_> {
     /// Adds a line to show with the op's row; the op still counts as run.

@@ -8927,6 +8927,11 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   point count run unshaped with a note. Only positional falloffs (Linear,
   Radial, Cylinder, Noise); selection, element and vertex-map falloffs and
   per-op falloff override not built. An empty step clears the one below.
+  2026-11-26 (Jason): one rule for the stack. The primitive ops (#15/#35)
+  no longer keep their own falloff copy; they build with the Falloff
+  step's falloff through their Falloff Scale/Offset/Twist rows (an old
+  scene's copy is read and ignored). The step's falloff points are its
+  view handles.
 - **MOQ-68 Deformer steps, provisional.** No deformer channels in
   TYPE-IDS, so ids (`deform.bend.item`, `deform.twist.item`), values and
   defaults are Operandi's own, in a "Deformers" Add folder. A deformer

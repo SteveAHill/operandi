@@ -90,9 +90,8 @@ You can also add an Ellipsoid as a step of a mesh's **Mesh Stack**: choose
 **Ellipsoid** under **Create > Primitives** in the stack's **Add Operator**
 list. It has the same properties as the tool, and the tool and the stack
 step build exactly the same ellipsoid from the same values, so you can
-change it later without rebuilding the mesh. If a falloff is on when you add it, the step keeps its own copy;
-its **Falloff** rows work as above, and **Use Active Falloff** and **Clear
-Falloff** copy one in or remove it. **Min**, **Max** and
+change it later without rebuilding the mesh. A **Falloff** step below it in the stack shapes it (see Mesh Stack tool
+steps): its **Falloff** rows work as above, with that step's falloff. **Min**, **Max** and
 **Numeric Symmetry** aren't there; use a **Symmetrize** step for symmetry. Scripts
 add it with `meshop.create type:prim.ellipsoid.item`.
 

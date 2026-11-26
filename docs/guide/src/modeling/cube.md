@@ -96,12 +96,8 @@ You can also add a Cube as a step of a mesh's **Mesh Stack**: choose
 **Cube** under **Create > Primitives** in the stack's **Add Operator**
 list. It has the same properties as the tool, and the tool and the stack
 step build exactly the same cube from the same values, so you can
-change it later without rebuilding the mesh. If a falloff is on when you
-add it, the step keeps its own copy; Its **Falloff Type** row and the
-falloff's own values (Start and End, Center and Size, Shape) edit that
-copy, and changes show at once. **Use Active Falloff** and **Clear
-Falloff** copy one in or remove it, and its other **Falloff** rows work as
-above. Rows that only steer the
+change it later without rebuilding the mesh. A **Falloff** step below it in the stack shapes it (see Mesh Stack tool
+steps): its **Falloff** rows work as above, with that step's falloff. Rows that only steer the
 tool's handles (**Handle Mode**, **Min** and **Max**) aren't there. Scripts
 add it with `meshop.create type:prim.cube.item`.
 

@@ -190,8 +190,8 @@ impl Editor {
                     .collect();
                 let mut values = values.clone();
                 def.created(&mut values, &picked);
-                // #15: a primitive op takes a copy of the active falloff
-                // (primitive_ops.rs, `falloff`).
+                // A Falloff step takes a copy of the active falloff
+                // (meshop_tool_pipe.rs, `falloff`).
                 if values.get("falloff").is_some_and(|v| v.is_null())
                     && let Some(w) = self.primitive_weights()
                 {

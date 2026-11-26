@@ -1278,13 +1278,9 @@ fn op_falloff_section(
         );
         rows::note(
             ui,
-            if values.get("falloffScale").is_some() {
-                "The Falloff Scale, Offset, Twist, Sample At and Spacing rows say what it does. \
-                 Drag its points in the view while this operation is selected."
-            } else {
-                "The steps above that move points move them only by this falloff. \
-                 Drag its points in the view while this operation is selected."
-            },
+            "Steps above that move points move them only by this falloff; primitives \
+             above are shaped by it through their Falloff Scale rows. Drag its points in \
+             the view while this step is selected.",
         );
     });
 }

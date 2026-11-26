@@ -234,6 +234,7 @@ fn run_op(id: &str, values: serde_json::Value) -> Mesh {
         links: &[],
         time: Default::default(),
         notes: Default::default(),
+        falloff: None,
     };
     def.run(&ctx, &v).unwrap()
 }

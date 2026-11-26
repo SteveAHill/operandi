@@ -14,10 +14,17 @@ fn cylinder_op() -> Operandi {
     a.run(Command::MeshOpCreate("prim.cylinder.item".into()));
     a
 }
+/// A Falloff step on its own (its falloff's points are its handles).
+fn falloff_step() -> Operandi {
+    let mut a = Operandi::empty();
+    a.run(Command::NewMesh);
+    a.run(Command::MeshOpCreate("falloff.meshop.item".into()));
+    a
+}
 fn op_values(a: &Operandi) -> serde_json::Value {
     let (_, v) = a
         .selected_primitive_op()
-        .expect("a primitive op is selected");
+        .expect("a primitive op or Falloff step is selected");
     v
 }
 
@@ -79,25 +86,20 @@ fn dragging_a_size_square_edits_the_op_live_in_one_undo_step() {
 }
 
 #[test]
-fn the_ops_falloff_points_are_handles_too() {
-    let mut a = cylinder_op();
+fn a_falloff_steps_points_are_handles() {
+    let mut a = falloff_step();
     let (r, _) = a.selected_primitive_op().unwrap();
     let mut values = serde_json::Map::new();
     values.insert(
         "falloff".into(),
         serde_json::json!({"first": {"Linear": {"start": [0., 0.75, 0.], "end": [0., -0.75, 0.]}}}),
     );
-    values.insert("falloffScale".into(), 0.into());
     a.run(Command::MeshOpSet { op: r, values });
     let handles = a.meshop_handles(rect());
     // GitHub #27: the tool falloff's handles: Start, End, then three
     // per-axis handles at each.
-    assert_eq!(
-        handles.len(),
-        18,
-        "centre, 3 arrows, 3 planes, 3 sizes, Start, End, 6 axis handles"
-    );
-    let (end, h) = handles[11];
+    assert_eq!(handles.len(), 8, "Start, End, 6 axis handles");
+    let (end, h) = handles[1];
     assert_eq!(h, OpHandle::Falloff(FalloffHandle::Point(1)));
     let rr = rect();
     let q = a.camera.project(end, rr).unwrap().0;
@@ -112,17 +114,16 @@ fn the_ops_falloff_points_are_handles_too() {
     assert!(f[1].as_f64().unwrap() > -0.75, "End moved up: {f}");
 }
 
-/// A cylinder op with its own Radial falloff, centred at the origin with
-/// Size 1 on every axis.
+/// A Falloff step with a Radial falloff, centred at the origin with Size
+/// 1 on every axis.
 fn radial_op() -> (Operandi, operandi_core::mesh_stack_editor::OpRef) {
-    let mut a = cylinder_op();
+    let mut a = falloff_step();
     let (r, _) = a.selected_primitive_op().unwrap();
     let mut values = serde_json::Map::new();
     values.insert(
         "falloff".into(),
         serde_json::json!({"first": {"Radial": {"center": [0., 0., 0.], "size": [1., 1., 1.]}}}),
     );
-    values.insert("falloffScale".into(), 0.into());
     a.run(Command::MeshOpSet { op: r, values });
     (a, r)
 }

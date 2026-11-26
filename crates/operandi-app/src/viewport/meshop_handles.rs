@@ -1,7 +1,8 @@
 //! Handles for the selected primitive MeshOp (Steve Hill via Jason,
 //! 2026-11-25): with a primitive op's row selected in the Mesh Stack and
-//! no tool on, the view shows its centre, one size square per axis and
-//! its own falloff's points. Dragging one edits the op's values live,
+//! no tool on, the view shows its centre and one size square per axis; a
+//! selected Falloff step shows its falloff's points (the primitives read
+//! the Falloff step below them since 2026-11-26). Dragging one edits the op's values live,
 //! one undo step per drag (SAFE-13, as the op's fields do).
 //!
 //! The handles follow the tool handles' look (UIC section 7): a move
@@ -59,7 +60,8 @@ fn op_falloff(values: &serde_json::Value) -> Option<ShapeWeights> {
 }
 
 impl Operandi {
-    /// The selected primitive op and its values, when no tool is on.
+    /// The selected primitive op or Falloff step and its values, when no
+    /// tool is on.
     pub(crate) fn selected_primitive_op(&self) -> Option<(OpRef, serde_json::Value)> {
         if self.editor.live.is_some() || self.editor.has_active_task() {
             return None;
@@ -74,11 +76,14 @@ impl Operandi {
             .iter()
             .find(|o| o.id == op_id)?;
         let def = op.kind.def()?;
-        if !def.id().starts_with("prim.") {
+        let falloff_step = def.id() == operandi_core::meshop_tool_pipe::FALLOFF_ID;
+        if !def.id().starts_with("prim.") && !falloff_step {
             return None;
         }
         let values = op.kind.values();
-        vec3(&values, "cen")?;
+        if !falloff_step {
+            vec3(&values, "cen")?;
+        }
         Some((
             OpRef {
                 item: row.item,
@@ -96,11 +101,32 @@ impl Operandi {
         let Ok(world) = self.editor.scene.world_matrix(op.item) else {
             return Vec::new();
         };
-        let Some(centre) = vec3(&values, "cen") else {
-            return Vec::new();
-        };
+        let mut out = Vec::new();
+        if let Some(centre) = vec3(&values, "cen") {
+            self.shape_handles(world, centre, &values, r, &mut out);
+        }
+        if let Some(w) = op_falloff(&values) {
+            // The falloff lives in the item's space, as the shapes do.
+            out.extend(
+                self.falloff_handles_in(Some(w.first), world, &[], r)
+                    .into_iter()
+                    .map(|(p, h)| (p, OpHandle::Falloff(h))),
+            );
+        }
+        out
+    }
+
+    /// A primitive's centre, move, plane and size handles.
+    fn shape_handles(
+        &self,
+        world: glam::DMat4,
+        centre: DVec3,
+        values: &serde_json::Value,
+        r: Rect,
+        out: &mut Vec<(DVec3, OpHandle)>,
+    ) {
         let at = world.transform_point3(centre);
-        let mut out = vec![(at, OpHandle::Centre)];
+        out.push((at, OpHandle::Centre));
         // Move arrows and plane squares, a fixed size on screen.
         if let Some(mpp) = self.camera.metres_per_pixel(at, r) {
             let len = ARROW_PIXELS * mpp * self.handle_scale_at(at) as f64;
@@ -113,7 +139,7 @@ impl Operandi {
                 out.push((at + (dir(u) + dir(v)) * len * 0.3, OpHandle::Plane(n)));
             }
         }
-        if let Some(size) = vec3(&values, "size") {
+        if let Some(size) = vec3(values, "size") {
             // The Cube's Size is its full width; the others' are radii.
             let full = values.get("segmentsX").is_some();
             for a in 0..3 {
@@ -122,15 +148,6 @@ impl Operandi {
                 out.push((world.transform_point3(p), OpHandle::Size(a)));
             }
         }
-        if let Some(w) = op_falloff(&values) {
-            // The op's falloff lives in the item's space, as its shape.
-            out.extend(
-                self.falloff_handles_in(Some(w.first), world, &[], r)
-                    .into_iter()
-                    .map(|(p, h)| (p, OpHandle::Falloff(h))),
-            );
-        }
-        out
     }
 
     /// The handle under `pos`, nearest first.

@@ -90,9 +90,8 @@ You can also add a Torus as a step of a mesh's **Mesh Stack**: choose
 **Torus** under **Create > Primitives** in the stack's **Add Operator**
 list. It has the same properties as the tool, and the tool and the stack
 step build exactly the same torus from the same values, so you can
-change it later without rebuilding the mesh. If a falloff is on when you add it, the step keeps its own copy;
-its **Falloff** rows work as above, and **Use Active Falloff** and **Clear
-Falloff** copy one in or remove it. **Hole Size** isn't there:
+change it later without rebuilding the mesh. A **Falloff** step below it in the stack shapes it (see Mesh Stack tool
+steps): its **Falloff** rows work as above, with that step's falloff. **Hole Size** isn't there:
 it follows from **Ring Radius** and **Cross Section**, which are. Scripts
 add it with `meshop.create type:prim.toroid.item`.
 

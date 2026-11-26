@@ -578,6 +578,7 @@ fn run_op(
         links,
         time,
         notes: Default::default(),
+        falloff: pipe.falloff.as_ref(),
     };
     let mut out = def.run(&ctx, values)?;
     // A Set Work Plane step below places new primitives and shapes.

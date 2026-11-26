@@ -14,9 +14,10 @@
 //!   count) moves each point only by the falloff's weight there: full
 //!   where the falloff is 100%, not at all where it is 0. The step keeps
 //!   its own copy of the falloff layers, taken from the active falloff
-//!   when it is added (Use Active Falloff / Clear Falloff change it), as
-//!   the primitive ops do (#15). Steps that add or remove points aren't
-//!   shaped and say so on their row.
+//!   when it is added (Use Active Falloff / Clear Falloff change it).
+//!   The primitives above build their shape with it (their Falloff
+//!   Scale, Offset and Twist rows, #15). Other steps that add or remove
+//!   points aren't shaped and say so on their row.
 //!
 //! Provisional (MOQ-66): which steps follow each setting, the mirror's
 //! plane and tolerance, and the angle order are Operandi's reading; the
@@ -56,6 +57,18 @@ const PLACED: &[&str] = &[
     "prim.sphere.item",
     "prim.teapot.item",
     "prim.text.item",
+    "prim.toroid.item",
+];
+
+/// The primitives that build their shape with the falloff (Falloff
+/// Scale, Offset, Twist rows) instead of having their points weighed.
+const SHAPED: &[&str] = &[
+    "prim.capsule.item",
+    "prim.cone.item",
+    "prim.cube.item",
+    "prim.cylinder.item",
+    "prim.ellipsoid.item",
+    "prim.sphere.item",
     "prim.toroid.item",
 ];
 
@@ -174,7 +187,8 @@ impl Pipe {
     /// why the op's result isn't shaped.
     pub fn weigh(&self, type_id: &str, input: &Mesh, out: &mut Mesh) -> Option<&'static str> {
         let w = self.falloff.as_ref()?;
-        if [SYMMETRY_ID, WORK_PLANE_ID, FALLOFF_ID].contains(&type_id) {
+        if [SYMMETRY_ID, WORK_PLANE_ID, FALLOFF_ID].contains(&type_id) || SHAPED.contains(&type_id)
+        {
             return None;
         }
         if out.vertices.len() != input.vertices.len() {

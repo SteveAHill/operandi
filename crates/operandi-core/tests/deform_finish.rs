@@ -825,6 +825,7 @@ fn the_deform_ops_run_the_tools_functions() {
         links: &[],
         time: Default::default(),
         notes: Default::default(),
+        falloff: None,
     };
     let def = op_def(JITTER_OP).expect("Jitter is in the op table");
     // TYPE-IDS: the op's Seed starts at 137.

@@ -98,7 +98,7 @@ replaces it. Turn a step's eye off and it sets nothing.
 |---|---|
 | **Symmetry** | A step with a **Selection** also works on the mirror image of what it picked, across the mesh's own X, Y or Z = 0 plane (**Axis**). Elements with no mirror partner are used as they are. |
 | **Set Work Plane** | Primitives and curve shapes are made on this plane: moved by **Offset X/Y/Z** and turned by **Angle X**, then **Y**, then **Z**, about the mesh's origin. Geometry that's already there doesn't move. |
-| **Falloff** | Steps that move points move each point only by the falloff's strength there: fully where it's 100%, not at all where it's 0%. The step keeps its own copy of the active falloff from when you add it; **Use Active Falloff** and **Clear Falloff** in its properties change it. Steps that add or remove points aren't shaped, and their row says so. A Falloff step with no falloff turns off the one below it. |
+| **Falloff** | Steps that move points move each point only by the falloff's strength there: fully where it's 100%, not at all where it's 0%. The step keeps its own copy of the active falloff from when you add it; **Use Active Falloff** and **Clear Falloff** in its properties change it. Primitives above it (Cube, Sphere, Cylinder, Cone, Capsule, Ellipsoid, Torus) are built with it through their own **Falloff** rows. Other steps that add or remove points aren't shaped, and their row says so. Select the step to drag its falloff's points in the view. A Falloff step with no falloff turns off the one below it. |
 
 ## Deformer steps
 

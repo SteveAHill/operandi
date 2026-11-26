@@ -133,7 +133,7 @@ fn apply_keeps_the_shaped_mesh_in_one_undo_step() {
 }
 
 #[test]
-fn each_primitive_op_takes_a_copy_of_the_falloff_and_matches_its_tool() {
+fn each_primitive_op_follows_the_falloff_step_below_and_matches_its_tool() {
     for (kind, type_id) in [
         ("cone", "prim.cone.item"),
         ("capsule", "prim.capsule.item"),
@@ -147,7 +147,9 @@ fn each_primitive_op_takes_a_copy_of_the_falloff_and_matches_its_tool() {
         if matches!(kind, "cone" | "capsule") {
             values["segments"] = 4.into();
         }
-        let op = add(&mut e, id, type_id, values);
+        // The Falloff step takes a copy of the active falloff.
+        let step = add(&mut e, id, "falloff.meshop.item", serde_json::json!({}));
+        add(&mut e, id, type_id, values);
         let op_mesh = ok(&e, id);
 
         let mut t = armed(kind);
@@ -155,11 +157,14 @@ fn each_primitive_op_takes_a_copy_of_the_falloff_and_matches_its_tool() {
             .unwrap();
         assert_eq!(op_mesh.vertices, preview(&t).vertices, "{kind}: op = tool");
 
-        // Clear the op's copy: the plain shape again.
+        // Clear the step's copy: the plain shape again.
         let mut clear = serde_json::Map::new();
         clear.insert("falloff".into(), serde_json::Value::Null);
-        e.dispatch(Command::MeshOpSet { op, values: clear })
-            .unwrap();
+        e.dispatch(Command::MeshOpSet {
+            op: step,
+            values: clear,
+        })
+        .unwrap();
         assert_ne!(ok(&e, id).vertices, op_mesh.vertices, "{kind}: cleared");
     }
 }

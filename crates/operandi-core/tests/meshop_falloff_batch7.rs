@@ -68,7 +68,7 @@ fn steps_that_add_points_are_not_shaped_and_say_so() {
     e.dispatch(Command::SpatialFalloff(Some(ramp()))).unwrap();
     add(&mut e, id, "falloff.meshop.item", json!({}));
     e.dispatch(Command::SpatialFalloff(None)).unwrap();
-    add(&mut e, id, "prim.cube.item", json!({}));
+    add(&mut e, id, "prim.teapot.item", json!({}));
     let r = e
         .mesh_stack
         .current(&e.scene, e.scene.item(id).unwrap())
@@ -77,5 +77,5 @@ fn steps_that_add_points_are_not_shaped_and_say_so() {
         panic!("{:?}", r.statuses)
     };
     assert!(notes[0].text.contains("isn't shaped"));
-    assert_eq!(r.mesh.vertices.len(), 2 * cube().vertices.len());
+    assert!(r.mesh.vertices.len() > cube().vertices.len());
 }

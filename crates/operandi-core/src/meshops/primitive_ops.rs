@@ -103,11 +103,9 @@ const POLYGONS: [PolygonRepresentation; 3] = [
 const CAPSULE_ENDS: [CapsuleEnds; 2] = [CapsuleEnds::Polar, CapsuleEnds::QuadGrid];
 
 /// The primitive ops' falloff values (#15; Cone, Capsule, Torus and
-/// Ellipsoid #35). The op keeps
-/// its own copy of the falloff layers (`falloff`): the tool falloff isn't
-/// scene data, and a saved stack must evaluate the same everywhere. It is
-/// taken from the active falloff when the op is added, and Use Active
-/// Falloff / Clear Falloff change it (`Editor::meshop_falloff`). Positions
+/// Ellipsoid #35). The falloff layers come from the Falloff step below
+/// the op (meshop_tool_pipe.rs; one rule for the whole stack, Jason
+/// 2026-11-26), so a saved stack evaluates the same everywhere. Positions
 /// are the op's own (the item's local space), for Use World Transforms
 /// on and off alike (provisional, PRIM-OP-Q04).
 macro_rules! op_falloff {
@@ -143,7 +141,7 @@ op_falloff!(
 );
 
 type Weigher = Option<Box<dyn Fn(DVec3) -> f64>>;
-fn weigher(weights: &Option<ShapeWeights>) -> Result<Weigher> {
+fn weigher(weights: Option<&ShapeWeights>) -> Result<Weigher> {
     let Some(w) = weights else {
         return Ok(None);
     };
@@ -200,8 +198,10 @@ pub struct CubeOp {
     /// 0 Even, 1 Follow Falloff.
     #[serde(rename = "falloffSpacing")]
     pub falloff_spacing: u32,
-    /// The op's own copy of the falloff layers; `null` = none.
-    pub falloff: Option<ShapeWeights>,
+    /// An old scene's own copy of the falloff layers (#15): read and
+    /// ignored, never saved; the Falloff step below shapes the op now.
+    #[serde(default, skip_serializing)]
+    pub falloff: Option<serde_json::Value>,
 }
 impl CubeOp {
     pub fn shape(&self) -> Result<CubeShape> {
@@ -256,7 +256,7 @@ impl Default for CubeOp {
 impl TypedOp for CubeOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
         let s = self.shape()?;
-        let w = weigher(&self.falloff)?;
+        let w = weigher(ctx.falloff)?;
         generated(ctx, s.mesh_weighted(as_weight(&w))?, 1)
     }
 }
@@ -306,8 +306,10 @@ pub struct SphereOp {
     /// 0 Even, 1 Follow Falloff.
     #[serde(rename = "falloffSpacing")]
     pub falloff_spacing: u32,
-    /// The op's own copy of the falloff layers; `null` = none.
-    pub falloff: Option<ShapeWeights>,
+    /// An old scene's own copy of the falloff layers (#15): read and
+    /// ignored, never saved; the Falloff step below shapes the op now.
+    #[serde(default, skip_serializing)]
+    pub falloff: Option<serde_json::Value>,
 }
 impl SphereOp {
     pub fn shape(&self) -> Result<SphereShape> {
@@ -370,7 +372,7 @@ impl Default for SphereOp {
 impl TypedOp for SphereOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
         let s = self.shape()?;
-        let w = weigher(&self.falloff)?;
+        let w = weigher(ctx.falloff)?;
         generated(ctx, s.mesh_weighted(as_weight(&w))?, s.axis)
     }
 }
@@ -419,8 +421,10 @@ pub struct CylinderOp {
     /// 0 Even, 1 Follow Falloff.
     #[serde(rename = "falloffSpacing")]
     pub falloff_spacing: u32,
-    /// The op's own copy of the falloff layers; `null` = none.
-    pub falloff: Option<ShapeWeights>,
+    /// An old scene's own copy of the falloff layers (#15): read and
+    /// ignored, never saved; the Falloff step below shapes the op now.
+    #[serde(default, skip_serializing)]
+    pub falloff: Option<serde_json::Value>,
 }
 impl CylinderOp {
     pub fn shape(&self) -> Result<CylinderShape> {
@@ -483,7 +487,7 @@ impl Default for CylinderOp {
 impl TypedOp for CylinderOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
         let s = self.shape()?;
-        let w = weigher(&self.falloff)?;
+        let w = weigher(ctx.falloff)?;
         generated(ctx, s.mesh_weighted(as_weight(&w))?, s.axis)
     }
 }
@@ -542,8 +546,10 @@ pub struct ConeOp {
     /// 0 Even, 1 Follow Falloff.
     #[serde(rename = "falloffSpacing")]
     pub falloff_spacing: u32,
-    /// The op's own copy of the falloff layers; `null` = none.
-    pub falloff: Option<ShapeWeights>,
+    /// An old scene's own copy of the falloff layers (#15): read and
+    /// ignored, never saved; the Falloff step below shapes the op now.
+    #[serde(default, skip_serializing)]
+    pub falloff: Option<serde_json::Value>,
 }
 impl ConeOp {
     pub fn parameters(&self) -> Result<ConeParameters> {
@@ -623,7 +629,7 @@ impl TypedOp for ConeOp {
         let p = self.parameters()?;
         // #35: shaped by the op's own falloff copy, as the tool is by the
         // tool falloff.
-        let w = weigher(&self.falloff)?;
+        let w = weigher(ctx.falloff)?;
         let mesh = crate::primitive_shapes::shaped(
             crate::cone_geometry(&p)?,
             &p.falloff,
@@ -683,8 +689,10 @@ pub struct CapsuleOp {
     /// 0 Even, 1 Follow Falloff.
     #[serde(rename = "falloffSpacing")]
     pub falloff_spacing: u32,
-    /// The op's own copy of the falloff layers; `null` = none.
-    pub falloff: Option<ShapeWeights>,
+    /// An old scene's own copy of the falloff layers (#15): read and
+    /// ignored, never saved; the Falloff step below shapes the op now.
+    #[serde(default, skip_serializing)]
+    pub falloff: Option<serde_json::Value>,
 }
 impl CapsuleOp {
     pub fn parameters(&self) -> Result<CapsuleParameters> {
@@ -756,7 +764,7 @@ impl TypedOp for CapsuleOp {
         let p = self.parameters()?;
         // #35: shaped by the op's own falloff copy, as the tool is by the
         // tool falloff.
-        let w = weigher(&self.falloff)?;
+        let w = weigher(ctx.falloff)?;
         let mesh = crate::primitive_shapes::shaped(
             crate::capsule_geometry(&p)?,
             &p.falloff,
@@ -809,8 +817,10 @@ pub struct TorusOp {
     /// 0 Even, 1 Follow Falloff.
     #[serde(rename = "falloffSpacing")]
     pub falloff_spacing: u32,
-    /// The op's own copy of the falloff layers; `null` = none.
-    pub falloff: Option<ShapeWeights>,
+    /// An old scene's own copy of the falloff layers (#15): read and
+    /// ignored, never saved; the Falloff step below shapes the op now.
+    #[serde(default, skip_serializing)]
+    pub falloff: Option<serde_json::Value>,
 }
 impl TorusOp {
     pub fn parameters(&self) -> Result<TorusParameters> {
@@ -889,7 +899,7 @@ impl TypedOp for TorusOp {
         let p = self.parameters()?;
         // #35: shaped by the op's own falloff copy, as the tool is by the
         // tool falloff.
-        let w = weigher(&self.falloff)?;
+        let w = weigher(ctx.falloff)?;
         let mesh = crate::primitive_shapes::shaped(
             crate::torus_geometry(&p)?,
             &p.falloff,
@@ -951,8 +961,10 @@ pub struct EllipsoidOp {
     /// 0 Even, 1 Follow Falloff.
     #[serde(rename = "falloffSpacing")]
     pub falloff_spacing: u32,
-    /// The op's own copy of the falloff layers; `null` = none.
-    pub falloff: Option<ShapeWeights>,
+    /// An old scene's own copy of the falloff layers (#15): read and
+    /// ignored, never saved; the Falloff step below shapes the op now.
+    #[serde(default, skip_serializing)]
+    pub falloff: Option<serde_json::Value>,
 }
 impl EllipsoidOp {
     pub fn parameters(&self) -> Result<EllipsoidParameters> {
@@ -1037,7 +1049,7 @@ impl TypedOp for EllipsoidOp {
         let p = self.parameters()?;
         // #35: shaped by the op's own falloff copy, as the tool is by the
         // tool falloff.
-        let w = weigher(&self.falloff)?;
+        let w = weigher(ctx.falloff)?;
         let mesh = crate::primitive_shapes::shaped(
             crate::ellipsoid_geometry(&p)?,
             &p.falloff,
@@ -1153,8 +1165,6 @@ fn falloff_fields() -> Vec<Field> {
         Field::new("falloffTwist", "Falloff Twist", FieldKind::Angle),
         choice("falloffSample", "Sample At", &["Spine", "Points"]),
         choice("falloffSpacing", "Spacing", &["Even", "Follow Falloff"]),
-        // The layers themselves: set by Use Active Falloff, not typed.
-        Field::new("falloff", "Falloff", FieldKind::Hidden),
     ]);
     f
 }
@@ -1306,6 +1316,7 @@ mod tests {
             links: &[],
             time: Default::default(),
             notes: Default::default(),
+            falloff: None,
         };
         def.run(&ctx, &values)
     }
