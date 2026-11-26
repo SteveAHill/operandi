@@ -67,6 +67,27 @@ map in **UV Map** or **Map Name**; a map that doesn't exist yet is made.
 | **Set Seam** | Edges | Adds the chosen edges to a UV seam map, so a UV Unwrap above can cut there. |
 | **Set Vertex Normals** | Points | Rebuilds the vertex normal map on the chosen points, splitting at hard edges. |
 
+## Slice steps
+
+These steps cut new edges into polygons along a path, as the Slice tools
+do: Primitive Slice, Curve Slice and Pen Slice (see
+[Slice tools](../edit/slice-tools.md)). The path is pushed along **Axis** (X, Y, Z, **Custom** with
+**Vector X/Y/Z**, or **Action Axis**) and cuts every polygon it passes,
+or only the step's chosen polygons. No point moves.
+
+| Step | What it cuts with |
+|---|---|
+| **Primitive Slice** | A **Rectangle**, **Circle** or **Ellipse** at **Center**, lying square to its own **Axis X/Y/Z** (Action Axis cuts along that axis). **Half Size**, **Radius**, **Sides**, **Corner Radius**, **Heading**, **Pitch**, **Bank**, **Flip** and the **Clone X/Y** grid work as in the tool. |
+| **Curve Slice** | One of the mesh's own curves, picked by **Curve Index** (0 is the first). **Steps** sets how many straight pieces the curve is cut in (or **Automatic**, by **Smoothing Angle**). **Start** and **End** keep part of the curve and **Slide** moves that part along it. The curve itself isn't cut and stays. |
+| **Pen Slice** | One of the mesh's curves, picked by **Polyline Index**, as straight lines between its points. A closed curve cuts a closed outline. |
+
+**Operation** picks what the cut does: **Slice** only cuts; **Stencil**
+gives the polygons inside a closed outline **Material**; **Core** keeps
+only those inside polygons; **Tunnel** deletes them, leaving a hole. **Select
+Sliced Edges** adds the new edges to the edge selection set named in
+**Edge Selection Set**, so a step above can use them. With no curves in
+the mesh, Curve Slice and Pen Slice pass the mesh through.
+
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through
 unchanged, so the rest of the stack still works.

@@ -519,6 +519,9 @@ pub(crate) fn op_icon(id: &str) -> Option<crate::icons::Icon> {
         // Batch 1 tool steps: their direct tools' icons.
         "edge.bridge.item" => "bridge",
         "poly.loopSlice.item" => "loop-slice",
+        "prim.slice.item" => "primitive-slice",
+        "curve.slice.item" => "curve-slice",
+        "pen.slice.item" => "pen-slice",
         "edge.slide.item" => "edge-slide",
         "chamfer.edit.item" => "edge-chamfer",
         "poly.thicken.item" => "thicken",

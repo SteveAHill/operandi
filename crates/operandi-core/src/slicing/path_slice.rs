@@ -1064,7 +1064,7 @@ impl CurveSlice {
 
 /// Auto steps: keep a dense sample whenever the curve has turned by
 /// `angle` degrees since the last kept one (provisional).
-fn by_angle(dense: &[DVec3], closed: bool, angle: f64) -> Vec<DVec3> {
+pub(crate) fn by_angle(dense: &[DVec3], closed: bool, angle: f64) -> Vec<DVec3> {
     if dense.len() <= 2 {
         return dense.to_vec();
     }

@@ -459,6 +459,8 @@ mod meshop_radial_sweep;
 mod meshop_selops_batch2;
 #[path = "meshop_set_edge_weight.rs"]
 mod meshop_set_edge_weight;
+#[path = "meshop_slicers_batch5.rs"]
+mod meshop_slicers_batch5;
 #[path = "meshop_text.rs"]
 mod meshop_text;
 #[path = "meshop_thicken.rs"]

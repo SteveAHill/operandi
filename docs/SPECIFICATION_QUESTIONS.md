@@ -8890,6 +8890,26 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
 - **MOQ-62 Set Vertex Normals channels, provisional.** Tolerance, Method,
   Angle, Power, Color Map Name kept, not built; Vertex Normal Options
   defaults. UV Transform (`uvtransform`, help table only) not built.
+- **MOQ-63 Path slice ops' cutter, provisional.** Curve Slice, Pen Slice
+  and Primitive Slice (Operandi ids `curve.slice.item`, `pen.slice.item`,
+  `prim.slice.item`; the reference saves generator + `effector.cutter.item`
+  pairs) cut in mesh space with the tools' engine. Operation lists the
+  built cuts by position (Core, Tunnel, Stencil, Slice); Axis by position
+  X, Y, Z, Custom, Action Axis; depth0/depth1/preview kept, not shown.
+  Select Sliced Edges adds the new edges to the named edge set. Slice
+  Effector alone (needs a generator) and Lace Geometry (no channels in
+  TYPE-IDS) not built.
+- **MOQ-64 Curve/Pen Slice path, provisional.** Curve Index / Polyline
+  Index count the mesh's own curve elements in order (no curve items
+  yet); the curve isn't cut and stays; Action Axis = world Y; no curves =
+  pass-through, an index past the last curve fails. Curve Slice samples
+  Steps even steps by length over [Start+Slide, End+Slide]; Automatic
+  keeps a step per Smoothing Angle turned. Alignment channels not kept.
+- **MOQ-65 Primitive Slice shape, provisional.** Type = Rectangle,
+  Circle, Ellipse (Preset not built, Content Preset channels not kept);
+  the shape's axis is always the Axis X/Y/Z vector (default Z); Action
+  Axis = that vector. Handles, Lazy Apply, Exponent, Extend Open Edge not
+  kept.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

@@ -460,10 +460,14 @@ mod meshop_curve_convert;
 mod meshop_curve_fill;
 #[path = "meshops/meshop_curve_rebuild.rs"]
 mod meshop_curve_rebuild;
+#[path = "meshops/meshop_curve_slice.rs"]
+mod meshop_curve_slice;
 #[path = "meshops/meshop_curve_sweep.rs"]
 mod meshop_curve_sweep;
 #[path = "meshops/meshop_curve_winding.rs"]
 mod meshop_curve_winding;
+#[path = "meshops/meshop_cutter_common.rs"]
+mod meshop_cutter_common;
 #[path = "meshops/meshop_edge_slide.rs"]
 mod meshop_edge_slide;
 #[path = "meshops/meshop_edges_to_curves.rs"]
@@ -478,8 +482,12 @@ mod meshop_hard_edge;
 mod meshop_loop_slice;
 #[path = "meshops/meshop_part_tag.rs"]
 mod meshop_part_tag;
+#[path = "meshops/meshop_pen_slice.rs"]
+mod meshop_pen_slice;
 #[path = "meshops/meshop_polygon_type.rs"]
 mod meshop_polygon_type;
+#[path = "meshops/meshop_primitive_slice.rs"]
+mod meshop_primitive_slice;
 #[path = "meshops/meshop_radial_sweep.rs"]
 mod meshop_radial_sweep;
 #[path = "meshops/meshop_scene.rs"]

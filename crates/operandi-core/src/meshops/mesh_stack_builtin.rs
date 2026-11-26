@@ -635,6 +635,9 @@ pub(crate) fn builtin() -> Vec<Arc<dyn OpDef>> {
     table.extend(crate::meshop_radial_sweep::entries());
     table.extend(crate::mesh_stack_tools::edit_entries());
     table.extend(crate::meshop_loop_slice::entries());
+    table.extend(crate::meshop_primitive_slice::entries());
+    table.extend(crate::meshop_curve_slice::entries());
+    table.extend(crate::meshop_pen_slice::entries());
     table.extend(crate::meshop_hard_edge::entries());
     table.extend(crate::mesh_stack_tools::deform_entries());
     table.extend(crate::mesh_stack_tools::uv_entries());
