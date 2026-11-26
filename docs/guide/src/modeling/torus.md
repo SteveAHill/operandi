@@ -20,6 +20,15 @@ To draw it the same size in every direction instead, hold **Control** before
 you start the drag: the press is the centre and the pointer sets the
 size.
 
+## Handles
+
+Once the torus has height, it shows its handles in the **3D view**:
+
+- **Arrows** at the centre move it along X, Y or Z.
+- **Squares** at the ends of each axis resize it along that axis. The torus grows or shrinks on both sides at once, keeping its centre. The squares set the same **Radius** values as **Tool Properties**: the ones along the axis set **Height**, and the ones across it set **Cross Section**, with **Hole Size** kept, so the ring grows with it.
+
+A handle that points straight at you is hidden; orbit the view to reach it.
+
 ## Without a drag
 
 - **Shift**-click **Torus** adds a 1 m torus as a new mesh item at

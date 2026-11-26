@@ -4181,6 +4181,20 @@ picks the spec leaves open, all provisional:
   their border neighbours only, so Smooth slides them along the edge
   instead of shrinking the opening. Mirrored dabs near the symmetry plane
   overlap their originals and add up (Attenuate caps it).
+- **SCQ-11 Move and back faces** (#38, Jason 2026-11-26). Starting state: a
+  subdivided cube, front ortho view, Move with the tip covering the mesh.
+  Every brush skips points facing away, so Move drags the front and leaves
+  the back. Built: a Move setting **Move Back Faces** (off by default) that
+  also grabs points facing away inside the tip. Open: does the reference
+  Move grab back faces, and should the default be on? Needs a hands-on check.
+- **PH-Q37 Handles on Cone, Ellipsoid, Torus, Capsule, Text** (#37; Q-CN-06,
+  NPR-Q01 leave them open). Built (provisional): once drawn, move arrows at
+  the centre and a radius square at each end of each axis; Ellipsoid and
+  Torus resize from the centre, Cone and Capsule keep the far side; the
+  Torus squares set Radius X/Y/Z as the panel does (along the axis Height,
+  across it Cross Section with Hole Size kept); Text gets arrows only. Open:
+  Handle Mode and Show Corner, and whether the Torus should offer ring and
+  tube radius handles instead.
 
 ## Multiple active meshes, stage 2: transforms (2026-11-08, branch multi-active-transforms)
 

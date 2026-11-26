@@ -260,6 +260,7 @@ fn pct(
 pub(crate) enum Row {
     SculptMode,
     MoveMode,
+    MoveBackFaces,
     InvertedFlatten,
     OffsetMode,
     OffsetDistance,
@@ -419,6 +420,13 @@ fn row_field(
             |p, m| p.move_mode = m,
         )
         .tip("Normal: points follow the pointer. Slide: they keep to the surface"),
+        Row::MoveBackFaces => tf::check(
+            "sculpt_move_back_faces",
+            "Move Back Faces",
+            |p: &BrushSettings| p.move_back_faces,
+            |p, on| p.move_back_faces = on,
+        )
+        .tip("Also grab the points facing away inside the brush, so the far side moves too"),
         Row::InvertedFlatten => tf::check(
             "sculpt_inverted_flatten",
             "Inverted Flatten",
@@ -629,6 +637,9 @@ fn brush_section(
     {
         // SCT-49: Move Mode first.
         f.field(mode);
+        if let Some(back) = row_field(Row::MoveBackFaces, brush, p, pen_seen) {
+            f.field(back);
+        }
     }
     let grab = brush.kind() == operandi_core::sculpt::BrushKind::Grab;
     let grab_why = "Move follows the pointer; Offset Amount scales how far (provisional, SCQ-01)";

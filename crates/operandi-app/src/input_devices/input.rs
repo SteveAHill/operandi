@@ -57,6 +57,11 @@ pub enum GestureKind {
         base: glam::DVec3,
         axis: usize,
     },
+    /// Dragging a drawn Cone/Ellipsoid/Torus/Capsule/Text's handle (#37).
+    SessionHandle {
+        id: usize,
+        base: crate::session_handles::SessionShape,
+    },
     /// Add Loop / Add Point held after the click: sliding re-places the new
     /// loop along edge `a`–`b` (screen ends `ends`, with their depths).
     EdgeInsert {

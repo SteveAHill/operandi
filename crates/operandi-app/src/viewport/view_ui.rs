@@ -2130,6 +2130,7 @@ impl Operandi {
                 }
                 let dragging = self.navigation.as_ref().is_some_and(|g| match &g.kind {
                     input::GestureKind::Handle(id, _, _) => *id == axis,
+                    input::GestureKind::SessionHandle { id, .. } => *id == axis,
                     input::GestureKind::Primitive(primitive_input::Gesture::RadialSide(
                         a,
                         max,

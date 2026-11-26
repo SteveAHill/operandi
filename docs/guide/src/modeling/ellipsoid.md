@@ -20,6 +20,15 @@ To draw it the same size in every direction instead, hold **Control** before
 you start the drag: the press is the centre and the pointer sets the
 size.
 
+## Handles
+
+Once the ellipsoid has height, it shows its handles in the **3D view**:
+
+- **Arrows** at the centre move it along X, Y or Z.
+- **Squares** at the ends of each axis resize it along that axis. The ellipsoid grows or shrinks on both sides at once, keeping its centre.
+
+A handle that points straight at you is hidden; orbit the view to reach it.
+
 ## Without a drag
 
 - **Shift**-click **Ellipsoid** adds a 1 m ellipsoid as a new mesh item at

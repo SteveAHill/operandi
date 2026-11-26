@@ -176,6 +176,9 @@ impl Operandi {
             input::GestureKind::SessionHeight { base, axis } => {
                 self.session_height(*base, *axis, g.start, pos, r)
             }
+            input::GestureKind::SessionHandle { id, base } => {
+                self.session_handle_drag(*id, *base, g.start, pos, r)
+            }
             input::GestureKind::EdgeInsert { tool, a, b, ends } => {
                 self.edge_insert_slide(*tool, *a, *b, *ends, pos)
             }

@@ -528,6 +528,11 @@ mod session_draw;
 #[cfg(test)]
 #[path = "graphics/session_draw_tests.rs"]
 mod session_draw_tests;
+#[path = "graphics/session_handles.rs"]
+mod session_handles;
+#[cfg(test)]
+#[path = "graphics/session_handles_tests.rs"]
+mod session_handles_tests;
 #[path = "transforms/set_position_dialog.rs"]
 mod set_position_dialog;
 #[path = "materials/shading_panel.rs"]

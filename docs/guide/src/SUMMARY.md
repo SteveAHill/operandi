@@ -155,6 +155,7 @@
     - [Modeling aids]()
         - [Reset and Freeze transforms](modeling/reset-freeze-transforms.md)
 - [Sculpting]()
+    - [Move brush](sculpting/move-brush.md)
     - [Multiresolution](sculpting/multiresolution.md)
 - [Curves]()
 - [Materials]()

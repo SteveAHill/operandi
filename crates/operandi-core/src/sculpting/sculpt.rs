@@ -485,6 +485,10 @@ pub struct BrushSettings {
     pub inverted_flatten: bool,
     /// Move's Move Mode (SCT-49).
     pub move_mode: MoveMode,
+    /// Move Back Faces (#38, Jason 2026-11-26): Move also grabs the points
+    /// facing away inside the tip, so the far side comes along. Off by
+    /// default (today's behaviour) until the reference is checked (SCQ-11).
+    pub move_back_faces: bool,
     pub sculpt_mode: SculptMode,
     pub curve_constraint: CurveConstraint,
     /// Vertex Map Tools' Normalize Weights (VMT-11).
@@ -500,6 +504,7 @@ impl Default for BrushSettings {
             level: 0.1,
             inverted_flatten: false,
             move_mode: MoveMode::Normal,
+            move_back_faces: false,
             offset_mode: OffsetMode::Adaptive,
             offset_distance: 0.1,
             offset_amount: 0.3,
@@ -1386,10 +1391,17 @@ impl Target {
     }
 
     /// The points a dab reaches (SC-30, SC-32): within the world radius of
-    /// the centre, facing the viewer, not frozen; weighted by their
-    /// distance from the centre across the view (screen space at the
-    /// centre's depth) and the falloff.
-    fn touches(&mut self, dab: &Dab, tip: &Tip, scratch: &mut Vec<u32>) -> Vec<Touch> {
+    /// the centre, not frozen, and (with `front_only`) facing the viewer;
+    /// weighted by their distance from the centre across the view (screen
+    /// space at the centre's depth) and the falloff. Move with Move Back
+    /// Faces on grabs the hidden side too (#38, SCQ-11).
+    fn touches(
+        &mut self,
+        dab: &Dab,
+        tip: &Tip,
+        front_only: bool,
+        scratch: &mut Vec<u32>,
+    ) -> Vec<Touch> {
         scratch.clear();
         let r = dab.radius;
         self.points.query(
@@ -1425,7 +1437,7 @@ impl Target {
                 self.partner_scratch = found;
             }
             let normal = self.frame_normal(v);
-            if normal.dot(dab.view) <= 0. {
+            if front_only && normal.dot(dab.view) <= 0. {
                 continue;
             }
             out.push(Touch {
@@ -1990,7 +2002,7 @@ impl Stroke {
         } else {
             self.dab_tip(settings.tip)
         };
-        let touches = self.targets[i].touches(dab, &tip, &mut self.scratch);
+        let touches = self.targets[i].touches(dab, &tip, true, &mut self.scratch);
         let touches = self.painted(i, dab, touches, acting.is_vertex_map());
         if touches.is_empty() {
             return;
@@ -2357,9 +2369,10 @@ impl Stroke {
         self.grab_started = true;
         let tip = self.dab_tip(self.setup.settings.tip);
         let symmetry = self.setup.symmetry;
+        let front_only = !(self.acting == SculptBrush::Move && self.setup.settings.move_back_faces);
         for i in 0..self.targets.len() {
             let mut scratch = std::mem::take(&mut self.scratch);
-            let touches = self.targets[i].touches(dab, &tip, &mut scratch);
+            let touches = self.targets[i].touches(dab, &tip, front_only, &mut scratch);
             let touches = self.painted(i, dab, touches, false);
             let t = &mut self.targets[i];
             let mut weights: FxHashMap<u32, (f64, f64)> = FxHashMap::default();
@@ -2373,7 +2386,7 @@ impl Stroke {
                     normal: t.mirror_dir(symmetry, dab.normal),
                     ..*dab
                 };
-                for touch in t.touches(&mirrored, &tip, &mut scratch) {
+                for touch in t.touches(&mirrored, &tip, front_only, &mut scratch) {
                     weights.entry(touch.v).or_default().1 = touch.weight;
                 }
             }
@@ -2918,6 +2931,38 @@ mod tests {
         s.dab(dab_at(0.4, 0.4));
         assert_eq!(z_at(&scene, id, 18 * 21 + 18), 0.);
         assert_eq!(s.label(), "Move Stroke");
+    }
+
+    #[test]
+    fn move_back_faces_grabs_the_hidden_side_too() {
+        // #38: with Move Back Faces on, a Move tip drags the far side with
+        // the near side; seen from below, the grid faces away and moves.
+        // Off (the default), it stays put as before.
+        let (e, id) = editor_with_grid(20);
+        let mid = 10 * 21 + 10;
+        let mut scene = e.scene.clone();
+        let mut s = Stroke::begin(&scene, &[id], setup(SculptBrush::Move))
+            .unwrap()
+            .unwrap();
+        s.dab(Dab {
+            view: -DVec3::Z,
+            ..dab_at(0., 0.)
+        });
+        s.grab_to(DVec3::new(0.1, 0., 0.));
+        s.flush(&mut scene);
+        assert_eq!(scene.item(id).unwrap().mesh.vertices[mid].x, 0.);
+        let mut scene = e.scene.clone();
+        let mut on = setup(SculptBrush::Move);
+        on.settings.move_back_faces = true;
+        let mut s = Stroke::begin(&scene, &[id], on).unwrap().unwrap();
+        s.dab(Dab {
+            view: -DVec3::Z,
+            ..dab_at(0., 0.)
+        });
+        s.grab_to(DVec3::new(0.1, 0., 0.));
+        s.flush(&mut scene);
+        let x = scene.item(id).unwrap().mesh.vertices[mid].x;
+        assert!((x - 0.1).abs() < 1e-9, "{x}");
     }
 
     #[test]

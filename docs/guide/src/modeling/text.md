@@ -10,7 +10,8 @@
 1. Make sure the mesh you want to add to is selected in the **Items list**.
 2. Click **Text** in the **Primitives** section of the **Create** tool tab.
 3. Type your words in the **Text** field of **Tool Properties**.
-4. Drag in the **3D view** to move the text.
+4. Drag in the **3D view** to move the text, or drag one of the arrows at its
+   centre to move it along just X, Y or Z.
 5. Click **Drop** to keep it as polygons, or **Apply** to keep it and type
    more.
 

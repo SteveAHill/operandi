@@ -21,7 +21,8 @@ impl Operandi {
     }
     pub(super) fn all_handles(&self, r: Rect) -> Vec<(usize, Pos2, Pos2, String)> {
         let Some(l) = &self.editor.live else {
-            return Vec::new();
+            // #37: a drawn Cone, Ellipsoid, Torus, Capsule or Text.
+            return self.session_handles(r);
         };
         // CS-01: an armed tool draws nothing until its first click.
         if self.editor.is_armed() {
@@ -600,7 +601,7 @@ impl Operandi {
     /// camera that it would be a stub too short to see or grab, or its
     /// tip is behind the camera. Drags don't use this length; they measure
     /// along the axis themselves (`update_handle`).
-    pub(super) fn handle_arrow(
+    pub(crate) fn handle_arrow(
         &self,
         origin: DVec3,
         direction: DVec3,
@@ -804,7 +805,9 @@ impl Operandi {
             // squares first, then the move arrows along their whole shaft,
             // not only at the tip (Sphere and Cylinder took the tip only,
             // so a press on the arrow dragged the nearest side instead).
-            .is_some_and(|live| live.tool.is_primitive())
+            .map_or(self.session_shape().is_some(), |live| {
+                live.tool.is_primitive()
+            })
             && let Some(side) = handles.iter().filter(|h| h.0 >= 3).find(|h| {
                 Rect::from_center_size(h.2, Vec2::splat(self.handle_preferences.point_hit_size))
                     .contains(p)

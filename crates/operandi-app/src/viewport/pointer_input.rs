@@ -1066,6 +1066,12 @@ impl Operandi {
                         input::GestureKind::Blocked
                     } else if let Some(height) = self.begin_session_height(pos, r) {
                         height
+                    } else if let Some(handle) = self
+                        .begin_session_handle(pos, r)
+                        .filter(|_| modifiers.is_none())
+                    {
+                        // #37: the drawn shape's move arrows and radius squares.
+                        handle
                     } else if self.editor.reduction.is_some()
                         || self.editor.bridge.is_some()
                         || self.editor.spike.is_some()
