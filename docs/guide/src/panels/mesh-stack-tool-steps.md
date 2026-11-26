@@ -1,4 +1,4 @@
-<!-- help-ids: edge.bridge.item, poly.loopSlice.item, poly.thicken.item, poly.setType.meshop.item, edge.slide.item, setvmap.subd.item, hardedge.meshop.item, hardedgeconvert.meshop.item, chamfer.edit.item, pmodel.partTag.item, assignselectionset.meshop.item, curveconvert.meshop.item, curveWinding.meshop.item, curvefill, curveBoolean.meshop.item, pmodel.edgeToCurve.item, cRebuild.mOp, curve.sweep, radial.sweep.item, prim.text.item, prim.arc.item, Curve Convert, Curve Winding Aligner, Curve Fill, Curve Boolean, Curve Rebuild, Curve Sweep, Assign Selection Set, Set Polygon Type, Hard Edge, Hard Edge Convert, Part Tag ; template: concept ; since: 0.1.2 -->
+<!-- help-ids: edge.bridge.item, poly.loopSlice.item, poly.thicken.item, poly.setType.meshop.item, edge.slide.item, setvmap.subd.item, hardedge.meshop.item, hardedgeconvert.meshop.item, chamfer.edit.item, pmodel.partTag.item, assignselectionset.meshop.item, curveconvert.meshop.item, curveWinding.meshop.item, curvefill, curveBoolean.meshop.item, pmodel.edgeToCurve.item, cRebuild.mOp, curve.sweep, radial.sweep.item, prim.text.item, prim.arc.item, uv.create.item, uv.relax.item, uv.pelt.item, uvflip.meshop.item, uvconvert.meshop.item, setvmap.create.item, setvmap.weight.item, setvmap.flood.item, setvmap.rgb.item, setvmap.seam.item, setvmap.vnorm.item, pmodel.geodesic.mOp, Create UV Map, UV Relax, UV Unwrap and Relax, UV Flip, Convert UV to Mesh, Create Vertex Map, Set Weight, Flood Weight, Set RGB, Set Seam, Set Vertex Normals, Geodesic Weight, Curve Convert, Curve Winding Aligner, Curve Fill, Curve Boolean, Curve Rebuild, Curve Sweep, Assign Selection Set, Set Polygon Type, Hard Edge, Hard Edge Convert, Part Tag ; template: concept ; since: 0.1.2 -->
 # Tool steps in the Mesh Stack
 
 Many modeling tools can also be a step in a mesh's **Mesh Stack**, so you
@@ -46,6 +46,26 @@ every curve.
 | **Curve Rebuild** | Curves | Rebuilds each curve through evenly spaced points: **Point Count** points, or one every **Point Spacing**. |
 | **Curve Convert** | Curves | Converts curves of one type (**From**) to another (**To**): Curve, Bezier or B-Spline, as [Convert Curves](../curve/offset-convert.md). It starts as Curve to Bezier. |
 | **Curve Winding Aligner** | Curves | Makes every closed curve run the same way round, as [Align Winding](../curve/curve-commands.md). **Merge Curves** first joins open curves that meet end to end; **Reverse** turns them all the other way. |
+
+## UV and vertex map steps
+
+These steps write into a mesh's UV maps and vertex maps. A step names its
+map in **UV Map** or **Map Name**; a map that doesn't exist yet is made.
+
+| Step | Works on | What it does |
+|---|---|---|
+| **Create UV Map** | Polygons | Projects the chosen polygons into the map: Planar, Cylindrical, Spherical, Atlas, Barycentric, Atlas 2 or Cubic. **Settings: Automatic** fits the shape to the polygons; **Manual** uses **Center**, **Size** and **Rotation**. |
+| **UV Relax** | Polygons | Relaxes the chosen polygons' UVs, as the UV Relax tool. **Iterations** starts at 0, which leaves the UVs alone, so raise it to see a change. Polygons not chosen stay still. |
+| **UV Unwrap and Relax** | Polygons | A UV Unwrap followed by a UV Relax, each switched on or off with its own checkbox and with its own **Iterations**. |
+| **UV Flip** | Polygons | Mirrors the chosen polygons' UVs in U or V about their middle, as [Flip UVs](../uv/flip-uvs.md). **Flip per Polygon** flips each polygon on its own. |
+| **Convert UV to Mesh** | Polygons | Replaces the mesh with its flat UV layout: U along X, V along Y. |
+| **Create Vertex Map** | Whole mesh | Adds an empty map called **Map Name**: Weight, UV, Morph, RGB or RGBA. |
+| **Set Weight** | Points | Gives the chosen points **Map Value** in a weight map, or adds it with **Additive**. |
+| **Flood Weight** | Points | Sets every chosen point to 100% (**High**) or 0% (**Low**). |
+| **Set RGB** | Points | Gives the chosen points a colour in a colour map; **Map Type: RGBA** uses **Value A** too. |
+| **Geodesic Weight** | Points | Makes a weight map of each point's distance from the chosen points, measured along the edges. **Normalize** makes the farthest point 100%; **Invert** turns it round. |
+| **Set Seam** | Edges | Adds the chosen edges to a UV seam map, so a UV Unwrap above can cut there. |
+| **Set Vertex Normals** | Points | Rebuilds the vertex normal map on the chosen points, splitting at hard edges. |
 
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through

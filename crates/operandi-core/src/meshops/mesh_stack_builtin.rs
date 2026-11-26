@@ -638,7 +638,19 @@ pub(crate) fn builtin() -> Vec<Arc<dyn OpDef>> {
     table.extend(crate::meshop_hard_edge::entries());
     table.extend(crate::mesh_stack_tools::deform_entries());
     table.extend(crate::mesh_stack_tools::uv_entries());
+    table.extend(crate::meshop_create_uv_map::entries());
+    table.extend(crate::meshop_uv_relax::entries());
+    table.extend(crate::meshop_uv_unwrap_relax::entries());
+    table.extend(crate::meshop_uv_flip::entries());
+    table.extend(crate::meshop_uv_to_mesh::entries());
     table.extend(crate::meshop_set_edge_weight::entries());
+    table.extend(crate::meshop_create_vertex_map::entries());
+    table.extend(crate::meshop_set_weight::entries());
+    table.extend(crate::meshop_flood_weight::entries());
+    table.extend(crate::meshop_set_rgb::entries());
+    table.extend(crate::meshop_set_seam::entries());
+    table.extend(crate::meshop_set_vertex_normals::entries());
+    table.extend(crate::meshop_geodesic_weight::entries());
     table.extend(crate::meshop_assign_selection_set::entries());
     // The Deform finish tools' ops (mesh_stack_deform.rs).
     table.extend(crate::mesh_stack_deform::entries());

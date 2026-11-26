@@ -8861,6 +8861,29 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   Effector needs a generator in its Tool Pipe (Curve Extrude and Radial
   Sweep already are generator + sweep); Create Polygons' Positions are a
   runtime list that isn't saved, so a stack can't hold them.
+- **MOQ-52 Create UV Map op, provisional.** Projection Type by position
+  in the tool's list; World Space kept, not built (mesh space).
+- **MOQ-53 UV Relax op, provisional.** Mode/Boundary by position ("lscm"
+  = Conformal); transform-handle channels kept, not built; unchosen
+  polygons hidden from the relax.
+- **MOQ-54 UV Unwrap and Relax op, provisional.** Unwrap step as the UV
+  Unwrap op (MOQ-26), then Relax; Relax Mode default Adaptive.
+- **MOQ-55 Convert UV to Mesh op, provisional.** Result is the layout
+  alone (the command makes a new item).
+- **MOQ-56 Create Vertex Map types, provisional.** Weight, UV, Morph, RGB,
+  RGBA by position; blank name adds nothing.
+- **MOQ-57 Set Weight blank map, provisional.** Blank Map Name = first
+  weight map, else "Weight"; Map Type kept, not built.
+- **MOQ-58 Flood Weight High/Low, provisional.** 100% / 0%.
+- **MOQ-59 Set RGB, provisional.** Blank name = first colour map, else
+  "Color"; RGB alpha 1; Force Discontinuous etc. kept, not built.
+- **MOQ-60 Geodesic Weight, provisional.** Shortest edge-path distance
+  from the op's chosen points (Input Array isn't saved); no Selection adds
+  nothing; Triangulate and advanced kept, not built.
+- **MOQ-61 Set Seam blank map, provisional.** "UV Seam" (UVS-P02).
+- **MOQ-62 Set Vertex Normals channels, provisional.** Tolerance, Method,
+  Angle, Power, Color Map Name kept, not built; Vertex Normal Options
+  defaults. UV Transform (`uvtransform`, help table only) not built.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

@@ -446,6 +446,10 @@ mod meshop_assign_selection_set;
 mod meshop_bridge;
 #[path = "meshops/meshop_chamfer_edit.rs"]
 mod meshop_chamfer_edit;
+#[path = "meshops/meshop_create_uv_map.rs"]
+mod meshop_create_uv_map;
+#[path = "meshops/meshop_create_vertex_map.rs"]
+mod meshop_create_vertex_map;
 #[path = "meshops/meshop_curve_boolean.rs"]
 mod meshop_curve_boolean;
 #[path = "meshops/meshop_curve_common.rs"]
@@ -464,6 +468,10 @@ mod meshop_curve_winding;
 mod meshop_edge_slide;
 #[path = "meshops/meshop_edges_to_curves.rs"]
 mod meshop_edges_to_curves;
+#[path = "meshops/meshop_flood_weight.rs"]
+mod meshop_flood_weight;
+#[path = "meshops/meshop_geodesic_weight.rs"]
+mod meshop_geodesic_weight;
 #[path = "meshops/meshop_hard_edge.rs"]
 mod meshop_hard_edge;
 #[path = "meshops/meshop_loop_slice.rs"]
@@ -474,16 +482,36 @@ mod meshop_part_tag;
 mod meshop_polygon_type;
 #[path = "meshops/meshop_radial_sweep.rs"]
 mod meshop_radial_sweep;
+#[path = "meshops/meshop_scene.rs"]
+mod meshop_scene;
 #[path = "meshops/meshop_selection.rs"]
 pub mod meshop_selection;
 #[path = "meshops/meshop_set_edge_weight.rs"]
 mod meshop_set_edge_weight;
+#[path = "meshops/meshop_set_rgb.rs"]
+mod meshop_set_rgb;
+#[path = "meshops/meshop_set_seam.rs"]
+mod meshop_set_seam;
+#[path = "meshops/meshop_set_vertex_normals.rs"]
+mod meshop_set_vertex_normals;
+#[path = "meshops/meshop_set_weight.rs"]
+mod meshop_set_weight;
 #[path = "meshops/meshop_text.rs"]
 mod meshop_text;
 #[path = "meshops/meshop_thicken.rs"]
 mod meshop_thicken;
 #[path = "meshops/meshop_types.rs"]
 pub mod meshop_types;
+#[path = "meshops/meshop_uv_flip.rs"]
+mod meshop_uv_flip;
+#[path = "meshops/meshop_uv_relax.rs"]
+mod meshop_uv_relax;
+#[path = "meshops/meshop_uv_to_mesh.rs"]
+mod meshop_uv_to_mesh;
+#[path = "meshops/meshop_uv_unwrap_relax.rs"]
+mod meshop_uv_unwrap_relax;
+#[path = "meshops/meshop_vertex_map_common.rs"]
+mod meshop_vertex_map_common;
 #[path = "rigging/pose_tool.rs"]
 pub mod pose_tool;
 #[path = "rigging/rig.rs"]
