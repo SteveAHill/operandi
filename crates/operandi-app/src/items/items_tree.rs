@@ -207,6 +207,9 @@ impl Operandi {
         let items: std::collections::HashMap<u64, &operandi_core::Item> =
             self.editor.scene.items.iter().map(|i| (i.id, i)).collect();
         let s = &self.editor.scene.selection;
+        // A set: searching `also` per row cost the square of the item count
+        // with thousands selected (panel_speed_tests.rs).
+        let also: operandi_core::fxhash::FxHashSet<u64> = s.also.iter().copied().collect();
         let render_camera = self.editor.scene.render_camera();
         for ListRow {
             id,
@@ -250,7 +253,7 @@ impl Operandi {
             };
             row.selected = if s.item == Some(id) {
                 Selected::Primary
-            } else if s.also.contains(&id) {
+            } else if also.contains(&id) {
                 Selected::Yes
             } else {
                 Selected::No
@@ -1279,6 +1282,10 @@ mod tests {
         assert_eq!(item_type_icon(mesh), icons::Icon::Cube);
     }
 }
+
+#[cfg(test)]
+#[path = "panel_speed_tests.rs"]
+mod panel_speed_tests;
 
 #[cfg(test)]
 #[path = "../rigging/items_rig_tests.rs"]

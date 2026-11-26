@@ -49,6 +49,19 @@ impl Scene {
             active
         }
     }
+    /// Every item `is_active_mesh` holds for, as a set: what a loop over
+    /// all items should ask instead of `is_active_mesh` per item, which
+    /// searches the selection each time.
+    pub fn active_item_set(&self) -> crate::fxhash::FxHashSet<u64> {
+        let mut set: crate::fxhash::FxHashSet<u64> = self
+            .selection
+            .item
+            .into_iter()
+            .chain(self.selection.also.iter().copied())
+            .collect();
+        set.extend(self.remembered_mesh());
+        set
+    }
     /// Whether item `id` draws with the active look (VP-04/05): it is
     /// selected, or it is the remembered mesh while no mesh is selected.
     pub fn is_active_mesh(&self, id: u64) -> bool {

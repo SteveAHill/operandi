@@ -38,7 +38,13 @@ impl Operandi {
     }
     /// The look the view draws an item with (its group, with the view's
     /// overrides); `None` when the view hides it.
+    #[cfg(test)]
     pub(super) fn item_look(&self, id: u64) -> Option<Group> {
+        self.item_look_as(id, self.editor.scene.is_active_mesh(id))
+    }
+    /// `item_look` with the item's activeness already known
+    /// (`Scene::active_item_set`), for loops over every item.
+    pub(super) fn item_look_as(&self, id: u64, active: bool) -> Option<Group> {
         let selection = &self.editor.scene.selection;
         // Show Meshes off: no mesh item draws (cameras, lights and
         // backdrops have their own switches).
@@ -55,16 +61,16 @@ impl Operandi {
             // VP-04/05: every selected mesh item is active, whatever the
             // selection mode; with no mesh selected, the last selected one
             // stays active (last_mesh.rs).
-            .group(self.editor.scene.is_active_mesh(id))
+            .group(active)
             .map(|g| self.display.effective(g, selection.mode))
     }
 
     /// An item's plain wire colour on the CPU drawing paths, as the GPU
     /// path's Look picks it (ViewDisplay::plain_wire_color), else the
     /// theme's Wireframe.
-    pub(super) fn plain_wire(&self, id: u64) -> Color32 {
+    pub(super) fn plain_wire_as(&self, active: bool) -> Color32 {
         self.display
-            .plain_wire_color(self.editor.scene.is_active_mesh(id))
+            .plain_wire_color(active)
             .unwrap_or_else(theme::viewport::wireframe)
     }
 

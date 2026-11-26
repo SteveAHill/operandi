@@ -217,9 +217,18 @@ fn same_file(a: &Path, b: &Path) -> bool {
             .is_some_and(|(a, b)| a == b)
 }
 
+/// A crash mid-backup leaves the safe writer's temporary behind
+/// (`.<name>.<pid>-<n>.operandi-tmp`, operandi-files). One older than this
+/// can't belong to a backup still being written, even by another copy of
+/// the app sharing the folder.
+pub const STALE_TEMP_AGE: Duration = Duration::from_secs(60 * 60);
+
 /// Delete backups older than the cutoff, keeping the newest revision of
-/// each scene. Other files are left alone. Returns how many were removed.
+/// each scene, and temporaries a crash left behind (older than
+/// [`STALE_TEMP_AGE`]). Other files are left alone. Returns how many
+/// backups were removed.
 pub fn remove_old_backups(dir: &Path, now: SystemTime) -> usize {
+    remove_stale_temps(dir, now);
     let Some(cutoff) = now.checked_sub(MAX_BACKUP_AGE) else {
         return 0;
     };
@@ -246,6 +255,32 @@ pub fn remove_old_backups(dir: &Path, now: SystemTime) -> usize {
             if *old && fs::remove_file(path).is_ok() {
                 removed += 1;
             }
+        }
+    }
+    removed
+}
+
+/// Removes the safe writer's leftover temporaries of backups (hidden
+/// `.<scene>.autosave-NNNN.opscene.<pid>-<n>.operandi-tmp` files) older
+/// than [`STALE_TEMP_AGE`]. Returns how many were removed.
+pub fn remove_stale_temps(dir: &Path, now: SystemTime) -> usize {
+    let Some(cutoff) = now.checked_sub(STALE_TEMP_AGE) else {
+        return 0;
+    };
+    let mut removed = 0;
+    for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else { continue };
+        let is_backup_temp =
+            name.starts_with('.') && name.ends_with(".operandi-tmp") && name.contains(".autosave-");
+        let old = entry
+            .metadata()
+            .ok()
+            .filter(|m| m.is_file())
+            .and_then(|m| m.modified().ok())
+            .is_some_and(|t| t < cutoff);
+        if is_backup_temp && old && fs::remove_file(entry.path()).is_ok() {
+            removed += 1;
         }
     }
     removed
@@ -639,6 +674,10 @@ impl super::Operandi {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "autosave_crash_tests.rs"]
+mod autosave_crash_tests;
 
 #[cfg(test)]
 mod tests {

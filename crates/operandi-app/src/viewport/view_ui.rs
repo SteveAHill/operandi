@@ -253,6 +253,10 @@ impl Operandi {
             // Children)) leave the view; empty in the common case.
             let display_hidden = display_scene.display_hidden();
             let shown = |i: &operandi_core::Item| i.visible && !display_hidden.contains(&i.id);
+            // Which items draw with the active look, looked up once for the
+            // frame: asking the selection per item cost the square of the
+            // item count with thousands selected (panel_speed_tests.rs).
+            let active_now = self.editor.scene.active_item_set();
             let resident: std::collections::BTreeSet<u64> = display_scene
                 .items
                 .iter()
@@ -268,7 +272,7 @@ impl Operandi {
                 // This view's look for the item (view_display.rs); the
                 // projected path colours each face the way the shader would
                 // (display_shading.rs).
-                let Some(look) = self.item_look(item.id) else {
+                let Some(look) = self.item_look_as(item.id, active_now.contains(&item.id)) else {
                     continue;
                 };
                 let wireframe = look.style == view_display::Style::Wireframe;
@@ -532,7 +536,7 @@ impl Operandi {
                 } else if pre {
                     pre_color
                 } else {
-                    self.plain_wire(*id)
+                    self.plain_wire_as(active_now.contains(id))
                 };
                 let vertex =
                     |point: &(Pos2, f64), color| outline::vertex(&self.camera, r, *point, color);
@@ -589,7 +593,8 @@ impl Operandi {
                         && !resident.contains(&i.id)
                         && operandi_core::subdivision::has_smooth(&i.mesh)
                 }) {
-                    let Some(look) = self.item_look(item.id) else {
+                    let Some(look) = self.item_look_as(item.id, active_now.contains(&item.id))
+                    else {
                         continue;
                     };
                     let wireframe = look.style == view_display::Style::Wireframe;
@@ -711,7 +716,7 @@ impl Operandi {
                         } else if pre {
                             palette::polygon_rollover(&item.mesh, source)
                         } else {
-                            self.plain_wire(item.id)
+                            self.plain_wire_as(active_now.contains(&item.id))
                         };
                         let gradient = depth_gradient(&self.camera, r, &points);
                         for i in (0..n).filter(|&i| surface.traced[sf][i]) {
@@ -738,11 +743,12 @@ impl Operandi {
             }
             // Straight line elements never enter the filled-face tessellator.
             let mut synthetic: u32 = 0x8000_0000;
-            for item in display_scene
-                .items
-                .iter()
-                .filter(|i| shown(i) && self.item_look(i.id).is_some())
-            {
+            for item in display_scene.items.iter().filter(|i| {
+                shown(i)
+                    && self
+                        .item_look_as(i.id, active_now.contains(&i.id))
+                        .is_some()
+            }) {
                 // Only polygons with a representation can be lines.
                 let maybe_lines = item
                     .mesh
@@ -773,7 +779,7 @@ impl Operandi {
                     } else {
                         // Set Curves Color (CC-30) overrides the plain wire.
                         self.curve_override()
-                            .unwrap_or_else(|| self.plain_wire(item.id))
+                            .unwrap_or_else(|| self.plain_wire_as(active_now.contains(&item.id)))
                     };
                     // Smooth curves draw their sampled shape; the keys are
                     // made up so samples never merge with real edges.
@@ -954,8 +960,10 @@ impl Operandi {
             let held: std::collections::BTreeSet<u64> =
                 resident.difference(stand_ins).copied().collect();
             // Boxed items' wire colour (inactive ones in Inactive Wireframe).
-            let box_wire: std::collections::BTreeMap<u64, Color32> =
-                boxed.iter().map(|&id| (id, self.plain_wire(id))).collect();
+            let box_wire: std::collections::BTreeMap<u64, Color32> = boxed
+                .iter()
+                .map(|&id| (id, self.plain_wire_as(active_now.contains(&id))))
+                .collect();
             let radii = self.point_radii();
             // Show Selections as drawn now (off while a brush hides it).
             let selections_drawn = self.shows_selections();
@@ -1073,7 +1081,14 @@ impl Operandi {
                     _ => (item.clone(), matrix),
                 };
                 // Every selected mesh draws as active (multi_active.rs).
-                let active_ids = self.editor.scene.shown_active_meshes();
+                // A set: with thousands of items selected, a list search per
+                // item made this frame cost grow with the square of the count.
+                let active_ids: std::collections::HashSet<u64> = self
+                    .editor
+                    .scene
+                    .shown_active_meshes()
+                    .into_iter()
+                    .collect();
                 let remembered = self.editor.scene.remembered_mesh();
                 // Show Selections (Viewport Properties > Visibility).
                 let shows_selections = selections_drawn;
@@ -1565,7 +1580,13 @@ impl Operandi {
             };
             // Every shown active mesh draws its points and edges
             // (multi_active.rs).
-            let mut shown_active = self.editor.scene.shown_active_meshes();
+            // A set, for the same reason as `active_ids` above.
+            let mut shown_active: std::collections::HashSet<u64> = self
+                .editor
+                .scene
+                .shown_active_meshes()
+                .into_iter()
+                .collect();
             if !hud {
                 shown_active.clear();
             }
