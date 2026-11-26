@@ -8918,7 +8918,15 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   op's resolved Selection; it doesn't mirror ops without a Selection or
   the moves of transform ops. Set Work Plane moves the new points of the
   Create primitives and curve shapes by Offset and Angle X, then Y, then
-  Z (R = Rz·Ry·Rx). Falloff entries in the stack not built.
+  Z (R = Rz·Ry·Rx).
+- **MOQ-67 Falloff step, provisional.** `falloff.meshop.item` (Operandi's
+  own id; TYPE-IDS has no stack falloff entry) keeps a copy of the active
+  falloff layers, taken when added, as the primitive ops do (#15). Ops
+  above that keep the point count have each moved point scaled by the
+  weight at its old place (mesh space, clamped 0..1); ops that change the
+  point count run unshaped with a note. Only positional falloffs (Linear,
+  Radial, Cylinder, Noise); selection, element and vertex-map falloffs and
+  per-op falloff override not built. An empty step clears the one below.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

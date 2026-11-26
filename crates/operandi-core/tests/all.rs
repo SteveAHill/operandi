@@ -445,6 +445,8 @@ mod meshop_edge_slide;
 mod meshop_edges_to_curves;
 #[path = "meshop_element_selection.rs"]
 mod meshop_element_selection;
+#[path = "meshop_falloff_batch7.rs"]
+mod meshop_falloff_batch7;
 #[path = "meshop_hard_edge.rs"]
 mod meshop_hard_edge;
 #[path = "meshop_loop_slice.rs"]

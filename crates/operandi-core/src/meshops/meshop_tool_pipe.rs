@@ -1,6 +1,6 @@
-//! Tool pipe steps in the Mesh Stack (batch 6): Symmetry
+//! Tool pipe steps in the Mesh Stack (batches 6 and 7): Symmetry
 //! (`symmetry.tool.item`) and Set Work Plane (`pmodel.workplane.item`),
-//! TYPE-IDS.md. Neither changes the mesh itself; each sets something the
+//! TYPE-IDS.md, and Falloff (`falloff.meshop.item`, Operandi's own id). Neither changes the mesh itself; each sets something the
 //! steps above it use, until another step of the same kind replaces it.
 //!
 //! - **Symmetry**: a step above that has a Selection also works on the
@@ -10,15 +10,25 @@
 //! - **Set Work Plane**: the primitives and curve shapes above (the Create
 //!   steps) are made on this plane: moved by Offset and turned by Angle X,
 //!   then Y, then Z, about the mesh's origin.
+//! - **Falloff**: a step above that moves points (and keeps the point
+//!   count) moves each point only by the falloff's weight there: full
+//!   where the falloff is 100%, not at all where it is 0. The step keeps
+//!   its own copy of the falloff layers, taken from the active falloff
+//!   when it is added (Use Active Falloff / Clear Falloff change it), as
+//!   the primitive ops do (#15). Steps that add or remove points aren't
+//!   shaped and say so on their row.
 //!
 //! Provisional (MOQ-66): which steps follow each setting, the mirror's
 //! plane and tolerance, and the angle order are Operandi's reading; the
 //! reference's tool pipe entries also drive interactive tools, which the
-//! stack doesn't have. A turned-off step sets nothing.
+//! stack doesn't have. A turned-off step sets nothing. Falloff (MOQ-67)
+//! takes the positional falloffs only (Linear, Radial, Cylinder, Noise),
+//! in the mesh's own space; a Falloff step with no layers clears the one
+//! below.
 use crate::mesh_stack::{MeshOp, OpKind};
 use crate::mesh_stack_builtin::{choice, distance};
 use crate::meshop_types::{Field, FieldKind, OpContext, OpDef, SelElement, Typed, TypedOp};
-use crate::{Mesh, Result};
+use crate::{Mesh, Result, ShapeWeights};
 use glam::{DMat4, DQuat, DVec3, EulerRot};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -26,6 +36,7 @@ use std::sync::Arc;
 
 pub const SYMMETRY_ID: &str = "symmetry.tool.item";
 pub const WORK_PLANE_ID: &str = "pmodel.workplane.item";
+pub const FALLOFF_ID: &str = "falloff.meshop.item";
 
 /// The steps Set Work Plane places: those that make new geometry from
 /// their own values.
@@ -101,12 +112,28 @@ impl TypedOp for WorkPlaneOp {
     }
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FalloffOp {
+    /// The falloff layers (set by Use Active Falloff, not typed).
+    pub falloff: Option<ShapeWeights>,
+}
+impl TypedOp for FalloffOp {
+    fn run(&self, ctx: &OpContext) -> Result<Mesh> {
+        if let Some(w) = &self.falloff {
+            w.validate()?;
+        }
+        Ok(ctx.input.clone())
+    }
+}
+
 /// What the tool pipe steps below an op have set.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Pipe {
     /// Mirror axis (0 X, 1 Y, 2 Z).
     pub symmetry: Option<usize>,
     pub work_plane: Option<DMat4>,
+    pub falloff: Option<ShapeWeights>,
 }
 impl Pipe {
     /// The pipe for the ops above `op`.
@@ -133,8 +160,36 @@ impl Pipe {
                     self.work_plane = Some(m);
                 }
             }
+            FALLOFF_ID => {
+                if let Ok(f) = serde_json::from_value::<FalloffOp>(values.clone()) {
+                    self.falloff = f.falloff.filter(|w| w.validate().is_ok());
+                }
+            }
             _ => {}
         }
+    }
+
+    /// Falloff: each point of `out` that `input` had moves only by the
+    /// falloff's weight at its old place. `None` when it applies, else
+    /// why the op's result isn't shaped.
+    pub fn weigh(&self, type_id: &str, input: &Mesh, out: &mut Mesh) -> Option<&'static str> {
+        let w = self.falloff.as_ref()?;
+        if [SYMMETRY_ID, WORK_PLANE_ID, FALLOFF_ID].contains(&type_id) {
+            return None;
+        }
+        if out.vertices.len() != input.vertices.len() {
+            return Some(
+                "The Falloff below shapes steps that move points; this one adds or removes \
+                 points, so it isn't shaped",
+            );
+        }
+        let weight = w.weigher(DMat4::IDENTITY);
+        for (p, &was) in out.vertices.iter_mut().zip(input.vertices.iter()) {
+            if *p != was {
+                *p = was + (*p - was) * weight(was).clamp(0., 1.);
+            }
+        }
+        None
     }
 
     /// `chosen` plus their mirror partners (Symmetry).
@@ -259,6 +314,13 @@ pub(crate) fn entries() -> Vec<Arc<dyn OpDef>> {
                 angle("angley", "Angle Y"),
                 angle("anglez", "Angle Z"),
             ],
+        )),
+        Arc::new(Typed::<FalloffOp>::new(
+            FALLOFF_ID,
+            "Falloff",
+            "Other",
+            false,
+            vec![Field::new("falloff", "Falloff", FieldKind::Hidden)],
         )),
     ]
 }

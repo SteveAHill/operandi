@@ -532,6 +532,7 @@ pub(crate) fn op_icon(id: &str) -> Option<crate::icons::Icon> {
         "assignselectionset.meshop.item" => "tag-selection-set",
         "symmetry.tool.item" => "symmetry",
         "pmodel.workplane.item" => "workplane",
+        "falloff.meshop.item" => "falloff",
         "uv.create.item" => "uv-project",
         "uv.relax.item" => "uv-relax",
         "uv.pelt.item" => "uv-pelt",
@@ -1275,8 +1276,13 @@ fn op_falloff_section(
         );
         rows::note(
             ui,
-            "The Falloff Scale, Offset, Twist, Sample At and Spacing rows say what it does. \
-             Drag its points in the view while this operation is selected.",
+            if values.get("falloffScale").is_some() {
+                "The Falloff Scale, Offset, Twist, Sample At and Spacing rows say what it does. \
+                 Drag its points in the view while this operation is selected."
+            } else {
+                "The steps above that move points move them only by this falloff. \
+                 Drag its points in the view while this operation is selected."
+            },
         );
     });
 }

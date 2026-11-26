@@ -582,6 +582,14 @@ fn run_op(
     let mut out = def.run(&ctx, values)?;
     // A Set Work Plane step below places new primitives and shapes.
     pipe.place(def.id(), clean.vertices.len(), &mut out);
+    // A Falloff step below shapes how far the points move.
+    if let Some(why) = pipe.weigh(def.id(), &clean, &mut out) {
+        notes.push(crate::meshop_types::OpNote {
+            item: 0,
+            text: why.into(),
+            problem: false,
+        });
+    }
     crate::meshop_selection::carry_groups(&groups, &clean, &mut out);
     notes.extend(ctx.notes.into_inner());
     Ok((out, notes))
