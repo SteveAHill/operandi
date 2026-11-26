@@ -30,6 +30,8 @@ pub(crate) enum OpHandle {
     /// A handle of the op's own falloff, as the tool falloff's handles
     /// (GitHub #27): its points, their per-axis handles and Size boxes.
     Falloff(FalloffHandle),
+    /// A Lattice step's control point, by number.
+    Lattice(usize),
 }
 
 /// A drag on one handle: the op, the handle, the op's values at the press
@@ -47,6 +49,15 @@ const AXES: [&str; 3] = ["X", "Y", "Z"];
 fn vec3(values: &serde_json::Value, prefix: &str) -> Option<DVec3> {
     let c = |a: &str| values.get(format!("{prefix}{a}"))?.as_f64();
     Some(DVec3::new(c("X")?, c("Y")?, c("Z")?))
+}
+
+/// A Lattice step's values and its control points (mesh space).
+fn lattice_of(values: &serde_json::Value) -> Option<operandi_core::meshop_lattice::LatticeOp> {
+    values.get("divX")?;
+    serde_json::from_value(values.clone()).ok()
+}
+fn lattice_points(values: &serde_json::Value) -> Option<Vec<DVec3>> {
+    lattice_of(values)?.control_points().ok()
 }
 
 /// The move arrows' length on screen, as the tool's Move handles.
@@ -77,11 +88,12 @@ impl Operandi {
             .find(|o| o.id == op_id)?;
         let def = op.kind.def()?;
         let falloff_step = def.id() == operandi_core::meshop_tool_pipe::FALLOFF_ID;
-        if !def.id().starts_with("prim.") && !falloff_step {
+        let lattice = def.id() == operandi_core::meshop_lattice::LATTICE_ID;
+        if !def.id().starts_with("prim.") && !falloff_step && !lattice {
             return None;
         }
         let values = op.kind.values();
-        if !falloff_step {
+        if !falloff_step && !lattice {
             vec3(&values, "cen")?;
         }
         Some((
@@ -102,6 +114,14 @@ impl Operandi {
             return Vec::new();
         };
         let mut out = Vec::new();
+        if let Some(points) = lattice_points(&values) {
+            out.extend(
+                points
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, p)| (world.transform_point3(p), OpHandle::Lattice(i))),
+            );
+        }
         if let Some(centre) = vec3(&values, "cen") {
             self.shape_handles(world, centre, &values, r, &mut out);
         }
@@ -237,6 +257,16 @@ impl Operandi {
                 let grow = if full { 2. * delta[a] } else { delta[a] };
                 changes.insert(format!("size{}", AXES[a]), (s[a] + grow).max(0.).into());
             }
+            OpHandle::Lattice(i) => {
+                let Some(lattice) = lattice_of(v) else { return };
+                let Ok(mut moves) = lattice.moves() else {
+                    return;
+                };
+                let Some(m) = moves.get_mut(i) else { return };
+                *m += delta;
+                let offsets: Vec<[f64; 3]> = moves.iter().map(|m| m.to_array()).collect();
+                changes.insert("offsets".into(), serde_json::json!(offsets));
+            }
             OpHandle::Falloff(h) => {
                 let Some(mut w) = op_falloff(v) else {
                     return;
@@ -278,6 +308,37 @@ impl Operandi {
             self.draw_falloff_shape_in(painter, r, w.first, world, &[]);
             self.draw_falloff_size_boxes_in(painter, r, w.first, world);
         }
+        // A Lattice step's cage: a line to each next control point.
+        if let Some((op, values)) = self.selected_primitive_op()
+            && let Some(lattice) = lattice_of(&values)
+            && let Ok(points) = lattice.control_points()
+            && let Ok([a, b, c]) = lattice.divisions()
+            && let Ok(world) = self.editor.scene.world_matrix(op.item)
+        {
+            let q = |n: usize| {
+                self.camera
+                    .project(world.transform_point3(points[n]), r)
+                    .map(|x| x.0)
+            };
+            let stroke = Stroke::new(self.handle_preferences.line_width, palette::selection());
+            for k in 0..c {
+                for j in 0..b {
+                    for i in 0..a {
+                        let here = lattice.index(i, j, k);
+                        let next = [
+                            (i + 1 < a).then(|| lattice.index(i + 1, j, k)),
+                            (j + 1 < b).then(|| lattice.index(i, j + 1, k)),
+                            (k + 1 < c).then(|| lattice.index(i, j, k + 1)),
+                        ];
+                        for n in next.into_iter().flatten() {
+                            if let (Some(p), Some(q)) = (q(here), q(n)) {
+                                painter.line_segment([p, q], stroke);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         let Some(&(centre, _)) = handles.first() else {
             return;
         };
@@ -316,6 +377,13 @@ impl Operandi {
                         Rect::from_center_size(q, vec2(size * 1.2, size * 1.2)),
                         0.,
                         color,
+                    );
+                }
+                OpHandle::Lattice(_) => {
+                    painter.rect_filled(
+                        Rect::from_center_size(q, vec2(size, size)),
+                        0.,
+                        palette::selection(),
                     );
                 }
                 // Drawn with the falloff above.

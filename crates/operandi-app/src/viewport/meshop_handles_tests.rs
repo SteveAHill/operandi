@@ -229,3 +229,24 @@ fn a_size_square_on_an_arrow_shaft_still_wins() {
         OpHandle::Size(0)
     );
 }
+
+#[test]
+fn dragging_a_lattice_point_moves_it_in_one_undo_step() {
+    let mut a = Operandi::empty();
+    a.run(Command::NewMesh);
+    a.run(Command::MeshOpCreate("deform.lattice.item".into()));
+    let rr = rect();
+    let handles = a.meshop_handles(rr);
+    assert_eq!(handles.len(), 27, "3 x 3 x 3 control points");
+    let at = handle_at(&a, OpHandle::Lattice(26));
+    let grab = a.meshop_handle_hit(at, rr).expect("the corner point");
+    assert_eq!(grab.handle, OpHandle::Lattice(26));
+    let history = a.editor.undo.len();
+    for step in 1..=3 {
+        a.drag_meshop_handle(&grab, at, at + vec2(0., -20. * step as f32), rr);
+    }
+    let offsets = &op_values(&a)["offsets"];
+    assert_eq!(offsets.as_array().unwrap().len(), 27);
+    assert!(offsets[26][1].as_f64().unwrap() > 0., "moved up: {offsets}");
+    assert_eq!(a.editor.undo.len(), history + 1, "one step for the drag");
+}

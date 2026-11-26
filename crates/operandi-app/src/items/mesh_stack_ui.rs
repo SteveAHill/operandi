@@ -541,6 +541,8 @@ pub(crate) fn op_icon(id: &str) -> Option<crate::icons::Icon> {
         "deform.weightInfluence.item" => "vmap-paint",
         "deform.pushInfluence.item" => "push",
         "deform.morphInfluence.item" => "vmap-set-value",
+        "deform.vortex.item" => "vortex",
+        "deform.lattice.item" => "cube",
         "uv.create.item" => "uv-project",
         "uv.relax.item" => "uv-relax",
         "uv.pelt.item" => "uv-pelt",

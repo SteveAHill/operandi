@@ -482,6 +482,8 @@ mod meshop_flood_weight;
 mod meshop_geodesic_weight;
 #[path = "meshops/meshop_hard_edge.rs"]
 mod meshop_hard_edge;
+#[path = "meshops/meshop_lattice.rs"]
+pub mod meshop_lattice;
 #[path = "meshops/meshop_loop_slice.rs"]
 mod meshop_loop_slice;
 #[path = "meshops/meshop_magnet.rs"]
@@ -538,6 +540,8 @@ mod meshop_uv_to_mesh;
 mod meshop_uv_unwrap_relax;
 #[path = "meshops/meshop_vertex_map_common.rs"]
 mod meshop_vertex_map_common;
+#[path = "meshops/meshop_vortex.rs"]
+mod meshop_vortex;
 #[path = "meshops/meshop_weight_influence.rs"]
 mod meshop_weight_influence;
 #[path = "rigging/pose_tool.rs"]

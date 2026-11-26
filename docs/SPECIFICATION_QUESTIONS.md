@@ -8950,6 +8950,11 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   (`deform.pushInfluence.item`: along averaged polygon normals x Distance
   x optional map weight), Morph Influence (`deform.morphInfluence.item`:
   relative morph offsets x Strength). A missing map fails the step.
+  Batch 12: Vortex (`deform.vortex.item`: turn Angle x (1-(d/Radius)^2)^2
+  by distance from the line), Lattice (`deform.lattice.item`: Bernstein
+  free-form deformation in the Min..Max box, Divisions 2-16 per axis,
+  offsets set by dragging its control points in the view; outside points
+  stay).
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

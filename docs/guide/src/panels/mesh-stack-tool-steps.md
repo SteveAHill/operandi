@@ -118,6 +118,8 @@ way. Put a **Falloff** step below a deformer to fade it out across the mesh.
 | **Weight Influence** | Moves each point by **Offset X/Y/Z** times its value in the weight map named in **Map Name**, so painting the map paints the move. Points the map doesn't cover stay. |
 | **Push Influence** | Pushes each point out along its normal by **Distance**. With a **Map Name**, each point is pushed by its share of that weight map. |
 | **Morph Influence** | Moves each point by its offset in the morph map named in **Map Name**, times **Strength**, so you can dial a morph in partway, or past 100%. |
+| **Vortex** | Swirls the points around a line through **Center** along **Axis**: points on the line turn by the full **Angle**, and the turn fades smoothly to nothing at **Radius** from it. |
+| **Lattice** | A box cage from **Min** to **Max** with **Divisions X/Y/Z** control points. Select the step and drag a control point in the view: the points inside the box bend smoothly with it. Points outside the box don't move. Changing **Divisions** starts the control points over. |
 
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through
