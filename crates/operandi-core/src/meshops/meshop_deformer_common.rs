@@ -59,3 +59,13 @@ pub(crate) fn deform(ctx: &OpContext, strength: f64, to: impl Fn(DVec3) -> DVec3
     }
     Ok(out)
 }
+
+/// A deformer's Axis choice (0 X, 1 Y, 2 Z) as a direction.
+pub(crate) fn axis_of(axis: u32, what: &str) -> Result<DVec3> {
+    match axis {
+        0 => Ok(DVec3::X),
+        1 => Ok(DVec3::Y),
+        2 => Ok(DVec3::Z),
+        _ => Err(format!("{what} Axis must be 0 (X), 1 (Y) or 2 (Z)")),
+    }
+}

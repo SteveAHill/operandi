@@ -439,6 +439,8 @@ mod meshop_curve_rebuild;
 mod meshop_curve_sweep;
 #[path = "meshop_curve_winding.rs"]
 mod meshop_curve_winding;
+#[path = "meshop_deformers_batch10.rs"]
+mod meshop_deformers_batch10;
 #[path = "meshop_deformers_batch8.rs"]
 mod meshop_deformers_batch8;
 #[path = "meshop_edge_slide.rs"]

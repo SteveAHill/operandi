@@ -8941,6 +8941,10 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   along the Spine leaves the points). Twist turns by Angle x clamp(distance
   along Axis / Length, 0, 1). Angle starts at 90°. Plan:
   /mnt/project-files/meshops-deformers-2026-11-26/DEFORMERS-PLAN.md.
+  Batch 10: Transform Effector (`deform.transform.item`: scale, then
+  turn X/Y/Z, then move, about Center; starts as no change), Rotate
+  Effector (`deform.rotate.item`), Magnet (`deform.magnet.item`: Offset
+  times (1 - (d/Radius)^2)^2).
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

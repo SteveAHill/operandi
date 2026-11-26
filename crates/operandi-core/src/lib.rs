@@ -484,6 +484,8 @@ mod meshop_geodesic_weight;
 mod meshop_hard_edge;
 #[path = "meshops/meshop_loop_slice.rs"]
 mod meshop_loop_slice;
+#[path = "meshops/meshop_magnet.rs"]
+mod meshop_magnet;
 #[path = "meshops/meshop_part_tag.rs"]
 mod meshop_part_tag;
 #[path = "meshops/meshop_pen_slice.rs"]
@@ -494,6 +496,8 @@ mod meshop_polygon_type;
 mod meshop_primitive_slice;
 #[path = "meshops/meshop_radial_sweep.rs"]
 mod meshop_radial_sweep;
+#[path = "meshops/meshop_rotate_effector.rs"]
+mod meshop_rotate_effector;
 #[path = "meshops/meshop_scene.rs"]
 mod meshop_scene;
 #[path = "meshops/meshop_selection.rs"]
@@ -514,6 +518,8 @@ mod meshop_text;
 mod meshop_thicken;
 #[path = "meshops/meshop_tool_pipe.rs"]
 pub mod meshop_tool_pipe;
+#[path = "meshops/meshop_transform_effector.rs"]
+mod meshop_transform_effector;
 #[path = "meshops/meshop_twist.rs"]
 mod meshop_twist;
 #[path = "meshops/meshop_types.rs"]

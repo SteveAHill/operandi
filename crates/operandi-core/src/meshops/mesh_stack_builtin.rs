@@ -660,6 +660,9 @@ pub(crate) fn builtin() -> Vec<Arc<dyn OpDef>> {
     table.extend(crate::mesh_stack_deform::entries());
     table.extend(crate::meshop_bend::entries());
     table.extend(crate::meshop_twist::entries());
+    table.extend(crate::meshop_transform_effector::entries());
+    table.extend(crate::meshop_rotate_effector::entries());
+    table.extend(crate::meshop_magnet::entries());
     table.extend(crate::curve_ops::entries());
     table.extend(crate::meshop_curve_fill::entries());
     table.extend(crate::meshop_curve_rebuild::entries());

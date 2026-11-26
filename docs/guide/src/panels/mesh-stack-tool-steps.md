@@ -112,6 +112,9 @@ way. Put a **Falloff** step below a deformer to fade it out across the mesh.
 |---|---|
 | **Bend** | Curls the points into an arc. Points further along the **Spine** (from **Center**) turn further, up to the full **Angle** at the spine's end, around **Axis**. Points beyond the end turn with it; points behind the center stay, or mirror with **Both Sides**. |
 | **Twist** | Turns the points around a line through **Center** along **Axis**. Points at the center don't turn; points at **Length** along the axis, and beyond, turn by the full **Angle**. |
+| **Transform Effector** | Moves, turns and scales the points about **Center**: scaled by **Scale X/Y/Z** first, then turned by **Rotation X**, then **Y**, then **Z**, then moved by **Position X/Y/Z**. A new step changes nothing. |
+| **Rotate Effector** | Turns the points by **Angle** around a line through **Center** along **Axis**. |
+| **Magnet** | Pulls the points near **Center** by **Offset X/Y/Z**: fully at the center, fading smoothly to nothing at **Radius**. |
 
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through
