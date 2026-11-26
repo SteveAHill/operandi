@@ -444,6 +444,8 @@ mod meshop_arc;
 mod meshop_assign_selection_set;
 #[path = "meshops/meshop_bend.rs"]
 mod meshop_bend;
+#[path = "meshops/meshop_bezier_deformer.rs"]
+mod meshop_bezier_deformer;
 #[path = "meshops/meshop_bridge.rs"]
 mod meshop_bridge;
 #[path = "meshops/meshop_chamfer_edit.rs"]
@@ -456,8 +458,12 @@ mod meshop_create_vertex_map;
 mod meshop_curve_boolean;
 #[path = "meshops/meshop_curve_common.rs"]
 mod meshop_curve_common;
+#[path = "meshops/meshop_curve_constraint.rs"]
+mod meshop_curve_constraint;
 #[path = "meshops/meshop_curve_convert.rs"]
 mod meshop_curve_convert;
+#[path = "meshops/meshop_curve_deform_common.rs"]
+mod meshop_curve_deform_common;
 #[path = "meshops/meshop_curve_fill.rs"]
 mod meshop_curve_fill;
 #[path = "meshops/meshop_curve_rebuild.rs"]
@@ -518,6 +524,8 @@ mod meshop_set_seam;
 mod meshop_set_vertex_normals;
 #[path = "meshops/meshop_set_weight.rs"]
 mod meshop_set_weight;
+#[path = "meshops/meshop_spline_deformer.rs"]
+mod meshop_spline_deformer;
 #[path = "meshops/meshop_text.rs"]
 mod meshop_text;
 #[path = "meshops/meshop_thicken.rs"]

@@ -108,6 +108,8 @@ the same. Each one moves the points its **Selection** picked (every point
 with no Selection) by its **Strength**: 100% moves them fully, 50% half
 way. Put a **Falloff** step below a deformer to fade it out across the mesh.
 
+With no curve to follow, the curve deformers pass the mesh through.
+
 | Step | What it does |
 |---|---|
 | **Bend** | Curls the points into an arc. Points further along the **Spine** (from **Center**) turn further, up to the full **Angle** at the spine's end, around **Axis**. Points beyond the end turn with it; points behind the center stay, or mirror with **Both Sides**. |
@@ -120,6 +122,9 @@ way. Put a **Falloff** step below a deformer to fade it out across the mesh.
 | **Morph Influence** | Moves each point by its offset in the morph map named in **Map Name**, times **Strength**, so you can dial a morph in partway, or past 100%. |
 | **Vortex** | Swirls the points around a line through **Center** along **Axis**: points on the line turn by the full **Angle**, and the turn fades smoothly to nothing at **Radius** from it. |
 | **Lattice** | A box cage from **Min** to **Max** with **Divisions X/Y/Z** control points. Select the step and drag a control point in the view: the points inside the box bend smoothly with it. Points outside the box don't move. Changing **Divisions** starts the control points over. |
+| **Spline Deformer** | Bends the mesh along one of its own curves (**Curve Index** counts them from 0). The distance along **Axis**, from **Start** and times **Length Scale**, becomes the distance along the curve, so a straight column follows the curve. Past the curve's ends the mesh carries on straight. The curve itself doesn't move. |
+| **Bezier Deformer** | The same bend as **Spline Deformer**, along one of the mesh's Bezier curves (**Curve Index** counts only those). |
+| **Curve Constraint** | Pulls each point onto the nearest spot of one of the mesh's curves, by **Strength**. With a **Radius**, only points that close to the curve are pulled; 0 pulls every point. |
 
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through

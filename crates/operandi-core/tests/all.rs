@@ -445,6 +445,8 @@ mod meshop_deformers_batch10;
 mod meshop_deformers_batch11;
 #[path = "meshop_deformers_batch12.rs"]
 mod meshop_deformers_batch12;
+#[path = "meshop_deformers_batch13.rs"]
+mod meshop_deformers_batch13;
 #[path = "meshop_deformers_batch8.rs"]
 mod meshop_deformers_batch8;
 #[path = "meshop_edge_slide.rs"]

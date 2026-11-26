@@ -8955,6 +8955,12 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   free-form deformation in the Min..Max box, Divisions 2-16 per axis,
   offsets set by dragging its control points in the view; outside points
   stay).
+  Batch 13: Spline Deformer (`deform.spline.item`), Bezier Deformer
+  (`deform.bezier.item`, Bezier curves only) and Curve Constraint
+  (`deform.curveConstraint.item`, nearest spot, Radius 0 = all) read the
+  mesh's own curves by index (no curve items yet); frames by parallel
+  transport from the world axis least in line with the start; curve
+  points never move; past the ends the mesh carries on straight.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges
