@@ -173,7 +173,7 @@ impl CylinderShape {
 /// A falloff weight per position, for the `mesh_weighted` generators.
 pub type Weight<'a> = Option<&'a dyn Fn(glam::DVec3) -> f64>;
 
-fn shaped(
+pub(crate) fn shaped(
     mut mesh: Mesh,
     falloff: &ShapeFalloff,
     centre: DVec3,

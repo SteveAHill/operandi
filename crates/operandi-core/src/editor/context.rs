@@ -217,6 +217,64 @@ impl Editor {
             ..preset
         }))
     }
+    /// `mesh` (a numeric Cone, Capsule, Torus or Ellipsoid in world space)
+    /// shaped by the tool falloff, as the Cube, Sphere and Cylinder are
+    /// (#35). `target` is the mesh it goes into, for falloffs with Use World
+    /// Transforms off.
+    pub(crate) fn tool_falloff_shaped(
+        &self,
+        mesh: crate::Mesh,
+        falloff: &crate::ShapeFalloff,
+        centre: glam::DVec3,
+        axis: usize,
+        respace: bool,
+        target: u64,
+    ) -> Result<crate::Mesh> {
+        let weights = self.primitive_weights();
+        let to_local = self.scene.world_to_local(target).unwrap_or_default();
+        let weigh = weights.as_ref().map(|w| w.weigher(to_local));
+        let weight = weigh.as_ref().map(|f| f as &dyn Fn(glam::DVec3) -> f64);
+        crate::primitive_shapes::shaped(mesh, falloff, centre, axis, respace, weight)
+    }
+    /// After a falloff change: a numeric Cone, Capsule, Torus or Ellipsoid
+    /// that shows a preview rebuilds it, so the shape follows the falloff
+    /// while the tool is open (#35). A rebuild that fails says why in the
+    /// tool's panel, as a field edit would.
+    pub(crate) fn refresh_falloff_primitives(&mut self) {
+        let shown = |preview: &Option<crate::Mesh>, error: &Option<String>| {
+            preview.is_some() || error.is_some()
+        };
+        if let Some(p) = self
+            .cone
+            .as_ref()
+            .filter(|s| shown(&s.preview, &s.error))
+            .map(|s| s.requested.clone())
+        {
+            let _ = self.configure_cone(p);
+        }
+        if let Some(p) = self
+            .ellipsoid
+            .as_ref()
+            .filter(|s| shown(&s.preview, &s.error))
+            .map(|s| s.requested.clone())
+        {
+            let _ = self.configure_ellipsoid(p);
+        }
+        if let Some(p) = self
+            .shape
+            .as_ref()
+            .filter(|s| shown(&s.preview, &s.error))
+            .map(|s| s.requested.clone())
+            .filter(|p| {
+                matches!(
+                    p,
+                    crate::ShapeParameters::Torus(_) | crate::ShapeParameters::Capsule(_)
+                )
+            })
+        {
+            let _ = self.configure_shape(p);
+        }
+    }
     /// Why the active falloff can't shape a primitive, if it can't.
     pub fn primitive_falloff_note(&self) -> Option<String> {
         crate::ShapeWeights::from_active(&self.active_falloff()?).err()

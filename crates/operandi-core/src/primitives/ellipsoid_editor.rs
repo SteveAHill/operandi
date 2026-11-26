@@ -45,8 +45,16 @@ impl Editor {
     }
     /// The Ellipsoid, made twice when the shared Symmetry is on and the
     /// tool's own Numeric Symmetry is off (SYM-B2-04).
-    fn ellipsoid_with_symmetry(&self, p: &EllipsoidParameters) -> Result<crate::Mesh> {
-        let mesh = ellipsoid_geometry(p)?;
+    fn ellipsoid_with_symmetry(&self, p: &EllipsoidParameters, target: u64) -> Result<crate::Mesh> {
+        // #35: shaped by the tool falloff before it's doubled.
+        let mesh = self.tool_falloff_shaped(
+            ellipsoid_geometry(p)?,
+            &p.falloff,
+            p.position,
+            p.axis,
+            false,
+            target,
+        )?;
         if p.symmetry_axis.is_some() {
             return Ok(mesh);
         }
@@ -57,7 +65,7 @@ impl Editor {
         let p = p.normalized();
         let result = self
             .ellipsoid_target(target)
-            .and_then(|_| self.ellipsoid_with_symmetry(&p))
+            .and_then(|_| self.ellipsoid_with_symmetry(&p, target))
             .and_then(|mesh| {
                 // Check append/identity budgets and the full scene before accepting
                 // a preview, not for the first time at Apply or viewport consumption.
@@ -94,7 +102,7 @@ impl Editor {
         let (target, p) = (s.target, s.requested.clone());
         // Armed-without-preview Drop is neutral. Apply explicitly constructs.
         if !drop || s.preview.is_some() {
-            let mesh = self.ellipsoid_with_symmetry(&p)?;
+            let mesh = self.ellipsoid_with_symmetry(&p, target)?;
             let candidate = self.ellipsoid_scene(target, mesh)?;
             let before = std::mem::replace(&mut self.scene, candidate);
             self.record("Ellipsoid".into(), before);

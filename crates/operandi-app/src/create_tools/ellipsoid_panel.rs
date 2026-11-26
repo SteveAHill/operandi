@@ -108,6 +108,16 @@ impl ToolFields for EllipsoidFields {
                     p.set_max(b);
                 },
             ));
+        // #35: the falloff shapes the Ellipsoid as it's made.
+        crate::primitive_panel::shape_falloff_section(
+            &mut f,
+            app,
+            |p: &P| p.falloff,
+            |p| Some(&mut p.falloff),
+            Some("Moving an ellipsoid's rings would change its shape"),
+            Vec::new(),
+            None,
+        );
         let session = app.editor.ellipsoid.as_ref();
         let ready = app.field_errors.is_empty() && session.is_none_or(|s| s.error.is_none());
         f.wide(Button::command("Apply", Command::Apply).enabled_if(

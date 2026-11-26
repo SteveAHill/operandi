@@ -47,6 +47,10 @@ pub struct ConeParameters {
     pub compensation: bool,
     pub gaps: f64,
     pub selected_uv_map: Option<String>,
+    /// What a falloff's weight does to the shape as it's made (#35,
+    /// shape_falloff.rs); the weights come from the tool falloff or the
+    /// op's own copy.
+    pub falloff: crate::ShapeFalloff,
 }
 impl Default for ConeParameters {
     fn default() -> Self {
@@ -64,6 +68,7 @@ impl Default for ConeParameters {
             compensation: false,
             gaps: 0.,
             selected_uv_map: None,
+            falloff: crate::ShapeFalloff::default(),
         }
     }
 }

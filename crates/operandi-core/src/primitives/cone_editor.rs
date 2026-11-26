@@ -40,8 +40,16 @@ impl Editor {
             .ok_or("Cone target is missing or hidden")?;
         let inverse = self.scene.world_to_local(item.id)?;
         // SYM-B2-04: the shared Symmetry makes the Cone twice.
-        let mut mesh = crate::user_defaults::primitive_symmetry(self.active_symmetry())
-            .doubled(cone_geometry(p)?)?;
+        let mut mesh = crate::user_defaults::primitive_symmetry(self.active_symmetry()).doubled(
+            self.tool_falloff_shaped(
+                cone_geometry(p)?,
+                &p.falloff,
+                p.position,
+                p.axis,
+                true,
+                target,
+            )?,
+        )?;
         for v in &mut mesh.vertices {
             *v = inverse.transform_point3(*v);
         }

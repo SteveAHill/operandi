@@ -56,18 +56,48 @@ size.
   Size** are linked: change one and the others that depend on it follow.
   A **Hole Size** of 1 closes the hole to the axis.
 
+## Shaping it with a falloff
+
+A falloff can taper, bend or twist the torus while you make it, as with the
+Cube, Sphere and Cylinder. The falloff's weight decides how much each ring
+of points changes: full where the weight is 1, not at all where it is 0.
+More **Segments** give a smoother result.
+
+1. With the torus tool open, pick a **Linear**, **Radial**, **Cylinder** or
+   **Noise** falloff from the **Falloff** menu. The tool stays open.
+2. Open the **Falloff** section in **Tool Properties** and set what the
+   weight does, for example **Scale** 0% for a point at the full end.
+3. Drag the falloff's handles to move it. The torus updates as you go, and
+   as you change its own fields.
+4. **Apply** or **Drop** to keep the shaped torus. **Undo** takes it back
+   in one step.
+
+| Name | What it does | Default |
+|---|---|---|
+| **Scale** | The rings' size where the weight is full; 100% leaves them as they are. | 50% |
+| **Offset** | How far the rings move where the weight is full (X, Y, Z). | 0 m |
+| **Twist** | How far the rings turn about the axis where the weight is full. | 0° |
+| **Sample At** | **Spine** reads one weight per ring on the axis, so rings stay round. **Points** reads each point's own weight, so a Noise or Radial falloff dents the rings. | Spine |
+| **Spacing** | Always **Even**: moving the torus's rings would change its shape, so **Follow Falloff** is greyed. | Even |
+
+The rows stay grey until a falloff that can shape new geometry is on.
+Falloffs that weigh points that already exist (**Selection**, **Element**,
+**Vertex Map** and the painted ones) can't, and the rows say so.
+
 ## In the Mesh Stack
 
 You can also add a Torus as a step of a mesh's **Mesh Stack**: choose
 **Torus** under **Create > Primitives** in the stack's **Add Operator**
 list. It has the same properties as the tool, and the tool and the stack
 step build exactly the same torus from the same values, so you can
-change it later without rebuilding the mesh. **Hole Size** isn't there:
+change it later without rebuilding the mesh. If a falloff is on when you add it, the step keeps its own copy;
+its **Falloff** rows work as above, and **Use Active Falloff** and **Clear
+Falloff** copy one in or remove it. **Hole Size** isn't there:
 it follows from **Ring Radius** and **Cross Section**, which are. Scripts
 add it with `meshop.create type:prim.toroid.item`.
 
 With the step selected in the stack and no tool on, its handles show in the
-**3D view**. Drag an arrow to move it along that axis, a plane square or the centre dot to move it across a plane, and a size square at its edge to resize it. Each drag is one undo step. A right-drag anywhere else changes its counts, as with the tool: left and right for **Sides**, up and down for **Segments**.
+**3D view**. Drag an arrow to move it along that axis, a plane square or the centre dot to move it across a plane, and a size square at its edge to resize it, and its falloff's handles to change the falloff. Each drag is one undo step. A right-drag anywhere else changes its counts, as with the tool: left and right for **Sides**, up and down for **Segments**.
 
 ## Related
 

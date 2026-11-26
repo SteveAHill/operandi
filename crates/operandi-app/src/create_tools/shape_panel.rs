@@ -543,6 +543,26 @@ impl ToolFields for ShapeFields {
             ShapeParameters::Text(_) => text(&mut f),
             ShapeParameters::Teapot(_) => teapot(&mut f),
         }
+        // #35: the falloff shapes the Torus and Capsule as they're made.
+        if matches!(kind, ShapeKind::Torus | ShapeKind::Capsule) {
+            crate::primitive_panel::shape_falloff_section(
+                &mut f,
+                app,
+                |p: &P| match p {
+                    ShapeParameters::Torus(t) => t.falloff,
+                    ShapeParameters::Capsule(c) => c.falloff,
+                    _ => Default::default(),
+                },
+                |p| match p {
+                    ShapeParameters::Torus(t) => Some(&mut t.falloff),
+                    ShapeParameters::Capsule(c) => Some(&mut c.falloff),
+                    _ => None,
+                },
+                Some("Moving these rings would change the shape's ends"),
+                Vec::new(),
+                None,
+            );
+        }
         let session = app.editor.shape.as_ref();
         let ready = app.field_errors.is_empty()
             && session.is_some_and(|s| s.error.is_none() && s.preview.is_some());

@@ -636,6 +636,10 @@ impl Editor {
                 &cmd,
                 Command::ConfigureEllipsoid(_)
                     | Command::ResetEllipsoid
+                    // #35: the falloff shapes the Ellipsoid while it's open.
+                    | Command::SpatialFalloff(_)
+                    | Command::AddedFalloffs(_)
+                    | Command::SpatialFalloffMix(_)
                     | Command::Apply
                     | Command::Drop
                     | Command::Cancel
@@ -650,7 +654,18 @@ impl Editor {
             );
         }
         // Torus/Capsule/Arc/Tube own input like the numeric Ellipsoid.
+        // #35: the falloff shapes the Torus and Capsule while they're open.
+        let shaped_by_falloff = |kind: crate::ShapeKind| {
+            matches!(kind, crate::ShapeKind::Torus | crate::ShapeKind::Capsule)
+        };
         if let Some(active) = self.shape.as_ref().map(|s| s.kind())
+            && !(shaped_by_falloff(active)
+                && matches!(
+                    &cmd,
+                    Command::SpatialFalloff(_)
+                        | Command::AddedFalloffs(_)
+                        | Command::SpatialFalloffMix(_)
+                ))
             && !matches!(
                 &cmd,
                 Command::ConfigureShape(_)

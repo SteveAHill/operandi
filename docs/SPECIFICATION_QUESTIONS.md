@@ -10015,7 +10015,7 @@ Spec schematic-2026-11-24 (BEHAVIOR-SCHEMATIC, LXO-SCHEMATIC-FORMAT). Readings w
 
 - PRIM-FO-Q01 The global falloff shapes the Cube, Sphere and Cylinder while they're made (shape_falloff.rs); only Linear, Radial, Cylinder, Noise and Invert layers can weigh new points, and the others grey the Falloff section with a reason. The weight scales (about the axis), moves and turns each ring; at weight w a value changes by w of its full amount.
 - PRIM-FO-Q02 Follow Falloff spacing re-spaces rings by 1 + 4 × |slope| of the spine weight (Operandi's own number); greyed on the Sphere.
-- PRIM-FO-Q03 Cone and Capsule don't take the falloff yet (their tools run their own sessions); the next step.
+- PRIM-FO-Q03 (2026-11-26, #35) Cone, Capsule, Torus and Ellipsoid take the falloff too, tools and ops alike. Follow Falloff spacing only on the Cone (straight-sided); greyed elsewhere. The Torus's spine is its axis, so Spine sampling reads one weight per height. Their tools have no Fit Falloff to Shape yet. Supersedes the earlier "not yet".
 - PRIM-OP-Q04 A primitive op's falloff copy reads the op's own positions (the item's local space) whether its layers have Use World Transforms on or off.
 - PRIM-FO-Q04 Fit Falloff to Shape puts the Linear Start on the top of the shape, where the tool's top size handle is; there the tool's handle wins the press (TP-19), so the falloff's Start is moved with its axis arrows or by typing.
 

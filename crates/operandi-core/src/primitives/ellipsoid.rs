@@ -21,6 +21,10 @@ pub struct EllipsoidParameters {
     pub selected_uv_map: Option<String>,
     /// EA-011's recorded crossing-lobe case only; no coincidence/merge policy.
     pub symmetry_axis: Option<usize>,
+    /// What a falloff's weight does to the shape as it's made (#35,
+    /// shape_falloff.rs); the weights come from the tool falloff or the
+    /// op's own copy.
+    pub falloff: crate::ShapeFalloff,
 }
 impl Default for EllipsoidParameters {
     /// Observed EA-001 Reset, not a globally reset factory-profile claim.
@@ -39,6 +43,7 @@ impl Default for EllipsoidParameters {
             gaps: 0.,
             selected_uv_map: None,
             symmetry_axis: None,
+            falloff: crate::ShapeFalloff::default(),
         }
     }
 }

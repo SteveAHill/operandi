@@ -233,6 +233,10 @@ pub struct TorusParameters {
     pub bulge_side: f64,
     pub axis: usize,
     pub make_uvs: bool,
+    /// What a falloff's weight does to the shape as it's made (#35,
+    /// shape_falloff.rs); the weights come from the tool falloff or the
+    /// op's own copy.
+    pub falloff: crate::ShapeFalloff,
 }
 impl Default for TorusParameters {
     fn default() -> Self {
@@ -247,6 +251,7 @@ impl Default for TorusParameters {
             bulge_side: 0.,
             axis: 1,
             make_uvs: true,
+            falloff: crate::ShapeFalloff::default(),
         }
     }
 }
@@ -406,6 +411,10 @@ pub struct CapsuleParameters {
     pub bulge: f64,
     pub axis: usize,
     pub make_uvs: bool,
+    /// What a falloff's weight does to the shape as it's made (#35,
+    /// shape_falloff.rs); the weights come from the tool falloff or the
+    /// op's own copy.
+    pub falloff: crate::ShapeFalloff,
 }
 impl Default for CapsuleParameters {
     fn default() -> Self {
@@ -420,6 +429,7 @@ impl Default for CapsuleParameters {
             bulge: 0.,
             axis: 1,
             make_uvs: true,
+            falloff: crate::ShapeFalloff::default(),
         }
     }
 }

@@ -591,3 +591,47 @@ fn select_by_plane_position_and_normal_fields_are_separate() {
         "Normal untouched: {after:?}"
     );
 }
+
+#[test]
+fn merge_meshes_switches_toggle_from_the_panel() {
+    // GitHub #36: the Merge Meshes check boxes did nothing when clicked.
+    let (mut a, ctx, source) = stacked();
+    a.run(Command::NewMesh);
+    let target = a.editor.scene.items.last().unwrap().id;
+    a.editor.scene.select_item(Some(target));
+    a.run(Command::MeshOpCreate("pmodel.meshmerge".into()));
+    let (_, op) = a
+        .selected_mesh_op()
+        .expect("the new Merge Meshes is selected");
+    let r = operandi_core::mesh_stack_editor::OpRef { item: target, op };
+    let mut v = serde_json::Map::new();
+    v.insert("sources".into(), vec![source].into());
+    a.run(Command::MeshOpSet { op: r, values: v });
+    let value = |a: &Operandi, key: &str| {
+        let item = a.editor.scene.item(target).unwrap();
+        let stack = item.mesh_stack.as_ref().unwrap();
+        let o = stack.ops.iter().find(|o| o.id == op).unwrap();
+        o.kind.values()[key].as_bool().unwrap()
+    };
+    for (label, key) in [("Polygon Tags", "copyPtag"), ("Faces", "face")] {
+        crate::ui_inventory::take_rects();
+        draw(&mut a, &ctx, TALL, vec![]);
+        let rects = crate::ui_inventory::take_rects();
+        let at = rects
+            .get(label)
+            .unwrap_or_else(|| panic!("{label} in {:?}", rects.keys()))
+            .center();
+        let before = value(&a, key);
+        for events in [
+            vec![Event::PointerMoved(at)],
+            vec![
+                pointer(at, true, Modifiers::NONE),
+                pointer(at, false, Modifiers::NONE),
+            ],
+            vec![],
+        ] {
+            draw(&mut a, &ctx, TALL, events);
+        }
+        assert_eq!(value(&a, key), !before, "{label}: {}", a.status);
+    }
+}

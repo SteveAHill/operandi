@@ -69,6 +69,7 @@ fn requested() -> ConeParameters {
         compensation: true,
         gaps: 7.,
         selected_uv_map: Some(OLD_MAP.into()),
+        falloff: Default::default(),
     }
 }
 
@@ -283,6 +284,7 @@ fn active_settings() -> ConeParameters {
         compensation: true,
         gaps: 4.,
         selected_uv_map: None,
+        falloff: Default::default(),
     }
 }
 

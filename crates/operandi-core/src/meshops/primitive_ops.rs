@@ -102,7 +102,8 @@ const POLYGONS: [PolygonRepresentation; 3] = [
 ];
 const CAPSULE_ENDS: [CapsuleEnds; 2] = [CapsuleEnds::Polar, CapsuleEnds::QuadGrid];
 
-/// The Cube, Sphere and Cylinder ops' falloff values (#15). The op keeps
+/// The primitive ops' falloff values (#15; Cone, Capsule, Torus and
+/// Ellipsoid #35). The op keeps
 /// its own copy of the falloff layers (`falloff`): the tool falloff isn't
 /// scene data, and a saved stack must evaluate the same everywhere. It is
 /// taken from the active falloff when the op is added, and Use Active
@@ -131,7 +132,15 @@ macro_rules! op_falloff {
         }
     )*};
 }
-op_falloff!(CubeOp, SphereOp, CylinderOp);
+op_falloff!(
+    CubeOp,
+    SphereOp,
+    CylinderOp,
+    ConeOp,
+    CapsuleOp,
+    TorusOp,
+    EllipsoidOp
+);
 
 type Weigher = Option<Box<dyn Fn(DVec3) -> f64>>;
 fn weigher(weights: &Option<ShapeWeights>) -> Result<Weigher> {
@@ -515,11 +524,32 @@ pub struct ConeOp {
     /// The UV map to write; empty = the primitive map.
     #[serde(rename = "uvMap")]
     pub uv_map: String,
+    /// What the op's falloff does (#35, as #15); see `op_falloff!`.
+    #[serde(rename = "falloffScale")]
+    pub falloff_scale: f64,
+    #[serde(rename = "falloffOffsetX")]
+    pub falloff_offset_x: f64,
+    #[serde(rename = "falloffOffsetY")]
+    pub falloff_offset_y: f64,
+    #[serde(rename = "falloffOffsetZ")]
+    pub falloff_offset_z: f64,
+    /// Radians.
+    #[serde(rename = "falloffTwist")]
+    pub falloff_twist: f64,
+    /// 0 Spine, 1 Points.
+    #[serde(rename = "falloffSample")]
+    pub falloff_sample: u32,
+    /// 0 Even, 1 Follow Falloff.
+    #[serde(rename = "falloffSpacing")]
+    pub falloff_spacing: u32,
+    /// The op's own copy of the falloff layers; `null` = none.
+    pub falloff: Option<ShapeWeights>,
 }
 impl ConeOp {
     pub fn parameters(&self) -> Result<ConeParameters> {
         finite(&[self.edge_weight, self.gaps], "Edge Weight and Gaps")?;
         Ok(ConeParameters {
+            falloff: self.drive()?,
             position: vec3(self.cen_x, self.cen_y, self.cen_z, "Position")?,
             size: vec3(self.size_x, self.size_y, self.size_z, "Size")?,
             axis: axis_of(self.axis)?,
@@ -539,6 +569,7 @@ impl ConeOp {
 impl From<&ConeParameters> for ConeOp {
     fn from(c: &ConeParameters) -> Self {
         let ConeParameters {
+            falloff,
             position: p,
             size: s,
             axis,
@@ -554,6 +585,14 @@ impl From<&ConeParameters> for ConeOp {
             selected_uv_map,
         } = c;
         Self {
+            falloff_scale: falloff.scale,
+            falloff_offset_x: falloff.offset.x,
+            falloff_offset_y: falloff.offset.y,
+            falloff_offset_z: falloff.offset.z,
+            falloff_twist: falloff.twist.to_radians(),
+            falloff_sample: index_of(&FalloffSample::ALL, &falloff.sample),
+            falloff_spacing: index_of(&FalloffSpacing::ALL, &falloff.spacing),
+            falloff: None,
             cen_x: p.x,
             cen_y: p.y,
             cen_z: p.z,
@@ -582,7 +621,18 @@ impl Default for ConeOp {
 impl TypedOp for ConeOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
         let p = self.parameters()?;
-        generated(ctx, crate::cone_geometry(&p)?, p.axis)
+        // #35: shaped by the op's own falloff copy, as the tool is by the
+        // tool falloff.
+        let w = weigher(&self.falloff)?;
+        let mesh = crate::primitive_shapes::shaped(
+            crate::cone_geometry(&p)?,
+            &p.falloff,
+            p.position,
+            p.axis,
+            true,
+            as_weight(&w),
+        )?;
+        generated(ctx, mesh, p.axis)
     }
 }
 
@@ -615,11 +665,32 @@ pub struct CapsuleOp {
     pub axis: u32,
     #[serde(rename = "makeUVs")]
     pub make_uvs: bool,
+    /// What the op's falloff does (#35, as #15); see `op_falloff!`.
+    #[serde(rename = "falloffScale")]
+    pub falloff_scale: f64,
+    #[serde(rename = "falloffOffsetX")]
+    pub falloff_offset_x: f64,
+    #[serde(rename = "falloffOffsetY")]
+    pub falloff_offset_y: f64,
+    #[serde(rename = "falloffOffsetZ")]
+    pub falloff_offset_z: f64,
+    /// Radians.
+    #[serde(rename = "falloffTwist")]
+    pub falloff_twist: f64,
+    /// 0 Spine, 1 Points.
+    #[serde(rename = "falloffSample")]
+    pub falloff_sample: u32,
+    /// 0 Even, 1 Follow Falloff.
+    #[serde(rename = "falloffSpacing")]
+    pub falloff_spacing: u32,
+    /// The op's own copy of the falloff layers; `null` = none.
+    pub falloff: Option<ShapeWeights>,
 }
 impl CapsuleOp {
     pub fn parameters(&self) -> Result<CapsuleParameters> {
         finite(&[self.end_size, self.bulge], "End Size and Bulge")?;
         Ok(CapsuleParameters {
+            falloff: self.drive()?,
             position: vec3(self.cen_x, self.cen_y, self.cen_z, "Position")?,
             radius: vec3(self.size_x, self.size_y, self.size_z, "Radius")?,
             sides: self.sides,
@@ -637,6 +708,7 @@ impl CapsuleOp {
 impl From<&CapsuleParameters> for CapsuleOp {
     fn from(c: &CapsuleParameters) -> Self {
         let CapsuleParameters {
+            falloff,
             position: p,
             radius: r,
             sides,
@@ -649,6 +721,14 @@ impl From<&CapsuleParameters> for CapsuleOp {
             make_uvs,
         } = *c;
         Self {
+            falloff_scale: falloff.scale,
+            falloff_offset_x: falloff.offset.x,
+            falloff_offset_y: falloff.offset.y,
+            falloff_offset_z: falloff.offset.z,
+            falloff_twist: falloff.twist.to_radians(),
+            falloff_sample: index_of(&FalloffSample::ALL, &falloff.sample),
+            falloff_spacing: index_of(&FalloffSpacing::ALL, &falloff.spacing),
+            falloff: None,
             cen_x: p.x,
             cen_y: p.y,
             cen_z: p.z,
@@ -674,7 +754,18 @@ impl Default for CapsuleOp {
 impl TypedOp for CapsuleOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
         let p = self.parameters()?;
-        generated(ctx, crate::capsule_geometry(&p)?, p.axis)
+        // #35: shaped by the op's own falloff copy, as the tool is by the
+        // tool falloff.
+        let w = weigher(&self.falloff)?;
+        let mesh = crate::primitive_shapes::shaped(
+            crate::capsule_geometry(&p)?,
+            &p.falloff,
+            p.position,
+            p.axis,
+            false,
+            as_weight(&w),
+        )?;
+        generated(ctx, mesh, p.axis)
     }
 }
 
@@ -700,6 +791,26 @@ pub struct TorusOp {
     pub axis: u32,
     #[serde(rename = "makeUVs")]
     pub make_uvs: bool,
+    /// What the op's falloff does (#35, as #15); see `op_falloff!`.
+    #[serde(rename = "falloffScale")]
+    pub falloff_scale: f64,
+    #[serde(rename = "falloffOffsetX")]
+    pub falloff_offset_x: f64,
+    #[serde(rename = "falloffOffsetY")]
+    pub falloff_offset_y: f64,
+    #[serde(rename = "falloffOffsetZ")]
+    pub falloff_offset_z: f64,
+    /// Radians.
+    #[serde(rename = "falloffTwist")]
+    pub falloff_twist: f64,
+    /// 0 Spine, 1 Points.
+    #[serde(rename = "falloffSample")]
+    pub falloff_sample: u32,
+    /// 0 Even, 1 Follow Falloff.
+    #[serde(rename = "falloffSpacing")]
+    pub falloff_spacing: u32,
+    /// The op's own copy of the falloff layers; `null` = none.
+    pub falloff: Option<ShapeWeights>,
 }
 impl TorusOp {
     pub fn parameters(&self) -> Result<TorusParameters> {
@@ -714,6 +825,7 @@ impl TorusOp {
             "Torus sizes and Bulge",
         )?;
         Ok(TorusParameters {
+            falloff: self.drive()?,
             position: vec3(self.cen_x, self.cen_y, self.cen_z, "Position")?,
             sides: self.sides,
             segments: self.segments,
@@ -731,6 +843,7 @@ impl TorusOp {
 impl From<&TorusParameters> for TorusOp {
     fn from(t: &TorusParameters) -> Self {
         let TorusParameters {
+            falloff,
             position: p,
             sides,
             segments,
@@ -743,6 +856,14 @@ impl From<&TorusParameters> for TorusOp {
             make_uvs,
         } = *t;
         Self {
+            falloff_scale: falloff.scale,
+            falloff_offset_x: falloff.offset.x,
+            falloff_offset_y: falloff.offset.y,
+            falloff_offset_z: falloff.offset.z,
+            falloff_twist: falloff.twist.to_radians(),
+            falloff_sample: index_of(&FalloffSample::ALL, &falloff.sample),
+            falloff_spacing: index_of(&FalloffSpacing::ALL, &falloff.spacing),
+            falloff: None,
             cen_x: p.x,
             cen_y: p.y,
             cen_z: p.z,
@@ -766,7 +887,18 @@ impl Default for TorusOp {
 impl TypedOp for TorusOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
         let p = self.parameters()?;
-        generated(ctx, crate::torus_geometry(&p)?, p.axis)
+        // #35: shaped by the op's own falloff copy, as the tool is by the
+        // tool falloff.
+        let w = weigher(&self.falloff)?;
+        let mesh = crate::primitive_shapes::shaped(
+            crate::torus_geometry(&p)?,
+            &p.falloff,
+            p.position,
+            p.axis,
+            false,
+            as_weight(&w),
+        )?;
+        generated(ctx, mesh, p.axis)
     }
 }
 
@@ -801,6 +933,26 @@ pub struct EllipsoidOp {
     pub gaps: f64,
     #[serde(rename = "uvMap")]
     pub uv_map: String,
+    /// What the op's falloff does (#35, as #15); see `op_falloff!`.
+    #[serde(rename = "falloffScale")]
+    pub falloff_scale: f64,
+    #[serde(rename = "falloffOffsetX")]
+    pub falloff_offset_x: f64,
+    #[serde(rename = "falloffOffsetY")]
+    pub falloff_offset_y: f64,
+    #[serde(rename = "falloffOffsetZ")]
+    pub falloff_offset_z: f64,
+    /// Radians.
+    #[serde(rename = "falloffTwist")]
+    pub falloff_twist: f64,
+    /// 0 Spine, 1 Points.
+    #[serde(rename = "falloffSample")]
+    pub falloff_sample: u32,
+    /// 0 Even, 1 Follow Falloff.
+    #[serde(rename = "falloffSpacing")]
+    pub falloff_spacing: u32,
+    /// The op's own copy of the falloff layers; `null` = none.
+    pub falloff: Option<ShapeWeights>,
 }
 impl EllipsoidOp {
     pub fn parameters(&self) -> Result<EllipsoidParameters> {
@@ -809,6 +961,7 @@ impl EllipsoidOp {
             "Bulge and Gaps",
         )?;
         Ok(EllipsoidParameters {
+            falloff: self.drive()?,
             position: vec3(self.cen_x, self.cen_y, self.cen_z, "Position")?,
             radius: vec3(self.size_x, self.size_y, self.size_z, "Radius")?,
             sides: self.sides,
@@ -829,6 +982,7 @@ impl EllipsoidOp {
 impl From<&EllipsoidParameters> for EllipsoidOp {
     fn from(e: &EllipsoidParameters) -> Self {
         let EllipsoidParameters {
+            falloff,
             position: p,
             radius: r,
             sides,
@@ -846,6 +1000,14 @@ impl From<&EllipsoidParameters> for EllipsoidOp {
             symmetry_axis: _,
         } = e;
         Self {
+            falloff_scale: falloff.scale,
+            falloff_offset_x: falloff.offset.x,
+            falloff_offset_y: falloff.offset.y,
+            falloff_offset_z: falloff.offset.z,
+            falloff_twist: falloff.twist.to_radians(),
+            falloff_sample: index_of(&FalloffSample::ALL, &falloff.sample),
+            falloff_spacing: index_of(&FalloffSpacing::ALL, &falloff.spacing),
+            falloff: None,
             cen_x: p.x,
             cen_y: p.y,
             cen_z: p.z,
@@ -873,7 +1035,18 @@ impl Default for EllipsoidOp {
 impl TypedOp for EllipsoidOp {
     fn run(&self, ctx: &OpContext) -> Result<Mesh> {
         let p = self.parameters()?;
-        generated(ctx, crate::ellipsoid_geometry(&p)?, p.axis)
+        // #35: shaped by the op's own falloff copy, as the tool is by the
+        // tool falloff.
+        let w = weigher(&self.falloff)?;
+        let mesh = crate::primitive_shapes::shaped(
+            crate::ellipsoid_geometry(&p)?,
+            &p.falloff,
+            p.position,
+            p.axis,
+            false,
+            as_weight(&w),
+        )?;
+        generated(ctx, mesh, p.axis)
     }
 }
 
@@ -1049,6 +1222,7 @@ pub(crate) fn entries() -> Vec<Arc<dyn OpDef>> {
         axis(),
     ]);
     cone.extend(uv_rows());
+    cone.extend(falloff_fields());
 
     let mut capsule = position().to_vec();
     capsule.extend(size("Radius"));
@@ -1062,6 +1236,7 @@ pub(crate) fn entries() -> Vec<Arc<dyn OpDef>> {
         axis(),
         make_uvs(),
     ]);
+    capsule.extend(falloff_fields());
 
     let mut torus = position().to_vec();
     torus.extend([
@@ -1075,6 +1250,7 @@ pub(crate) fn entries() -> Vec<Arc<dyn OpDef>> {
         axis(),
         make_uvs(),
     ]);
+    torus.extend(falloff_fields());
 
     let mut ellipsoid = position().to_vec();
     ellipsoid.extend(size("Radius"));
@@ -1087,6 +1263,7 @@ pub(crate) fn entries() -> Vec<Arc<dyn OpDef>> {
         axis(),
     ]);
     ellipsoid.extend(uv_rows());
+    ellipsoid.extend(falloff_fields());
 
     let mut teapot = position().to_vec();
     teapot.extend([

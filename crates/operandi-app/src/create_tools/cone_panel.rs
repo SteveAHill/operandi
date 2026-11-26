@@ -152,6 +152,16 @@ impl ToolFields for ConeFields {
                     p.set_max(b);
                 },
             ));
+        // #35: the falloff shapes the Cone as it's made, as with the Cube.
+        crate::primitive_panel::shape_falloff_section(
+            &mut f,
+            app,
+            |p: &P| p.falloff,
+            |p| Some(&mut p.falloff),
+            None,
+            Vec::new(),
+            None,
+        );
         let session = app.editor.cone.as_ref();
         if let Some(error) = session.and_then(|s| s.error.as_ref()) {
             f.error(error);

@@ -97,3 +97,97 @@ fn the_falloff_section_starts_folded_and_greys_without_a_usable_falloff() {
         "Selection: greyed"
     );
 }
+
+/// GitHub #35: the numeric Torus with a falloff on, its preview and its
+/// Falloff section.
+fn armed_torus() -> Operandi {
+    let mut a = Operandi::empty();
+    a.run(Command::NewMesh);
+    a.run(Command::ArmShape(operandi_core::ShapeKind::Torus));
+    let mut t = operandi_core::TorusParameters::default();
+    t.falloff.scale = 0.2;
+    a.run(Command::ConfigureShape(
+        operandi_core::ShapeParameters::Torus(t),
+    ));
+    assert!(
+        a.editor.shape.as_ref().is_some_and(|s| s.preview.is_some()),
+        "{}",
+        a.status
+    );
+    a
+}
+fn torus_preview(a: &Operandi) -> Vec<DVec3> {
+    a.editor
+        .shape
+        .as_ref()
+        .unwrap()
+        .preview
+        .as_ref()
+        .unwrap()
+        .vertices
+        .clone()
+}
+
+#[test]
+fn a_falloff_handle_drag_reshapes_the_open_torus_and_keeps_the_tool() {
+    let mut a = armed_torus();
+    let plain = torus_preview(&a);
+    let r = rect();
+    let field = LinearFalloff {
+        start: DVec3::new(0., 1.2, 0.),
+        end: DVec3::new(0., -0.75, 0.),
+        ..Default::default()
+    };
+    a.run(Command::SpatialFalloff(Some(field.into())));
+    assert!(a.editor.shape.is_some(), "{}", a.status);
+    let shaped = torus_preview(&a);
+    assert_ne!(shaped, plain, "the falloff shapes the preview");
+    let (at, _) = a.falloff_handles(r)[0];
+    let q = a.camera.project(at, r).unwrap().0;
+    assert_eq!(
+        a.falloff_hit(q, r),
+        Some(0),
+        "the falloff's Start is pickable"
+    );
+    a.drag_falloff(0, field.into(), q, q + vec2(0., -80.), r);
+    assert!(a.editor.shape.is_some(), "still the Torus tool");
+    assert_ne!(torus_preview(&a), shaped, "the preview follows the drag");
+}
+
+#[test]
+fn the_torus_has_the_falloff_section_greyed_until_a_falloff_is_on() {
+    use crate::shape_panel::ShapeFields;
+    let mut a = armed_torus();
+    let section = |a: &Operandi| {
+        let p = ShapeFields::params(a).unwrap();
+        ShapeFields::form(a, &p)
+            .items
+            .iter()
+            .find_map(|i| match i {
+                Item::Section {
+                    name: "Falloff",
+                    folded,
+                    items,
+                } => Some((
+                    *folded,
+                    items
+                        .iter()
+                        .filter_map(|i| match i {
+                            Item::Field(f) => Some(f.disabled_tip.is_none()),
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>(),
+                )),
+                _ => None,
+            })
+            .expect("a Falloff section")
+    };
+    let (folded, enabled) = section(&a);
+    assert!(folded);
+    assert!(enabled.iter().all(|on| !on), "no falloff: greyed");
+    a.run(Command::SpatialFalloff(Some(
+        LinearFalloff::default().into(),
+    )));
+    // Every row but Spacing (a torus's rings can't move).
+    assert_eq!(section(&a).1.iter().filter(|on| !**on).count(), 1);
+}

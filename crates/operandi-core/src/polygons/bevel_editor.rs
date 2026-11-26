@@ -144,6 +144,7 @@ impl Editor {
             if let Some(l) = next.live.as_ref().filter(|l| l.applied) {
                 next.dispatch(Command::Preview(l.params.clone()))?;
             }
+            next.refresh_falloff_primitives();
             *self = next;
             return Ok(());
         }
@@ -156,6 +157,7 @@ impl Editor {
             if let Some(l) = next.live.as_ref().filter(|l| l.applied) {
                 next.dispatch(Command::Preview(l.params.clone()))?;
             }
+            next.refresh_falloff_primitives();
             *self = next;
             return Ok(());
         }
@@ -174,6 +176,7 @@ impl Editor {
             if let Some(l) = next.live.as_ref().filter(|l| l.applied) {
                 next.dispatch(Command::Preview(l.params.clone()))?;
             }
+            next.refresh_falloff_primitives();
             *self = next;
             return Ok(());
         }
@@ -193,6 +196,7 @@ impl Editor {
             if let Some(l) = next.live.as_ref().filter(|l| l.applied) {
                 next.dispatch(Command::Preview(l.params.clone()))?;
             }
+            next.refresh_falloff_primitives();
             *self = next;
             return Ok(());
         }
@@ -217,6 +221,7 @@ impl Editor {
             if let Some(l) = next.live.as_ref().filter(|l| l.applied) {
                 next.dispatch(Command::Preview(l.params.clone()))?;
             }
+            next.refresh_falloff_primitives();
             *self = next;
             return Ok(());
         }

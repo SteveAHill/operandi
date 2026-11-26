@@ -620,6 +620,8 @@ mod polyscale_offset_clean_spec;
 mod pose_tool;
 #[path = "primitive_falloff.rs"]
 mod primitive_falloff;
+#[path = "primitive_falloff_numeric.rs"]
+mod primitive_falloff_numeric;
 #[path = "primitive_moved_mesh.rs"]
 mod primitive_moved_mesh;
 #[path = "primitive_settings.rs"]

@@ -462,6 +462,46 @@ pub(super) fn plain_vector<P>(
 /// falloff's handles stay usable while the tool is live, so the falloff
 /// can be turned on, switched and moved without dropping the shape.
 fn falloff_section(f: &mut ToolForm<Parameters>, app: &Operandi, tool: Tool) {
+    let mut extra = Vec::new();
+    if tool == Tool::Box {
+        // The Cube has no Axis of its own; the falloff shapes it along this.
+        extra.push(
+            tf::axis(|p: &Parameters| p.radial_axis, |p, a| p.radial_axis = a)
+                .tip("The axis the falloff shapes the cube along"),
+        );
+    }
+    let fit = Button::run("Fit Falloff to Shape", |app: &mut Operandi| {
+        let fitted = app.editor.primitive_fit_falloff();
+        match fitted.and_then(|f| app.editor.dispatch(Command::SpatialFalloff(Some(f)))) {
+            Ok(()) => app.status = "Linear falloff fitted to the shape".into(),
+            Err(e) => app.status = e,
+        }
+    })
+    .tip("A Linear falloff from the shape's top (full) to its base (none)");
+    shape_falloff_section(
+        f,
+        app,
+        |p: &Parameters| p.shape_falloff,
+        |p| Some(&mut p.shape_falloff),
+        (tool == Tool::Sphere).then_some("Moving a sphere's rings would change the sphere"),
+        extra,
+        Some(fit),
+    );
+}
+
+/// The Falloff section for any primitive's form (#15; Cone, Capsule, Torus
+/// and Ellipsoid #35). `get` and `put` reach the form's `ShapeFalloff`;
+/// `no_spacing` greys Follow Falloff spacing with its reason for shapes
+/// whose rings can't move; `extra` rows and the `fit` button go last.
+pub(crate) fn shape_falloff_section<P: 'static>(
+    f: &mut ToolForm<P>,
+    app: &Operandi,
+    get: fn(&P) -> operandi_core::ShapeFalloff,
+    put: fn(&mut P) -> Option<&mut operandi_core::ShapeFalloff>,
+    no_spacing: Option<&'static str>,
+    extra: Vec<tf::Field<P>>,
+    fit: Option<Button<P>>,
+) {
     let e = &app.editor;
     // UIC-117: greyed with the reason, never hidden.
     let why = if e.spatial_falloff.is_none() {
@@ -471,17 +511,17 @@ fn falloff_section(f: &mut ToolForm<Parameters>, app: &Operandi, tool: Tool) {
     };
     let on = why.is_none();
     let why = why.unwrap_or_default();
-    let mut items: Vec<tf::Field<Parameters>> = vec![
+    let mut items: Vec<tf::Field<P>> = vec![
         tf::percent(
             "falloff_scale",
             "Scale",
             "%",
-            |p: &Parameters| p.shape_falloff.scale,
-            |p, v| {
+            move |p: &P| get(p).scale,
+            move |p, v| {
                 if !v.is_finite() || v < 0. {
                     return Err("Scale must be 0% or more".into());
                 }
-                p.shape_falloff.scale = v / 100.;
+                put(p).ok_or("No falloff values here")?.scale = v / 100.;
                 Ok(())
             },
         )
@@ -491,9 +531,9 @@ fn falloff_section(f: &mut ToolForm<Parameters>, app: &Operandi, tool: Tool) {
         "falloff_offset",
         "Offset",
         Unit::Distance,
-        |p: &Parameters| p.shape_falloff.offset,
-        |p, a, v| {
-            p.shape_falloff.offset[a] = v;
+        move |p: &P| get(p).offset,
+        move |p, a, v| {
+            put(p).ok_or("No falloff values here")?.offset[a] = v;
             Ok(())
         },
     ));
@@ -502,9 +542,9 @@ fn falloff_section(f: &mut ToolForm<Parameters>, app: &Operandi, tool: Tool) {
             "falloff_twist",
             "Twist",
             Unit::Angle,
-            |p: &Parameters| p.shape_falloff.twist,
-            |p, v| {
-                p.shape_falloff.twist = v;
+            move |p: &P| get(p).twist,
+            move |p, v| {
+                put(p).ok_or("No falloff values here")?.twist = v;
                 Ok(())
             },
         )
@@ -515,8 +555,12 @@ fn falloff_section(f: &mut ToolForm<Parameters>, app: &Operandi, tool: Tool) {
             "falloff_sample",
             "Sample At",
             &FalloffSample::ALL.map(|s| (s, s.label())),
-            |p: &Parameters| p.shape_falloff.sample,
-            |p, s| p.shape_falloff.sample = s,
+            move |p: &P| get(p).sample,
+            move |p, s| {
+                if let Some(f) = put(p) {
+                    f.sample = s;
+                }
+            },
         )
         .tip("Spine: one weight per ring, so rings stay round. Points: every point's own weight"),
     );
@@ -524,23 +568,20 @@ fn falloff_section(f: &mut ToolForm<Parameters>, app: &Operandi, tool: Tool) {
         "falloff_spacing",
         "Spacing",
         &FalloffSpacing::ALL.map(|s| (s, s.label())),
-        |p: &Parameters| p.shape_falloff.spacing,
-        |p, s| p.shape_falloff.spacing = s,
+        move |p: &P| get(p).spacing,
+        move |p, s| {
+            if let Some(f) = put(p) {
+                f.spacing = s;
+            }
+        },
     )
     .tip("Follow Falloff packs the Segments where the falloff changes fastest");
-    items.push(if tool == Tool::Sphere {
-        spacing.enabled_if(false, "Moving a sphere's rings would change the sphere")
-    } else {
-        spacing
+    items.push(match no_spacing {
+        Some(reason) => spacing.enabled_if(false, reason),
+        None => spacing,
     });
-    if tool == Tool::Box {
-        // The Cube has no Axis of its own; the falloff shapes it along this.
-        items.push(
-            tf::axis(|p: &Parameters| p.radial_axis, |p, a| p.radial_axis = a)
-                .tip("The axis the falloff shapes the cube along"),
-        );
-    }
-    let mut section: Vec<tf::Item<Parameters>> = items
+    items.extend(extra);
+    let mut section: Vec<tf::Item<P>> = items
         .into_iter()
         .map(|field| {
             tf::Item::Field(Box::new(if on {
@@ -550,15 +591,8 @@ fn falloff_section(f: &mut ToolForm<Parameters>, app: &Operandi, tool: Tool) {
             }))
         })
         .collect();
-    section.push(tf::Item::Wide(
-        Button::run("Fit Falloff to Shape", |app: &mut Operandi| {
-            let fitted = app.editor.primitive_fit_falloff();
-            match fitted.and_then(|f| app.editor.dispatch(Command::SpatialFalloff(Some(f)))) {
-                Ok(()) => app.status = "Linear falloff fitted to the shape".into(),
-                Err(e) => app.status = e,
-            }
-        })
-        .tip("A Linear falloff from the shape's top (full) to its base (none)"),
-    ));
+    if let Some(fit) = fit {
+        section.push(tf::Item::Wide(fit));
+    }
     f.section("Falloff", true, section);
 }

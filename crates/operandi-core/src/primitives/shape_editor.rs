@@ -47,8 +47,29 @@ impl Editor {
         }
         Ok(())
     }
-    fn shape_with_symmetry(&self, p: &ShapeParameters) -> Result<Mesh> {
-        crate::user_defaults::primitive_symmetry(self.active_symmetry()).doubled(p.geometry()?)
+    fn shape_with_symmetry(&self, p: &ShapeParameters, target: u64) -> Result<Mesh> {
+        // #35: the Torus and Capsule are shaped by the tool falloff before
+        // they're doubled.
+        let mesh = match p {
+            ShapeParameters::Torus(t) => self.tool_falloff_shaped(
+                p.geometry()?,
+                &t.falloff,
+                t.position,
+                t.axis,
+                false,
+                target,
+            )?,
+            ShapeParameters::Capsule(c) => self.tool_falloff_shaped(
+                p.geometry()?,
+                &c.falloff,
+                c.position,
+                c.axis,
+                false,
+                target,
+            )?,
+            _ => p.geometry()?,
+        };
+        crate::user_defaults::primitive_symmetry(self.active_symmetry()).doubled(mesh)
     }
     fn normalized_shape(p: ShapeParameters) -> ShapeParameters {
         match p {
@@ -84,7 +105,7 @@ impl Editor {
         }
         let result = self
             .shape_target(target, p.kind())
-            .and_then(|_| self.shape_with_symmetry(&p))
+            .and_then(|_| self.shape_with_symmetry(&p, target))
             .and_then(|mesh| {
                 self.shape_scene(target, mesh.clone())?;
                 Ok(mesh)
@@ -147,7 +168,7 @@ impl Editor {
         }
         let (target, p) = (s.target, s.requested.clone());
         if !drop || s.preview.is_some() {
-            let mesh = self.shape_with_symmetry(&p)?;
+            let mesh = self.shape_with_symmetry(&p, target)?;
             let candidate = self.shape_scene(target, mesh)?;
             let before = std::mem::replace(&mut self.scene, candidate);
             self.record(kind.label().into(), before);
