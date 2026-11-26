@@ -142,7 +142,7 @@ impl Default for EdgeBevelOptions {
             use_material: false,
             material: "Default".into(),
             support: 0.,
-            loop_slide: false,
+            loop_slide: true,
             corner: CornerPattern::Balanced,
         }
     }

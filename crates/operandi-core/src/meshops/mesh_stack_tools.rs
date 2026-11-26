@@ -541,9 +541,8 @@ pub struct EdgeBevelOp {
     /// Fraction (1 = 100%).
     pub depth: f64,
     pub bound_extend: bool,
-    /// Edge Bevel's Loop Slide (EBC-Q-LS1), off for a new op as on the
-    /// tool. Ops saved before it existed load with it on, which is how
-    /// they were built, so a saved scene reopens unchanged.
+    /// Edge Bevel's Loop Slide (EBC-Q-LS1), on by default as on the tool;
+    /// ops saved before it existed load with it on, as they were built.
     pub loop_slide: bool,
 }
 impl Default for EdgeBevelOp {
@@ -560,7 +559,7 @@ impl Default for EdgeBevelOp {
             coplanar: false,
             depth: 1.,
             bound_extend: true,
-            loop_slide: false,
+            loop_slide: true,
         }
     }
 }

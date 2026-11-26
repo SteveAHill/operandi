@@ -30,7 +30,7 @@
 | **Segments** | How many rows of polygons run across the bevel; 1 is a flat strip. Edge Bevel and Edge Chamfer count the same way. | 1 |
 | **Edge Shape** | **Round**, or **Square** and **Sharp** (two flat strips meeting at the original edge). | Round |
 | **Depth** | 100% is the full round profile; lower values flatten it toward a chamfer. Needs **Segments** 2 or more. | 100% |
-| **Loop Slide** | Edge Bevel. Off: points of the polygons around the bevel move out of its way, so it keeps its full width. On: nothing around it moves, and the bevel slides along the edges beside it and narrows where it has to. | Off |
+| **Loop Slide** | Edge Bevel. Off: points of the polygons around the bevel move out of its way, so it keeps its full width. On: nothing around it moves, and the bevel slides along the edges beside it and narrows where it has to, as at a corner that isn't square. | On |
 | **Mitering Style** | Edge Bevel: how strips meet where three or more come together. **Default**: a rounded corner, its rows wrapping around in an even grid. **Neutral**: a rounded corner whose lines run straight up into it. **Uniform**: rows nest as smooth arches under a pointed arch. **Pinch**: rows meet in V seams under an arch pinched to a point. Needs **Segments** 2 or more. | Default |
 | **Parallel** | Edge Chamfer: keeps each new edge the offset away from the original edge. | — |
 | **Stop At Edge** | Edge Chamfer: side points stop at the far end of their edge instead of running past it. | — |
@@ -42,7 +42,7 @@ The greyed rows (**Sharp**, **Coplanar** and the others below them) aren't avail
 
 ## Tips
 
-- With **Loop Slide** off, a wide bevel pushes nearby points along their edges, or across the polygon beyond when they sit on a straight line, only as far as it needs. Corners of the solid stay where they are.
+- With **Loop Slide** off, the bevel keeps its full width round corners that aren't square, and a wide bevel pushes nearby points along their edges, or across the polygon beyond when they sit on a straight line, only as far as it needs. Corners of the solid stay where they are.
 - Small rounded corners that a wide bevel would fold over close to a single point instead.
 
 ## Related

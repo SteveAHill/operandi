@@ -150,8 +150,9 @@ fn loop_slide_off_gives_an_even_width_and_the_diagonals_bend() {
 }
 
 #[test]
-fn loop_slide_is_off_by_default() {
-    // The default options give exactly the Loop Slide off result (tester, 2026-11-25).
+fn loop_slide_is_on_by_default() {
+    // The default options give exactly the Loop Slide on result, the
+    // measured one (EBC-B3-03; the maintainer, 2026-11-26).
     let m = hole();
     let settings = EdgeBevelSettings {
         width: WIDTH,
@@ -161,10 +162,10 @@ fn loop_slide_is_off_by_default() {
         options: EdgeBevelOptions::default(),
     };
     assert!(
-        !EdgeBevelOptions::default().loop_slide,
-        "Loop Slide is off by default"
+        EdgeBevelOptions::default().loop_slide,
+        "Loop Slide is on by default"
     );
     let a = edge_bevel_with(&m, &RIM, &settings, None).unwrap().mesh;
-    let b = bevel(false, 2);
+    let b = bevel(true, 2);
     assert_eq!(a.vertices, b.vertices);
 }

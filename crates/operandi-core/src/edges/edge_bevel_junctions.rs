@@ -1337,7 +1337,13 @@ fn general_with(
                 // polygon's inside (left of the edge as the polygon runs).
                 let normal = newell(mesh, c.face);
                 let (na, nb) = (ua.cross(normal), normal.cross(ub));
-                let offset = if chamfer && !parallel {
+                // EBC-B3-03 (measured; 2026-11-26 fix): with Loop Slide on,
+                // a corner where the polygon bends less than 180° slides the
+                // width along both edges, as measured, so the strip narrows
+                // at the bend. Loop Slide off keeps the full width (above).
+                let convex = (ua + ub).dot(na + nb) > 1e-12;
+                let offset = if (chamfer && !parallel) || (!chamfer && options.loop_slide && convex)
+                {
                     (ua + ub) * base
                 } else {
                     let cos = na.dot(nb);

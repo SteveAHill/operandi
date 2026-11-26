@@ -194,9 +194,9 @@ fn edge_bevel_mitering_field_and_script_attribute() {
     );
 }
 
-/// Edge Bevel's Loop Slide checkbox (2026-11-24): off by default (tester,
-/// 2026-11-25), in the
-/// panel and set by script; a bad value changes nothing.
+/// Edge Bevel's Loop Slide checkbox (2026-11-24): on by default, the
+/// measured result (EBC-B3-03; 2026-11-26), in the panel and set by
+/// script; a bad value changes nothing.
 #[test]
 fn edge_bevel_loop_slide_checkbox_and_script_attribute() {
     let probe = box_app();
@@ -205,9 +205,11 @@ fn edge_bevel_loop_slide_checkbox_and_script_attribute() {
         a.editor.scene.selection.edges = vec![e1, e2];
     });
     let on = |a: &Operandi| a.editor.live.as_ref().unwrap().params.edge_bevel.loop_slide;
-    assert!(!on(&a), "off by default");
+    assert!(on(&a), "on by default");
     a.execute("tool.attr edge.bevel loopSlide ?");
-    assert_eq!(a.status, "0");
+    assert_eq!(a.status, "1");
+    a.execute("tool.attr edge.bevel loopSlide off");
+    assert!(!on(&a));
     a.fields.insert("chamfer_offset".into(), "0.2 m".into());
     assert!(a.confirm_fields(), "{}", a.status);
     let even = mesh(&a).vertices.clone();

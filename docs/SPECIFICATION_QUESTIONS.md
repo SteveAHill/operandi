@@ -9910,7 +9910,9 @@ changed as noted.
   saved before Loop Slide load with it on (as they were built).
 - **EBC-Q-MO1 (fills EBC-Q03's Mitering for Edge Bevel).** Mitering Offset:
   an edge this far beyond the bevel on each side, with a second handle.
-- **EBC-Q-LS1 (new option).** Loop Slide, Edge Bevel only, off by default.
+- **EBC-Q-LS1 (new option).** Loop Slide, Edge Bevel only, on by default
+  (2026-11-26: on is the measured result, EBC-B3-03, at corners that
+  aren't square; off keeps the full width through them).
   Off: points of the polygons around the strip that it would reach move out
   of its way (along their edge, or across the polygon beyond), so it keeps
   its full width. On: nothing moves; the strip slides along the edges beside

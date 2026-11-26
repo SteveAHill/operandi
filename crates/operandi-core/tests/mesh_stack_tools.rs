@@ -617,9 +617,9 @@ fn bevel_ops_saved_with_round_level_load_as_segments() {
     let saved = serde_json::to_value(&op).unwrap();
     assert!(saved.get("level").is_none(), "{saved}");
     assert_eq!(serde_json::from_value::<EdgeBevelOp>(saved).unwrap(), op);
-    // A new op starts flat with Loop Slide off, as the tool does.
+    // A new op starts flat with Loop Slide on, as the tool does.
     let new = EdgeBevelOp::default();
-    assert_eq!((new.segments, new.loop_slide), (1, false));
+    assert_eq!((new.segments, new.loop_slide), (1, true));
     let old = json!({ "inset": 0.1, "useMat": false, "matName": "", "level": 0 });
     let op: VertexBevelOp = serde_json::from_value(old).unwrap();
     assert_eq!(op.segments, 1);

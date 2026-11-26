@@ -90,8 +90,11 @@ fn the_strip_keeps_its_width_through_the_bends() {
             rows,
             depth: 100.,
             chamfer: false,
+            // Loop Slide off keeps the width through the bends; on (the
+            // default) slides it along the edges as measured (EBC-B3-03).
             options: EdgeBevelOptions {
                 corner,
+                loop_slide: false,
                 ..Default::default()
             },
         };

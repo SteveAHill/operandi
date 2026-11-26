@@ -1678,7 +1678,8 @@ fn edge_bevel_form(p: &Parameters, f: &mut Form, bevel: bool) {
         .tip("100% is the full round profile; lower values flatten it toward a straight chamfer"),
     );
     if bevel {
-        // A tester's request (2026-11-24), off by default (EBC-Q-LS1).
+        // A tester's request (2026-11-24), on by default: the measured
+        // result (EBC-Q-LS1, EBC-B3-03).
         f.field(
             check(
                 "edge_bevel_loop_slide",
