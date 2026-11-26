@@ -542,6 +542,7 @@ pub(crate) fn op_icon(id: &str) -> Option<crate::icons::Icon> {
         "deform.pushInfluence.item" => "push",
         "deform.morphInfluence.item" => "vmap-set-value",
         "deform.vortex.item" => "vortex",
+        "deform.wrap.item" => "uv-unwrap",
         "deform.lattice.item" => "cube",
         "deform.spline.item" => "curve",
         "deform.bezier.item" => "bezier-curve",
@@ -1116,6 +1117,18 @@ impl Operandi {
             if def.fields().iter().any(|f| f.key == "falloff") {
                 op_falloff_section(ui, &self.editor, &values, &mut changes);
             }
+            if def.id() == operandi_core::meshop_wrap::WRAP_ID
+                && let Some(e) = wrap_section(
+                    ui,
+                    &self.editor.scene,
+                    &values,
+                    item.id,
+                    op_id,
+                    &mut changes,
+                )
+            {
+                self.status = e;
+            }
             if def.id() == operandi_core::meshblend::MESHBLEND_OP {
                 let status = evaluated.and_then(|e| e.statuses.get(index));
                 (blend_commands, blend_dragged) =
@@ -1219,6 +1232,56 @@ impl Operandi {
         });
         self.editor.undo_fold = previous;
     }
+}
+
+/// Wrap's binding rows: how many points are stuck to the Target, and
+/// Rebind, which measures the binding again from where the mesh and the
+/// Target are now. Returns why a Rebind failed.
+fn wrap_section(
+    ui: &mut egui::Ui,
+    scene: &operandi_core::Scene,
+    values: &serde_json::Value,
+    item: u64,
+    op: u64,
+    changes: &mut serde_json::Map<String, serde_json::Value>,
+) -> Option<String> {
+    use crate::form::rows;
+    use crate::unavailable::Gate as _;
+    let bound = values["binding"].as_array().map_or(0, Vec::len);
+    let has_target = values["target"].as_u64().is_some_and(|t| t != 0);
+    let mut failed = None;
+    rows::section(ui, "Binding", false, |ui| {
+        let shown = if bound == 0 {
+            "Not bound".to_owned()
+        } else {
+            format!("{bound} points")
+        };
+        rows::value(ui, "Bound", &shown);
+        ui.gated_ui(
+            crate::unavailable::unless(has_target, "Pick a Target first"),
+            |ui| {
+                if rows::button(ui, "Rebind")
+                    .on_hover_text(
+                        "Stick each point to its nearest spot on the Target, as things are now",
+                    )
+                    .clicked()
+                {
+                    match operandi_core::meshop_wrap::bind(scene, item, op) {
+                        Ok(v) => {
+                            changes.insert("binding".into(), v);
+                        }
+                        Err(e) => failed = Some(e.to_string()),
+                    }
+                }
+            },
+        );
+        rows::note(
+            ui,
+            "The points follow the Target when it moves or changes shape. Press Rebind \
+             after changing the mesh below or the Target's polygons.",
+        );
+    });
+    failed
 }
 
 /// A primitive op's Falloff section (#15): which falloff layers the op

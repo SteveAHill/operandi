@@ -934,7 +934,7 @@ fn ray_on(
 
 /// The source triangle nearest `p` and the barycentric weights of the
 /// nearest spot on it.
-fn nearest_on(
+pub(crate) fn nearest_on(
     source: &Mesh,
     tris: &[(usize, [usize; 3])],
     p: DVec3,

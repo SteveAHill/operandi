@@ -8961,6 +8961,12 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   mesh's own curves by index (no curve items yet); frames by parallel
   transport from the world axis least in line with the start; curve
   points never move; past the ends the mesh carries on straight.
+  Batch 14: Wrap (`deform.wrap.item`): each point is bound to its nearest
+  spot on the Target (polygon, triangle, two weights, offset in the
+  triangle's frame), saved with the step (Jason 2026-11-26); Rebind is a
+  Properties button that measures it again. A changed point count below
+  or missing target polygons pass the mesh through and ask for Rebind.
+  Unclear: whether Rebind needs its own command for scripts.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges

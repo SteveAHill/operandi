@@ -667,6 +667,7 @@ pub(crate) fn builtin() -> Vec<Arc<dyn OpDef>> {
     table.extend(crate::meshop_push_influence::entries());
     table.extend(crate::meshop_morph_influence::entries());
     table.extend(crate::meshop_vortex::entries());
+    table.extend(crate::meshop_wrap::entries());
     table.extend(crate::meshop_lattice::entries());
     table.extend(crate::meshop_spline_deformer::entries());
     table.extend(crate::meshop_bezier_deformer::entries());

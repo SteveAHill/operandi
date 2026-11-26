@@ -552,6 +552,8 @@ mod meshop_vertex_map_common;
 mod meshop_vortex;
 #[path = "meshops/meshop_weight_influence.rs"]
 mod meshop_weight_influence;
+#[path = "meshops/meshop_wrap.rs"]
+pub mod meshop_wrap;
 #[path = "rigging/pose_tool.rs"]
 pub mod pose_tool;
 #[path = "rigging/rig.rs"]

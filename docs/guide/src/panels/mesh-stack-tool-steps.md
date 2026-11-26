@@ -125,6 +125,7 @@ With no curve to follow, the curve deformers pass the mesh through.
 | **Spline Deformer** | Bends the mesh along one of its own curves (**Curve Index** counts them from 0). The distance along **Axis**, from **Start** and times **Length Scale**, becomes the distance along the curve, so a straight column follows the curve. Past the curve's ends the mesh carries on straight. The curve itself doesn't move. |
 | **Bezier Deformer** | The same bend as **Spline Deformer**, along one of the mesh's Bezier curves (**Curve Index** counts only those). |
 | **Curve Constraint** | Pulls each point onto the nearest spot of one of the mesh's curves, by **Strength**. With a **Radius**, only points that close to the curve are pulled; 0 pulls every point. |
+| **Wrap** | Sticks each point to its nearest spot on the **Target** mesh, so the mesh follows when the target moves or changes shape. Pick a **Target**, then press **Rebind** in the step's **Binding** section; the binding is saved with the scene. Press **Rebind** again after changing the mesh below or the target's polygons (the row tells you when). **Strength** below 100% moves the points only part of the way. |
 
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through
