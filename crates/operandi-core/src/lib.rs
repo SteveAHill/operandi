@@ -508,6 +508,8 @@ mod meshop_set_weight;
 mod meshop_text;
 #[path = "meshops/meshop_thicken.rs"]
 mod meshop_thicken;
+#[path = "meshops/meshop_tool_pipe.rs"]
+pub mod meshop_tool_pipe;
 #[path = "meshops/meshop_types.rs"]
 pub mod meshop_types;
 #[path = "meshops/meshop_uv_flip.rs"]

@@ -530,6 +530,8 @@ pub(crate) fn op_icon(id: &str) -> Option<crate::icons::Icon> {
         "setvmap.subd.item" => "edge-crease",
         "hardedge.meshop.item" | "hardedgeconvert.meshop.item" => "harden-normals",
         "assignselectionset.meshop.item" => "tag-selection-set",
+        "symmetry.tool.item" => "symmetry",
+        "pmodel.workplane.item" => "workplane",
         "uv.create.item" => "uv-project",
         "uv.relax.item" => "uv-relax",
         "uv.pelt.item" => "uv-pelt",

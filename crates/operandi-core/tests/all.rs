@@ -465,6 +465,8 @@ mod meshop_slicers_batch5;
 mod meshop_text;
 #[path = "meshop_thicken.rs"]
 mod meshop_thicken;
+#[path = "meshop_tool_pipe_batch6.rs"]
+mod meshop_tool_pipe_batch6;
 #[path = "meshop_uv_batch4.rs"]
 mod meshop_uv_batch4;
 #[path = "meshop_vertex_maps_batch4.rs"]

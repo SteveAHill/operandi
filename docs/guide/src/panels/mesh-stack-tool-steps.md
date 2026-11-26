@@ -88,6 +88,17 @@ Sliced Edges** adds the new edges to the edge selection set named in
 **Edge Selection Set**, so a step above can use them. With no curves in
 the mesh, Curve Slice and Pen Slice pass the mesh through.
 
+## Tool pipe steps
+
+These steps don't change the mesh themselves. Each one sets something for
+every step above it in the stack, until another step of the same kind
+replaces it. Turn a step's eye off and it sets nothing.
+
+| Step | What it does to the steps above |
+|---|---|
+| **Symmetry** | A step with a **Selection** also works on the mirror image of what it picked, across the mesh's own X, Y or Z = 0 plane (**Axis**). Elements with no mirror partner are used as they are. |
+| **Set Work Plane** | Primitives and curve shapes are made on this plane: moved by **Offset X/Y/Z** and turned by **Angle X**, then **Y**, then **Z**, about the mesh's origin. Geometry that's already there doesn't move. |
+
 A step that can't run (for example **Bridge** on a closed mesh with no
 open border) turns its row red and passes the mesh below through
 unchanged, so the rest of the stack still works.

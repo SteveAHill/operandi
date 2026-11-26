@@ -520,6 +520,7 @@ fn run_op(
     links: &[Linked],
     time: Tick,
     input: &Mesh,
+    pipe: &crate::meshop_tool_pipe::Pipe,
 ) -> Result<(Mesh, Vec<crate::meshop_types::OpNote>)> {
     let kind = op.kind.revived();
     let (def, values) = match (&*kind, kind.def()) {
@@ -538,6 +539,9 @@ fn run_op(
     let element = def.selection_element();
     let selection = if def.takes_selection() {
         crate::meshop_selection::resolve(op.selection.as_ref(), &op.selops, input, element)?
+            // A Symmetry step below adds the picked elements' mirror
+            // partners (meshop_tool_pipe.rs).
+            .map(|s| pipe.mirrored(input, element, s))
     } else {
         None
     };
@@ -576,6 +580,8 @@ fn run_op(
         notes: Default::default(),
     };
     let mut out = def.run(&ctx, values)?;
+    // A Set Work Plane step below places new primitives and shapes.
+    pipe.place(def.id(), clean.vertices.len(), &mut out);
     crate::meshop_selection::carry_groups(&groups, &clean, &mut out);
     notes.extend(ctx.notes.into_inner());
     Ok((out, notes))
@@ -590,8 +596,10 @@ pub fn guarded_op(
     links: &[Linked],
     time: Tick,
     limits: Limits,
+    pipe: &crate::meshop_tool_pipe::Pipe,
 ) -> std::result::Result<(Mesh, Vec<crate::meshop_types::OpNote>), String> {
-    let (out, notes) = match catch_unwind(AssertUnwindSafe(|| run_op(op, links, time, input))) {
+    let (out, notes) = match catch_unwind(AssertUnwindSafe(|| run_op(op, links, time, input, pipe)))
+    {
         Ok(Ok(done)) => done,
         Ok(Err(e)) => return Err(e),
         Err(_) => return Err("It stopped unexpectedly (an internal error)".into()),
@@ -789,6 +797,9 @@ fn run_chain(
 ) -> Option<Chain> {
     let keep = reuse.map_or(0, |c| c.valid_prefix(base, ops, inputs));
     let mut entries: Vec<Entry> = reuse.map_or_else(Vec::new, |c| c.entries[..keep].to_vec());
+    // What the tool pipe steps below each op have set.
+    let mut pipe = crate::meshop_tool_pipe::Pipe::default();
+    ops[..keep].iter().for_each(|op| pipe.after(op));
     for (op, op_inputs) in ops[keep..].iter().zip(&inputs[keep..]) {
         if cancel.load(Ordering::Relaxed) {
             return None;
@@ -800,7 +811,14 @@ fn run_chain(
             (input, OpStatus::Off)
         } else {
             counter.fetch_add(1, Ordering::Relaxed);
-            match guarded_op(&input, op, &op_inputs.links, op_inputs.time(), limits) {
+            match guarded_op(
+                &input,
+                op,
+                &op_inputs.links,
+                op_inputs.time(),
+                limits,
+                &pipe,
+            ) {
                 Ok((mesh, notes)) => {
                     let mesh = Shared::new(mesh);
                     // Checked above; later readers skip the walk.
@@ -816,6 +834,7 @@ fn run_chain(
                 Err(reason) => (input, OpStatus::Failed(reason)),
             }
         };
+        pipe.after(op);
         entries.push(Entry {
             op: op.clone(),
             inputs: op_inputs.clone(),

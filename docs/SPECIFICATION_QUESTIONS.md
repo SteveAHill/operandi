@@ -8910,6 +8910,15 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   the shape's axis is always the Axis X/Y/Z vector (default Z); Action
   Axis = that vector. Handles, Lazy Apply, Exponent, Extend Open Edge not
   kept.
+- **MOQ-66 Tool pipe steps, provisional.** Symmetry (`symmetry.tool.item`)
+  and Set Work Plane (`pmodel.workplane.item`) pass the mesh through and
+  set state for every op above until replaced; an off step sets nothing.
+  Symmetry adds the mirror partners (matched by position across the
+  mesh-space axis = 0 plane, tolerance 1e-6 of the mesh size) of each
+  op's resolved Selection; it doesn't mirror ops without a Selection or
+  the moves of transform ops. Set Work Plane moves the new points of the
+  Create primitives and curve shapes by Offset and Angle X, then Y, then
+  Z (R = Rz·Ry·Rx). Falloff entries in the stack not built.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges
