@@ -1,7 +1,6 @@
-//! Free Cursor (Preferences > Input > Remapping and
-//! Viewport Properties > Mouse Control; the tester, 2026-11-25, as Blender
-//! does): during a drag in a view, a pointer that reaches the view's edge is
-//! put back in at the opposite edge, and the drag goes on reading the
+//! Free Cursor (Preferences > Input > Remapping; the tester, 2026-11-25):
+//! during a drag in a view, a pointer that reaches the view's edge is put
+//! back in at the opposite edge, and the drag goes on reading the
 //! pointer as if it had kept going. The gestures see one unbroken path:
 //! every place the view reads during the drag is the real pointer plus the
 //! distance the put-backs have taken off.

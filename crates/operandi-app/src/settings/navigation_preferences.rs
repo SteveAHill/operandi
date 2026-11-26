@@ -65,8 +65,9 @@ impl InputDevice {
     }
 }
 
-/// The two unrestricted options' labels and tooltips, shared with Viewport
-/// Properties > Mouse Control, which shows the same preferences.
+/// The two unrestricted options' labels and tooltips. They live only in
+/// Preferences: they are app-wide, not a view's own (the maintainer,
+/// 2026-11-26).
 /// Named Free Orbit and Free Cursor by the tester (2026-11-25).
 pub const UNRESTRICTED_ROTATION_LABEL: &str = "Free Orbit";
 pub const UNRESTRICTED_ROTATION_TIP: &str = "Orbit up and down without stopping at straight up or down: keep going over the top and all the way round";

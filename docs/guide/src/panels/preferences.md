@@ -22,9 +22,8 @@ Map...** to change keys, and sets up a pen tablet.
 
 ## Free Orbit and Free Cursor
 
-Two mouse options on the **Remapping** page, both off at first. They also
-show in **Viewport Properties** (press **O** over a view) under **Mouse
-Control**; both places change the same setting, for every view.
+Two mouse options on the **Remapping** page, both off at first. Each
+applies to every view.
 
 - **Free Orbit**: orbiting up or down keeps going over the top and all the
   way round, instead of stopping just short of looking straight down or up.
