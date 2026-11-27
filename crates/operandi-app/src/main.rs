@@ -4152,6 +4152,9 @@ mod floating;
 #[path = "window_layout/form_editor.rs"]
 mod form_editor;
 #[cfg(test)]
+#[path = "window_layout/form_editor_pie_tests.rs"]
+mod form_editor_pie_tests;
+#[cfg(test)]
 #[path = "window_layout/form_editor_tests.rs"]
 mod form_editor_tests;
 #[path = "nodes/graph_editor.rs"]

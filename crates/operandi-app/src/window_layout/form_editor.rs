@@ -28,6 +28,10 @@ use crate::workbench::{bound, control_name, index_arg, on_arg, set_attr, word};
 use operandi_core::command_runtime::CommandState;
 use serde::{Deserialize, Serialize};
 
+// UIC-308..313: the ring preview and slot editor for pies.
+#[path = "form_editor_pie.rs"]
+mod pie_editor;
+
 /// The Form Editor palette's hash (`layout.window hash:formEditor`).
 pub(super) const PALETTE: &str = "formEditor";
 
@@ -73,8 +77,13 @@ pub(super) struct State {
     /// A control row being dragged: its form and index.
     drag: Option<(String, usize)>,
     /// Where each tree row drew last frame, by `<form>` or `<form>#<i>`
-    /// (tests and the drag).
+    /// (tests and the drag); a pie's ring slots by `<form>@<i>`.
     pub rects: BTreeMap<String, Rect>,
+    /// A pie slot being dragged onto another (its pie and slot).
+    pie_drag: Option<(String, usize)>,
+    /// A pie slot whose editor shows a command field (`false`) or the
+    /// sub-pie pick (`true`) before it holds one.
+    pie_kind: Option<(String, usize, bool)>,
 }
 
 /// The group a form's id puts it in when no user group holds it.
@@ -730,6 +739,23 @@ impl Operandi {
                 let id = std::mem::take(&mut self.form_editor.new_form);
                 self.execute(&format!("operandi.form.new id:{}", word(&id)));
             }
+            // UIC-308: a pie is a form with style pie, eight empty slots.
+            if ui
+                .button("New Pie")
+                .on_hover_text("Makes a pie with this id: eight empty slots around its name")
+                .clicked()
+            {
+                let id = std::mem::take(&mut self.form_editor.new_form);
+                self.execute(&format!("operandi.form.new id:{} style:pie", word(&id)));
+            }
+            // UIC-312: a pie file with its sub-pies.
+            if ui
+                .button("Import Pie…")
+                .on_hover_text("Reads a pie file written by Export Pie")
+                .clicked()
+            {
+                self.execute("operandi.pie.import");
+            }
         });
         ui.separator();
         let tree = self.form_tree();
@@ -932,6 +958,11 @@ impl Operandi {
             self.form_editor.selected = None;
             return;
         };
+        // A pie's slots are edited in its ring (form_editor_pie.rs).
+        if form.style == Style::Pie {
+            self.form_properties(ui, &form);
+            return;
+        }
         match index.and_then(|i| form.controls.get(i).cloned().map(|c| (i, c))) {
             Some((i, c)) => self.form_control_properties(ui, &id, i, &c),
             None => self.form_properties(ui, &form),
@@ -1176,6 +1207,53 @@ impl Operandi {
         let choices: Vec<&str> = groups.iter().map(String::as_str).collect();
         self.form_choice(ui, "Group", &id, None, "group", &group, &choices);
         ui.separator();
+        if form.style == Style::Pie {
+            self.pie_form_editor(ui, form);
+        } else {
+            self.form_add_rows(ui, &id);
+        }
+        ui.horizontal(|ui| {
+            let undo = self.workbench_state("operandi.workbench.undo", &format!("form:{id}"));
+            if ui
+                .gated(undo.unavailable.as_deref(), Button::new("Undo Edit"))
+                .clicked()
+            {
+                self.execute(&format!("operandi.workbench.undo form:{id}"));
+            }
+            let revert = if shipped { "Revert" } else { "Delete Form" };
+            if ui
+                .gated(
+                    crate::unavailable::unless(changed, "This form has no changes"),
+                    Button::new(revert),
+                )
+                .clicked()
+            {
+                self.execute(&format!("operandi.form.revert {id}"));
+                if !shipped {
+                    self.form_editor.selected = None;
+                }
+            }
+        });
+        if self.form_editor.preview && form.style != Style::Pie {
+            ui.separator();
+            ui.label(RichText::new("Preview").strong());
+            let width = 260.;
+            ui.allocate_ui(vec2(width, 10.), |ui| {
+                ui.set_width(width);
+                egui::Frame::new()
+                    .fill(theme::chrome::background())
+                    .inner_margin(4.)
+                    .show(ui, |ui| {
+                        ui.push_id(("form-preview", &id), |ui| self.draw_form(ui, &id));
+                    });
+            });
+        }
+    }
+
+    /// The rows that add controls to a form (not a pie: its eight slots
+    /// are edited in its ring).
+    fn form_add_rows(&mut self, ui: &mut Ui, id: &str) {
+        let id = id.to_owned();
         // Add a command: typed, or from the Command History (UIC-160).
         ui.horizontal(|ui| {
             let edit = ui.add(
@@ -1263,41 +1341,5 @@ impl Operandi {
                 self.execute(&format!("operandi.form.export form:{id}"));
             }
         });
-        ui.horizontal(|ui| {
-            let undo = self.workbench_state("operandi.workbench.undo", &format!("form:{id}"));
-            if ui
-                .gated(undo.unavailable.as_deref(), Button::new("Undo Edit"))
-                .clicked()
-            {
-                self.execute(&format!("operandi.workbench.undo form:{id}"));
-            }
-            let revert = if shipped { "Revert" } else { "Delete Form" };
-            if ui
-                .gated(
-                    crate::unavailable::unless(changed, "This form has no changes"),
-                    Button::new(revert),
-                )
-                .clicked()
-            {
-                self.execute(&format!("operandi.form.revert {id}"));
-                if !shipped {
-                    self.form_editor.selected = None;
-                }
-            }
-        });
-        if self.form_editor.preview {
-            ui.separator();
-            ui.label(RichText::new("Preview").strong());
-            let width = 260.;
-            ui.allocate_ui(vec2(width, 10.), |ui| {
-                ui.set_width(width);
-                egui::Frame::new()
-                    .fill(theme::chrome::background())
-                    .inner_margin(4.)
-                    .show(ui, |ui| {
-                        ui.push_id(("form-preview", &id), |ui| self.draw_form(ui, &id));
-                    });
-            });
-        }
     }
 }
