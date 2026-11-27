@@ -545,3 +545,29 @@ fn material_rows_sit_in_tabs_and_sections() {
     a.properties_tab = "Rays".into();
     assert!(has(&texts(&mut a), "Reflection Rays"));
 }
+
+/// #56 (UIC-116): an Image Map's Image field has a Browse… button on the
+/// row under it, which opens the file panel for a picture straight away
+/// (before, the only way was the last entry of the Image list).
+#[test]
+fn image_map_has_a_browse_button_under_its_image_field() {
+    let (mut a, ctx) = shading_app();
+    a.shading_add(NewLayer::ImageMap);
+    let out = draw(&mut a, &ctx, SIZE, vec![]);
+    let out = if text_at(&out, "Browse…").is_some() {
+        out
+    } else {
+        draw(&mut a, &ctx, SIZE, vec![])
+    };
+    let image = text_at(&out, "Image").expect("the Image row");
+    let browse = text_at(&out, "Browse…").expect("a Browse… button");
+    assert!(browse.y > image.y, "under the Image field");
+    let answer: crate::file_chooser::HeldAnswer = Default::default();
+    a.held_panel = Some(answer);
+    click(&mut a, &ctx, browse);
+    assert!(
+        a.choosing.is_some(),
+        "the picture panel is open: {}",
+        a.status
+    );
+}

@@ -3196,6 +3196,14 @@ impl Operandi {
                 .response
                 .on_hover_text("Double-click to show the image in the Image Viewer");
         });
+        // UIC-116: the field's button on the row under it (#56: the only
+        // way to a file panel was the last entry of the Image list).
+        if crate::option_row::button(ui, "Browse…")
+            .on_hover_text("Pick a picture file for this layer")
+            .clicked()
+        {
+            load = true;
+        }
         if view && let Some(path) = current_path {
             self.show_image_in_viewer(std::path::Path::new(&path));
         }
