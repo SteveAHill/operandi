@@ -452,6 +452,8 @@ mod meshop_bezier_deformer;
 mod meshop_bridge;
 #[path = "meshops/meshop_chamfer_edit.rs"]
 mod meshop_chamfer_edit;
+#[path = "meshops/meshop_conditional_loop.rs"]
+pub mod meshop_conditional_loop;
 #[path = "meshops/meshop_create_uv_map.rs"]
 mod meshop_create_uv_map;
 #[path = "meshops/meshop_create_vertex_map.rs"]

@@ -428,8 +428,15 @@ impl Editor {
         };
         let mut selops = op.selops.clone();
         let label = match edit {
-            SelOpEdit::Add(s) => {
+            SelOpEdit::Add(mut s) => {
                 check(&s)?;
+                // Select by Falloff takes a copy of the active falloff
+                // when added, as the Falloff step does (TB-01).
+                if let SelKind::Falloff { falloff, .. } = &mut s.kind
+                    && falloff.is_none()
+                {
+                    *falloff = self.primitive_weights();
+                }
                 let label = format!("Add {}", s.kind.label());
                 selops.push(s);
                 label
