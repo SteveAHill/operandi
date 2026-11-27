@@ -1488,6 +1488,11 @@ impl Operandi {
                 self.shading.collapsed.remove(&p);
                 at = self.editor.scene.shader_tree.get(p).and_then(|n| n.parent);
             }
+            // #56 (Jason, 2026-11-27): a new Image Map asks for its picture
+            // at once; cancelling keeps the empty layer.
+            if layer == NewLayer::ImageMap {
+                self.choose_shader_image(id);
+            }
         }
     }
 
@@ -3247,26 +3252,32 @@ impl Operandi {
             }
         }
         if load {
-            let folder = self
-                .editor
-                .scene
-                .images
-                .last()
-                .and_then(|i| {
-                    std::path::Path::new(&i.path)
-                        .parent()
-                        .map(|p| p.to_path_buf())
-                })
-                .unwrap_or_default();
-            if !self.choose(
-                crate::file_chooser::Choose::Image { folder },
-                crate::file_chooser::Purpose::ShaderImage(node.id),
-            ) {
-                self.status = "No file panel is available to choose a picture".into();
-            }
+            self.choose_shader_image(node.id);
         }
         #[cfg(feature = "painting")]
         self.psd_layer_row(ui, node.id);
+    }
+
+    /// Opens the picture file panel for Image Map layer `node`, in the
+    /// folder of the scene's last image.
+    fn choose_shader_image(&mut self, node: NodeId) {
+        let folder = self
+            .editor
+            .scene
+            .images
+            .last()
+            .and_then(|i| {
+                std::path::Path::new(&i.path)
+                    .parent()
+                    .map(|p| p.to_path_buf())
+            })
+            .unwrap_or_default();
+        if !self.choose(
+            crate::file_chooser::Choose::Image { folder },
+            crate::file_chooser::Purpose::ShaderImage(node),
+        ) {
+            self.status = "No file panel is available to choose a picture".into();
+        }
     }
 
     /// A picture file chosen for Image Map layer `node`.

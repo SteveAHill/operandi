@@ -571,3 +571,30 @@ fn image_map_has_a_browse_button_under_its_image_field() {
         a.status
     );
 }
+
+/// #56 (Jason, 2026-11-27): adding an Image Map asks for its picture at
+/// once; cancelling keeps the empty layer.
+#[test]
+fn adding_an_image_map_asks_for_its_picture() {
+    let (mut a, ctx) = shading_app();
+    let answer: crate::file_chooser::HeldAnswer = Default::default();
+    a.held_panel = Some(answer.clone());
+    a.shading_add(NewLayer::ImageMap);
+    let layer = a.shading.selected[0];
+    assert!(
+        a.choosing.is_some(),
+        "the picture panel opened: {}",
+        a.status
+    );
+    *answer.borrow_mut() = Some(None);
+    a.poll_choice(&ctx);
+    assert!(a.choosing.is_none());
+    assert!(
+        a.editor.scene.shader_tree.get(layer).is_some(),
+        "cancel keeps the layer"
+    );
+    // Other layers don't ask.
+    a.held_panel = Some(Default::default());
+    a.shading_add(NewLayer::Gradient);
+    assert!(a.choosing.is_none());
+}
