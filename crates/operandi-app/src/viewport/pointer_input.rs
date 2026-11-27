@@ -1555,6 +1555,11 @@ impl Operandi {
                         // NAV-07 box zoom finishes on release.
                         if let input::GestureKind::Navigate(kind) = g.kind {
                             self.navigation_release(kind, g.start, pos, r);
+                            // The first orbit drag offers Trackball Rotation
+                            // (trackball_offer.rs).
+                            if kind == input::NavigationKind::Orbit && g.start.distance(pos) > 2. {
+                                self.orbited(ui.input(|i| i.time));
+                            }
                         }
                         if let input::GestureKind::Pose(d) = &g.kind {
                             let d = d.clone();

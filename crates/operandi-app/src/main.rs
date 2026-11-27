@@ -1269,6 +1269,9 @@ struct Operandi {
     gpu: String,
     viewport_gpu: Option<gpu::ViewportGpu>,
     last_drawable: [u32; 2],
+    /// When the one-time Trackball Rotation offer appeared (egui time), while
+    /// it shows (trackball_offer.rs).
+    trackball_offer: Option<f64>,
     viewport_rect: Rect,
     /// The views (views.rs): their layout, each view's camera and rect, the
     /// active one (whose camera is `camera`), and the one being drawn.
@@ -2001,6 +2004,7 @@ impl Operandi {
             gpu: "GPU unavailable".into(),
             viewport_gpu: None,
             last_drawable: [0, 0],
+            trackball_offer: None,
             viewport_rect: Rect::NOTHING,
             views: operandi_layout::Layout::single_viewport(),
             cameras: BTreeMap::new(),
@@ -4186,6 +4190,8 @@ mod primitive_panel;
 mod render_ui;
 #[path = "anim/timeline.rs"]
 mod timeline;
+#[path = "view/trackball_offer.rs"]
+mod trackball_offer;
 #[path = "items/vertex_normal_ui.rs"]
 mod vertex_normal_ui;
 #[path = "view/view_display.rs"]

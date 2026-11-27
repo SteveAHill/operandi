@@ -1079,6 +1079,9 @@ impl Operandi {
                     self.sync_uv_tool_space(false);
                     self.view_ui(ui);
                     self.view_properties_popover(ui, view);
+                    // The one-time Trackball Rotation offer, in the view
+                    // just orbited (trackball_offer.rs).
+                    self.trackball_offer_ui(ui.ctx(), self.viewport_rect);
                 }
             });
             self.cameras.insert(view, self.camera.clone());
