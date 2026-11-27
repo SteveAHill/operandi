@@ -35,8 +35,8 @@ from the pies before this branch.
       the pie changed (•). Open the pie with its key: the swap shows.
 - [ ] Undo Edit takes the swap back; Revert brings the shipped pie back.
 - [ ] New Pie with id my.pie: eight empty slots. Set slot 1 to a command
-      from History ▾, give it a label and an icon slug (e.g.
-      action-center); Icons: both, icon, text change the ring and the pie.
+      from History ▾, give it a label and an icon from Browse Icons;
+      Icons: both, icon, text change the ring and the pie.
 - [ ] Type a line no command has: the slot is red in the ring and in the
       pie, and does nothing.
 - [ ] Holds Sub-pie: only pies that don't lead back are listed. Pick
