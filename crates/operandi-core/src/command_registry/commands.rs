@@ -14,6 +14,7 @@ mod items;
 mod libraries;
 mod nodes;
 mod phrases;
+mod pies;
 mod polygon_uv;
 mod presets_layouts;
 mod remesh_bake;
@@ -100,6 +101,7 @@ const SECTIONS: &[&[Entry]] = &[
     item_transforms::COMMANDS,
     nodes::COMMANDS,
     presets_layouts::COMMANDS,
+    pies::COMMANDS,
     libraries::COMMANDS,
     statistics::COMMANDS,
     selection_sets::COMMANDS,

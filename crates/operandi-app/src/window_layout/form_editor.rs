@@ -83,6 +83,7 @@ pub(super) fn default_group(id: &str) -> &'static str {
         "toolbox" => "Toolbox",
         "toolbar" => "Toolbars",
         "menu" => "Menus",
+        "pie" => "Pies",
         _ => "Forms",
     }
 }
@@ -119,7 +120,7 @@ fn set_form_attr(f: &mut Form, attr: &str, value: &str) -> std::result::Result<S
         "label" => f.label = text.to_owned(),
         "style" => {
             f.style = style_named(text)
-                .ok_or_else(|| bad("vertical, horizontal, sheet, menu, flyout, hold"))?
+                .ok_or_else(|| bad("vertical, horizontal, sheet, menu, flyout, hold, pie"))?
         }
         "icons" => f.icons = icons_named(text).ok_or_else(|| bad("icon, text, both"))?,
         "iconsize" => {
@@ -242,7 +243,14 @@ impl Operandi {
             .groups
             .iter()
             .find(|g| g.forms.iter().any(|f| f == id))
-            .map_or_else(|| default_group(id).to_owned(), |g| g.name.clone())
+            .map_or_else(
+                // Pies sit together whatever their ids (UIC-308).
+                || match self.forms.get(id) {
+                    Some(f) if f.style == Style::Pie => "Pies".to_owned(),
+                    _ => default_group(id).to_owned(),
+                },
+                |g| g.name.clone(),
+            )
     }
 
     /// The tree: each group and its form ids, filtered by the search.
@@ -259,7 +267,7 @@ impl Operandi {
                 || f.label.to_lowercase().contains(&needle)
                 || mentions(f, &needle)
         };
-        let mut names: Vec<String> = ["Toolbox", "Toolbars", "Menus", "Forms"]
+        let mut names: Vec<String> = ["Toolbox", "Toolbars", "Menus", "Pies", "Forms"]
             .map(str::to_owned)
             .into_iter()
             .collect();
@@ -340,19 +348,29 @@ impl Operandi {
                     }
                     None => Style::Vertical,
                 };
+                // UIC-308/309: a new pie starts with eight empty slots.
+                let pie = style == Style::Pie;
                 let form = Form {
                     version: cf::FORM_VERSION,
                     id: id.clone(),
                     label: a[1].clone().unwrap_or_else(|| id.clone()),
                     style,
-                    icons: IconMode::default(),
+                    icons: if pie {
+                        crate::pie_forms::NEW_PIE_ICONS
+                    } else {
+                        IconMode::default()
+                    },
                     icon_size: IconSize::default(),
                     exported: false,
                     show_when: None,
                     slot: None,
                     columns: None,
                     workbench: false,
-                    controls: Vec::new(),
+                    controls: if pie {
+                        crate::pie_forms::new_pie_controls()
+                    } else {
+                        Vec::new()
+                    },
                 };
                 self.forms.save(form)?;
                 if let Some(group) = a[3].clone() {
@@ -1073,7 +1091,15 @@ impl Operandi {
             None,
             "style",
             &style,
-            &["vertical", "horizontal", "sheet", "menu", "flyout", "hold"],
+            &[
+                "vertical",
+                "horizontal",
+                "sheet",
+                "menu",
+                "flyout",
+                "hold",
+                "pie",
+            ],
         );
         let icons = json_word(&form.icons);
         self.form_choice(

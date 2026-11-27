@@ -78,6 +78,12 @@ pub(super) enum Choose {
         name: String,
         eps: bool,
     },
+    /// A pie file (Export Pie / Import Pie, UIC-312): where to save one,
+    /// `name` suggested, or with no name one to open.
+    PieFile {
+        folder: PathBuf,
+        name: Option<String>,
+    },
     /// A folder (new ones can be made in the panel), starting in `folder`.
     Folder {
         folder: PathBuf,
@@ -161,6 +167,10 @@ pub(super) enum Purpose {
     /// (painting.rs). The tab travels with the answer (Astra P8-001).
     #[cfg(feature = "painting")]
     PaintImage(u64, u64),
+    /// Export Pie: write the pie in `pie_edit.export` there.
+    ExportPie,
+    /// Import Pie: read the chosen pie file.
+    ImportPie,
 }
 
 /// A native panel shown as a sheet on the window. It doesn't block: a modal
@@ -299,6 +309,28 @@ pub(super) fn start(request: Choose, purpose: Purpose) -> Pending {
                     .add_filter("IES photometry", &["ies", "IES"])
                     .pick_file();
                 Box::pin(async move { path(f.await) })
+            }
+            Choose::PieFile { folder, name } => {
+                let types = [crate::pie_forms::EXTENSION, "json"];
+                match name {
+                    Some(name) => {
+                        let f = D::new()
+                            .set_title("Export Pie")
+                            .set_directory(folder)
+                            .set_file_name(name)
+                            .add_filter("Operandi pie", &types)
+                            .save_file();
+                        Box::pin(async move { path(f.await) })
+                    }
+                    None => {
+                        let f = D::new()
+                            .set_title("Import Pie")
+                            .set_directory(folder)
+                            .add_filter("Operandi pie", &types)
+                            .pick_file();
+                        Box::pin(async move { path(f.await) })
+                    }
+                }
             }
             Choose::Script { folder } => {
                 let f = D::new()
@@ -629,6 +661,8 @@ impl super::Operandi {
             Purpose::LoadPreset(group) => self.load_preset_from(path, group, true),
             Purpose::ImportNodeGraph(selected) => self.import_node_graph_from(&path, selected),
             Purpose::RunScript => self.python_run_file(&path),
+            Purpose::ExportPie => self.export_pie_chosen(path),
+            Purpose::ImportPie => self.import_pie_chosen(path),
             Purpose::ImportMaterialX(beside) => self.import_materialx_from(&path, beside),
             Purpose::ExportMaterialX(node) => self.export_materialx_to(path, node),
             Purpose::PresetBrowserRoot => {

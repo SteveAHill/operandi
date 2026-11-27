@@ -410,6 +410,8 @@ mod path_tool_view;
 mod pen_interactive_ui;
 #[path = "view/picking.rs"]
 mod picking;
+#[path = "menus/pie_forms.rs"]
+mod pie_forms;
 #[path = "menus/pie_menu.rs"]
 mod pie_menu;
 #[path = "uv/planar_texture_ui.rs"]
@@ -1355,6 +1357,8 @@ struct Operandi {
     /// The open pie menu (pie_menu.rs), and one asked for by name.
     pie: Option<pie_menu::Open>,
     pie_request: Option<String>,
+    /// Export Pie / Import Pie in progress (pie_forms.rs).
+    pie_edit: pie_forms::State,
     segment_detent_pixels: f64,
     native_numbers: Vec<native::NumberKey>,
     /// Numeric Enter as Tab: a keypad Enter press turned into Tab whose
@@ -2049,6 +2053,7 @@ impl Operandi {
             modeling_menu_requested: false,
             pie: None,
             pie_request: None,
+            pie_edit: Default::default(),
             segment_detent_pixels: 12.,
             native_numbers: Vec::new(),
             keypad_enter_held: false,
@@ -4708,6 +4713,9 @@ mod performance_tests;
 #[path = "tools/perf_snapshot_tests.rs"]
 mod perf_snapshot_tests;
 
+#[cfg(test)]
+#[path = "menus/pie_engine_tests.rs"]
+mod pie_engine_tests;
 #[cfg(test)]
 #[path = "menus/pie_menu_tests.rs"]
 mod pie_menu_tests;
