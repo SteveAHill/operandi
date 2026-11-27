@@ -41,7 +41,7 @@ fn bloom_and_glare_are_read_set_undone_and_saved() {
         "render_settings_set",
         json!({"bloom": true, "bloom_threshold": 2.0, "bloom_intensity": 0.8,
                "bloom_radius": 0.1, "bloom_tint": [1.0, 0.5, 0.25],
-               "glare": true, "glare_streaks": 6, "glare_angle": 30.0,
+               "glare": true, "glare_streaks": 6, "glare_angle": 0.5,
                "glare_length": 0.3, "glare_intensity": 0.2, "glare_threshold": 4.0,
                "glare_tint": [0.5, 0.5, 1.0]}),
     )
@@ -54,7 +54,7 @@ fn bloom_and_glare_are_read_set_undone_and_saved() {
     assert_eq!(got["bloom_tint"], json!([1.0, 0.5, 0.25]));
     assert_eq!(got["glare"], true);
     assert_eq!(got["glare_streaks"], 6);
-    assert_eq!(got["glare_angle"], 30.0);
+    assert!((got["glare_angle"].as_f64().unwrap() - 0.5).abs() < 1e-12);
     assert_eq!(got["glare_length"], 0.3);
     assert_eq!(got["glare_tint"], json!([0.5, 0.5, 1.0]));
     let info = call(&mut b, "scene_info", json!({})).unwrap();

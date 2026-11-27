@@ -543,7 +543,7 @@ pub const RENDER_FIELDS: &[(&str, &str)] = &[
     ),
     (
         "glare_angle",
-        "Glare Angle in degrees, the first ray counter-clockwise from the right (default 45)",
+        "Glare Angle in radians, the first ray counter-clockwise from the right (default pi/4)",
     ),
     (
         "glare_length",
@@ -590,7 +590,7 @@ pub fn render_settings_get(e: &Editor, args: &Map<String, Value>) -> Result<Valu
         "glare_threshold": r.post.glare.threshold,
         "glare_intensity": r.post.glare.intensity,
         "glare_streaks": r.post.glare.streaks,
-        "glare_angle": r.post.glare.angle,
+        "glare_angle": r.post.glare.angle.to_radians(),
         "glare_length": r.post.glare.length,
         "glare_tint": r.post.glare.tint,
         "exposure": fc.as_ref().map(|o| o.settings.exposure.label()),
@@ -685,7 +685,8 @@ pub fn render_settings_set(e: &mut Editor, args: &Map<String, Value>) -> Result<
         g.streaks = whole("glare_streaks", v)?;
     }
     if let Some(v) = get("glare_angle") {
-        g.angle = number("glare_angle", v)?;
+        // The bridge's angles are radians; the panel shows degrees.
+        g.angle = number("glare_angle", v)?.to_degrees();
     }
     if let Some(v) = get("glare_length") {
         g.length = number("glare_length", v)?;

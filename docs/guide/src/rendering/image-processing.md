@@ -59,7 +59,7 @@ The picture updates as you change each value. Each change is one undo step, and 
 - **In saved pictures.** **Save Image...** writes the picture as the window shows it, Bloom and Glare included, and so do renders saved to your Pictures folder or to a path a script gives. The Render window's history keeps every render as it was rendered, so you can change the settings on an older render later.
 - **While it renders.** Small pictures show the effects as they render. On big pictures, where working them out takes longer, the render shows without them and they appear when it finishes.
 - **Every slot.** The tab's settings belong to the open scene and apply to whichever picture the window shows.
-- **From a script.** `render_settings_set` takes `bloom`, `bloom_threshold`, `bloom_intensity`, `bloom_radius`, `bloom_tint`, `glare`, `glare_threshold`, `glare_intensity`, `glare_streaks`, `glare_angle`, `glare_length` and `glare_tint`, and `render_settings_get` reports them. Intensities, Radius and Length are fractions there (0.5 is 50 %), and tints are linear colours.
+- **From a script.** `render_settings_set` takes `bloom`, `bloom_threshold`, `bloom_intensity`, `bloom_radius`, `bloom_tint`, `glare`, `glare_threshold`, `glare_intensity`, `glare_streaks`, `glare_angle`, `glare_length` and `glare_tint`, and `render_settings_get` reports them. Intensities, Radius and Length are fractions there (0.5 is 50 %), the angle is in radians, and tints are linear colours.
 
 ## Related
 
