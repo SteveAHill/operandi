@@ -147,25 +147,6 @@ pub fn side_points(mesh: &Mesh, points: &[u32], symmetry: Symmetry, side: Side) 
     }
 }
 
-/// The selection-based centre of `points` (item space) for `center`: the
-/// bounding-box middle (Automatic, None, Selection, Selection Center Auto
-/// Axis, Local's handle; the rulebook table) or the border centre
-/// (Selection Border: the average of the border points among `points`).
-fn centre_of(mesh: &Mesh, points: &[u32], center: CenterMode, border: &BTreeSet<u32>) -> DVec3 {
-    let at = |v: &u32| mesh.vertices[*v as usize];
-    if center == CenterMode::SelectionBorder {
-        let on_border: Vec<DVec3> = points
-            .iter()
-            .filter(|v| border.contains(v))
-            .map(at)
-            .collect();
-        if !on_border.is_empty() {
-            return on_border.iter().copied().sum::<DVec3>() / on_border.len() as f64;
-        }
-    }
-    crate::box_centre(points.iter().map(at))
-}
-
 impl PivotRequest<'_> {
     /// Symmetry as it applies to this request: on, a component selection
     /// of one mesh (several meshes share one frame and Symmetry mirrors
@@ -182,42 +163,86 @@ impl PivotRequest<'_> {
     }
 
     /// The primary pivot's frame: where the handle sits and the tool
-    /// pivots. The axes always come from the whole selection (ACS-02); the
-    /// centre follows the rulebook table, ACS-01 and ACS-07.
+    /// pivots, and the axes its values are entered in.
+    ///
+    /// Under Symmetry one side is asked for both. The centre: a placed
+    /// centre as placed (S-07); a fixed centre unmoved (S-10); a
+    /// selection-based one from the + side's points (S-01). The axes:
+    /// Selection axes come from that same side's points only (S-02), so
+    /// the mirror image of a selection can't tilt them; the other axis
+    /// rules don't read the selection. The side the centre is on then
+    /// drives the edit (S-03, `MirrorMap`), and the other side gets the
+    /// mirror image of this frame (S-04).
     pub fn frame(&self) -> Result<ActionFrame> {
         let plain = self.plain_frame()?;
-        if let Some(at) = self.placed {
+        let Some(symmetry) = self.mesh_symmetry() else {
             return Ok(ActionFrame {
-                center: at,
+                center: self.placed.unwrap_or(plain.center),
                 ..plain
             });
-        }
-        let Some(symmetry) = self.mesh_symmetry() else {
-            return Ok(plain);
         };
-        if !selection_based(self.context.center) {
-            // Origin, Parent, Pivot, Element and Screen have fixed centres.
-            return Ok(plain);
-        }
         let item = self.scene.active().ok_or("Select a mesh")?;
         let world = self.scene.world_matrix(item.id)?;
-        let points: Vec<u32> = crate::transform_vertices(self.scene)?.into_iter().collect();
-        let half = half_points(&item.mesh, &points, symmetry);
-        let border = border_points(self.scene, &points);
-        let center = match self.context.center {
-            // Automatic and None take their box in world space (as their
-            // plain frame does); the others in the item's own space
-            // (AC-Q20).
-            CenterMode::Automatic | CenterMode::None => crate::box_centre(
-                half.iter()
-                    .map(|&v| world.transform_point3(item.mesh.vertices[v as usize])),
-            ),
-            c => world.transform_point3(centre_of(&item.mesh, &half, c, &border)),
+        let mesh = &item.mesh;
+        let center = match self.placed {
+            Some(at) => at,
+            // Origin, Parent, Pivot, Element and Screen have fixed centres.
+            None if !selection_based(self.context.center) => plain.center,
+            None => {
+                let moved: Vec<u32> = crate::transform_vertices(self.scene)?.into_iter().collect();
+                let at = |v: &u32| mesh.vertices[*v as usize];
+                let half = |points: &[u32]| half_points(mesh, points, symmetry);
+                let center = match self.context.center {
+                    // Automatic and None take their box in world space (as
+                    // their plain frame does).
+                    CenterMode::Automatic | CenterMode::None => crate::box_centre(
+                        half(&moved).iter().map(|v| world.transform_point3(at(v))),
+                    ),
+                    CenterMode::SelectionBorder => {
+                        let border: Vec<u32> = crate::selection_axes::selection_border_points(
+                            mesh,
+                            &self.scene.selection,
+                        )
+                        .into_iter()
+                        .collect();
+                        if border.is_empty() {
+                            // No border edge: as Selection.
+                            world.transform_point3(crate::box_centre(half(&moved).iter().map(at)))
+                        } else {
+                            crate::box_centre(
+                                half(&border).iter().map(|v| world.transform_point3(at(v))),
+                            )
+                        }
+                    }
+                    // Selection, its Auto Axis twin and Local's handle: the
+                    // box in the item's own space (AC-Q20).
+                    _ => world.transform_point3(crate::box_centre(half(&moved).iter().map(at))),
+                };
+                if center.is_finite() {
+                    center
+                } else {
+                    plain.center
+                }
+            }
         };
-        if !center.is_finite() {
-            return Ok(plain);
-        }
-        Ok(ActionFrame { center, ..plain })
+        let basis = if self.context.axis == crate::AxisOrientation::Selection {
+            // S-02: the + side's points; with a placed centre, the side it
+            // was placed on (provisional, ACR-Q03). None there gives World.
+            let side = match self.placed {
+                Some(at) => side_of_world(self.scene, symmetry, at),
+                None => Side::Positive,
+            };
+            let tolerance = crate::symmetry::match_tolerance_shared(mesh.shared());
+            crate::selection_axes::selection_axes(
+                mesh,
+                &self.scene.selection,
+                world,
+                Some(&|p| symmetry.side(p, tolerance) == Some(side)),
+            )
+        } else {
+            plain.basis
+        };
+        Ok(ActionFrame { center, basis })
     }
 
     /// AC-75: under Local, the one handle's axes (world): the frame of the
@@ -498,35 +523,6 @@ impl MirrorMap {
             Some(Side::Negative) => self.symmetry.mirror(p),
             _ => p,
         }
-    }
-}
-
-/// Points on the border of the selected polygons (edges used by one
-/// selected polygon); all of `moved` when there is no such border.
-fn border_points(scene: &Scene, moved: &[u32]) -> BTreeSet<u32> {
-    let (Some(item), Mode::Polygon) = (scene.active(), scene.selection.mode) else {
-        return moved.iter().copied().collect();
-    };
-    let mut uses: std::collections::BTreeMap<(u32, u32), usize> = Default::default();
-    for &f in &scene.selection.faces {
-        let Some(face) = item.mesh.faces.get(f as usize) else {
-            continue;
-        };
-        let n = face.vertices.len();
-        for i in 0..n {
-            let (a, b) = (face.vertices[i], face.vertices[(i + 1) % n]);
-            *uses.entry((a.min(b), a.max(b))).or_default() += 1;
-        }
-    }
-    let border: BTreeSet<u32> = uses
-        .iter()
-        .filter(|(_, n)| **n == 1)
-        .flat_map(|((a, b), _)| [*a, *b])
-        .collect();
-    if border.is_empty() {
-        moved.iter().copied().collect()
-    } else {
-        border
     }
 }
 

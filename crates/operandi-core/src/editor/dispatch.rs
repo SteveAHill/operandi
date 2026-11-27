@@ -852,9 +852,27 @@ impl Editor {
                     return Err("The center must be a finite point".into());
                 }
                 let frame = live.action_frame.ok_or("Missing action frame")?;
+                // Selection axes under Symmetry follow the side the centre
+                // was placed on (S-02), so centre, axes and the side that
+                // drives the edit agree; other axes stay as they are.
+                let basis = match &self.live {
+                    Some(live)
+                        if self.action_context.axis == crate::AxisOrientation::Selection
+                            && live.params.uv.is_none() =>
+                    {
+                        crate::pivot_service::PivotRequest {
+                            placed: Some(point),
+                            ..self.pivot_request(&live.base, live.tool)
+                        }
+                        .frame()
+                        .map_or(frame.basis, |f| f.basis)
+                    }
+                    _ => frame.basis,
+                };
+                let live = self.live.as_mut().ok_or("No active transform tool")?;
                 live.action_frame = Some(crate::ActionFrame {
                     center: point,
-                    ..frame
+                    basis,
                 });
                 live.placed_centre = Some(point);
             }
@@ -864,10 +882,19 @@ impl Editor {
                 // Resolved against the tool's base, so after a drag the
                 // handle (center + delta) still sits on the moved selection.
                 let own = self.pivot_frame(&live.base, live.tool)?;
+                // Selection axes go back with the centre (S-02, see
+                // `SetActionCenter`).
+                let basis = if self.action_context.axis == crate::AxisOrientation::Selection
+                    && live.params.uv.is_none()
+                {
+                    own.basis
+                } else {
+                    frame.basis
+                };
                 if let Some(live) = &mut self.live {
                     live.action_frame = Some(crate::ActionFrame {
                         center: own.center,
-                        ..frame
+                        basis,
                     });
                     live.placed_centre = None;
                 }
