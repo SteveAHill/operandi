@@ -1067,6 +1067,9 @@ struct Operandi {
     retopo_stroke: Vec<DVec3>,
     /// Mesh Paint's click or stroke in progress (mesh_paint_ui.rs).
     mesh_paint: mesh_paint_ui::Gesture,
+    /// Mesh Paint's settings from its last use this session (#46): the
+    /// next start picks them up.
+    mesh_paint_memory: Option<operandi_core::mesh_paint::MeshPaintSettings>,
     /// Topology Pen's drag, weld and pre-highlight state.
     pen: topology_pen_ui::PenUi,
     /// Save Environment Preset…'s options dialog (environment_preset_ui.rs).
@@ -1894,6 +1897,7 @@ impl Operandi {
             select_dialog: None,
             retopo_stroke: Vec::new(),
             mesh_paint: Default::default(),
+            mesh_paint_memory: None,
             pen: Default::default(),
             env_preset_dialog: None,
             gi_hint_shown: false,
