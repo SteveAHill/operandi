@@ -638,9 +638,11 @@ impl Operandi {
         };
         let post = &self.editor.scene.render.post;
         let result = pixels.and_then(|(w, h, mut px)| {
-            // Final Color saves as the window shows it, Bloom and Glare
-            // included; the other outputs as rendered.
-            if d.output.is_none() {
+            // Final Color in a picture format (PNG, JPEG, TIFF...) saves as
+            // the window shows it, Bloom and Glare included. Float files
+            // (EXR, HDR) and the other outputs keep the rendered numbers
+            // (Jason, BG-Q4).
+            if d.output.is_none() && !d.format.is_float() {
                 operandi_core::post_effects::apply(post, &mut px, w, h);
             }
             image_viewer::save_output(
@@ -694,17 +696,7 @@ impl Operandi {
                 (s.width, s.height, names, pixels, s.meta.clone(), Some(s.id))
             }
         };
-        let mut pixels = pixels;
-        // The picture layer as the window shows it, Bloom and Glare
-        // included; the other layers as rendered.
-        if let Some(first) = pixels.first_mut() {
-            operandi_core::post_effects::apply(
-                &self.editor.scene.render.post,
-                first,
-                width,
-                height,
-            );
-        }
+        // Every layer as rendered, Bloom and Glare left out (BG-Q4).
         let window = self.render.viewer.view();
         let encoded: Vec<Vec<f32>> = pixels
             .into_iter()

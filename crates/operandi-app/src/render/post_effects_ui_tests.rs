@@ -76,30 +76,45 @@ fn turning_bloom_on_and_off_changes_only_what_is_shown() {
 }
 
 #[test]
-fn save_image_writes_final_color_with_bloom_and_other_outputs_without() {
+fn picture_formats_save_with_bloom_float_files_and_other_outputs_without() {
     let mut a = app();
     set_bloom(&mut a, true);
     a.refresh_post();
-    let expected = a.shown_pixels().unwrap().2.to_vec();
+    // As the window shows it, clipped to what a picture file holds.
+    let shown: Vec<f32> = a
+        .shown_pixels()
+        .unwrap()
+        .2
+        .iter()
+        .map(|v| v.min(1.0))
+        .collect();
     let folder = std::env::temp_dir().join(format!("operandi-post-save-{}", std::process::id()));
     std::fs::create_dir_all(&folder).unwrap();
-    let save = |a: &mut Operandi, name: &str, output: Option<usize>| {
+    let save = |a: &mut Operandi, name: &str, output: Option<usize>, format: SaveFormat| {
         a.viewer_save_to(
             &folder.join(name),
             SaveDialog {
                 slot: None,
                 output,
-                format: SaveFormat::Exr,
+                format,
             },
         );
-        image_viewer::load_image(&folder.join(format!("{name}.exr")))
+        let file = folder.join(format!("{name}.{}", format.extension()));
+        image_viewer::load_image(&file)
             .unwrap_or_else(|e| panic!("{e}: {}", a.status))
             .2
     };
-    let picture = save(&mut a, "picture", None);
-    let close = |x: &[f32], y: &[f32]| x.iter().zip(y).all(|(p, q)| (p - q).abs() < 1e-3);
-    assert!(close(&picture, &expected));
-    let depth = save(&mut a, "depth", Some(0));
+    let close = |x: &[f32], y: &[f32]| x.iter().zip(y).all(|(p, q)| (p - q).abs() < 2e-3);
+    // PNG (and every picture format): the glow is in the file.
+    let png = save(&mut a, "picture", None, SaveFormat::Png16);
+    assert!(close(&png, &shown));
+    // EXR and Multilayer EXR keep the numbers as rendered (BG-Q4).
+    let exr = save(&mut a, "float", None, SaveFormat::Exr);
+    assert!(close(&exr, &raw(&a)));
+    let layers = save(&mut a, "layers", None, SaveFormat::ExrMultilayer);
+    assert!(close(&layers, &raw(&a)));
+    // Other outputs as rendered in any format.
+    let depth = save(&mut a, "depth", Some(0), SaveFormat::Exr);
     assert!(close(&depth, &raw(&a)));
     let _ = std::fs::remove_dir_all(&folder);
 }

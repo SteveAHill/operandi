@@ -4894,5 +4894,5 @@ Design: docs/MATERIALX_GRAPHS.md (stages 1-5).
 ## 2026-11-27 — Bloom and Glare (branch render-bloom-glare)
 
 - Render window ▸ Image Processing tab: Bloom (Threshold, Intensity, Radius as a share of the width, Tint) and Glare (Threshold, Intensity, Streaks 2/4/6/8, Angle, Length, Tint), on the linear picture before the view transform (`operandi_core::post_effects`, multi-threaded: Gaussian pyramid for Bloom, four-tap streak passes for Glare). Off by default; saved with the scene as `RenderSettings::post` (native v68). Each change is one "Render Settings" undo step and re-applies at once: the Recent Frames cache keeps the picture as rendered.
-- Final Color only; Save Image..., OpenEXR Multilayer's picture layer and renders saved to Pictures / an MCP path include them. `render_settings_get/set` take `bloom_*` / `glare_*`. Live renders show them while applying costs under 60 ms.
-- Provisional: BG-Q1..Q8 (in the merge note). GUI check: docs/BLOOM_GLARE_GUI_QA.md. Guide: rendering/image-processing.md.
+- Final Color only; Save Image... in picture formats (PNG, JPEG, TIFF, Targa, BMP) and renders saved to Pictures / an MCP path include them; float files (EXR, Multilayer, HDR) stay as rendered (Jason, BG-Q4). `render_settings_get/set` take `bloom_*` / `glare_*`. Live renders show them while applying costs under 60 ms.
+- Jason 2026-11-27: BG-Q1 approved as built; Q3, Q5..Q8 kept as built (Q8 later); BG-Q2 (the Final Color output's own Bloom rows) still open. GUI check: docs/BLOOM_GLARE_GUI_QA.md. Guide: rendering/image-processing.md.

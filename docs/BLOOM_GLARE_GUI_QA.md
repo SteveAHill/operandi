@@ -22,8 +22,9 @@ best.
    Glare apply to Final Color.
 7. Click an older slot in the history strip: it gets the same effects.
    Untick both: every slot shows as rendered.
-8. With both on, **Save Image...** as PNG and as OpenEXR: both files
-   include the glow (open them in the Render window with Load Image...).
+8. With both on, **Save Image...** as PNG, as OpenEXR and as OpenEXR
+   Multilayer, then open each with Load Image...: the PNG has the glow;
+   both EXR files are as rendered, with no glow (BG-Q4).
 9. Save the scene, close, reopen: the tab shows the same settings.
 10. Render again with **F9** while the tab is on: small renders show the
     glow as they fill in; at 4K the picture renders plain and the tab
