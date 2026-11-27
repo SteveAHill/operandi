@@ -1,5 +1,16 @@
 # Milestone progress ledger
 
+- **Action Center rule sheet v6, step 2: presses (2026-11-27, branch ac-rewrite-2, GitHub #32, #39):**
+  with a transform tool on, a press off the handle follows the Action
+  Center's rule (`ActionContext::press`, `element_center.rs`): Element
+  picks the polygon, edge or point under the pointer on every press, on
+  any shown mesh, without touching the selection (A-ELEM: Z on the
+  normal); None, Automatic and Screen place the centre on the view's work
+  plane on every press, snapped at the pointer (Screen never); every
+  other centre stays put; a handle always wins. Element and Screen are
+  in force when chosen, with no waiting click. Not yet: Item mode, the
+  menu table, the preview through the pivot list. Provisional:
+  ACR-Q11..Q20.
 - **Action Center rule sheet v6, step 1 (2026-11-27, branch ac-rewrite-1):**
   Selection and Selection Border axes are the principal axes of the moved
   points (A-SEL, `selection_axes.rs`): X the longest direction, Z the
