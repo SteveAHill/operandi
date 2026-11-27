@@ -13,8 +13,9 @@ pub enum CenterMode {
     /// ACT-AUTO-01/02: the bounding-box centre of the points the tool moves
     /// (the whole mesh with nothing selected).
     Automatic,
-    /// The centre of the selection's border points; for one polygon the
-    /// same as Selection (action-center-scale F2).
+    /// C-BORDER: the middle of the box round the selection's border edges
+    /// (edges shared with an unselected polygon); Selection's centre when
+    /// there are none.
     SelectionBorder,
     /// Selection's centre with axes from the selection (F3).
     SelectionAutoAxis,
@@ -69,7 +70,8 @@ impl CenterMode {
 pub enum AxisOrientation {
     #[default]
     World,
-    /// M18 / user-approved D18-A, not a measured reference averaging rule.
+    /// A-SEL: the principal axes of the points the tool moves
+    /// (`selection_axes.rs`).
     Selection,
     /// An explicitly chosen admitted major workplane frame; not camera state.
     Workplane(u8),
@@ -194,97 +196,29 @@ pub fn transform_vertices(scene: &Scene) -> Result<BTreeSet<u32>> {
     }
     Ok(vertices.into_iter().collect())
 }
-/// D18-A: equal oriented face votes, sorted by geometric direction for stable
-/// accumulation independent of ordered selection and face storage. No render
-/// triangles, face areas, shading normals or unselected neighbors participate.
+/// A-SEL (AC-RULES v6): the Selection axes of the active mesh's selection,
+/// the principal axes of the points the tool moves (X the largest spread,
+/// Z the least; `selection_axes.rs`). Positions are read as they are in
+/// `scene`, so callers hand it a scene baked into world space.
 ///
-/// Every component mode feeds it (selection inference, SI-02, read the other
-/// way): polygons vote with their own normals, selected edges with the
-/// polygons that use them, selected points with the polygons around them.
-/// *Provisional* (ACS-Q01): an empty selection, or edges and points that
-/// touch no polygon (wires), take World axes.
+/// It never refuses a selection for its shape: wires, cancelling normals
+/// and closed bands all get a frame, and too little to go on gives World.
+/// Only Item mode, which has no component selection, is turned away.
 pub fn selection_basis(scene: &Scene) -> Result<DMat3> {
-    let mesh = &scene.active().ok_or("Select a visible mesh")?.mesh;
-    let s = &scene.selection;
-    let empty = match s.mode {
-        Mode::Polygon => s.faces.is_empty(),
-        Mode::Edge => s.edges.is_empty(),
-        Mode::Vertex => s.vertices.is_empty(),
-        Mode::Item => {
-            return Err(
-                "Selection axes need a component selection; use World or Work Plane".into(),
-            );
-        }
-    };
-    if empty {
-        // Nothing selected means the whole mesh, which faces no one way.
-        return Ok(DMat3::IDENTITY);
+    let item = scene.active().ok_or("Select a visible mesh")?;
+    if scene.selection.mode == Mode::Item {
+        return Err("Selection axes need a component selection; use World or Work Plane".into());
     }
-    mesh.validate()?;
-    let voters: Vec<u32> = match s.mode {
-        Mode::Polygon => {
-            let selected: BTreeSet<_> = s.faces.iter().copied().collect();
-            if selected.len() != s.faces.len() {
-                return Err("Duplicate selected polygon".into());
-            }
-            s.faces.clone()
-        }
-        Mode::Edge => {
-            let edges: BTreeSet<(u32, u32)> =
-                s.edges.iter().map(|&(a, b)| (a.min(b), a.max(b))).collect();
-            let touched = point_flags(mesh, edges.iter().flat_map(|&(a, b)| [a, b]))?;
-            faces_where(mesh, |face| {
-                let n = face.len();
-                (0..n).any(|i| {
-                    let (a, b) = (face[i], face[(i + 1) % n]);
-                    touched[a as usize]
-                        && touched[b as usize]
-                        && edges.contains(&(a.min(b), a.max(b)))
-                })
-            })
-        }
-        Mode::Vertex => {
-            let touched = point_flags(mesh, s.vertices.iter().copied())?;
-            faces_where(mesh, |face| face.iter().any(|&v| touched[v as usize]))
-        }
-        Mode::Item => unreachable!("refused above"),
-    };
-    if voters.is_empty() {
-        // Wires only: no polygon says which way is up.
-        return Ok(DMat3::IDENTITY);
-    }
-    let mut corners = 0usize;
-    for &f in &voters {
-        let face = mesh
-            .faces
-            .get(f as usize)
-            .ok_or("Invalid selected polygon")?;
-        corners = corners
-            .checked_add(face.vertices.len())
-            .ok_or("Selection corner budget")?;
-        if corners > 100_000 {
-            return Err("Selection exceeds 100,000-corner operation budget".into());
-        }
-        mesh.surface_triangles(f as usize)?;
-    }
-    let mut normals: Vec<_> = voters.iter().map(|&f| mesh.normal(f as usize)).collect();
-    normals.sort_by(|a, b| {
-        a.x.total_cmp(&b.x)
-            .then(a.y.total_cmp(&b.y))
-            .then(a.z.total_cmp(&b.z))
-    });
-    let sum: DVec3 = normals.iter().copied().sum();
-    if !sum.is_finite() || sum.length() <= normals.len() as f64 * 1e-10 {
-        // AC-20: where the normals cancel (a closed piece, or a selection
-        // and its Symmetry mirror whose sides face away from each other),
-        // World axes, as with wires. It used to refuse, which greyed out
-        // Selection and Selection Border in the menu.
-        return Ok(DMat3::IDENTITY);
-    }
-    Ok(basis_from_up(sum.normalize()))
+    Ok(crate::selection_axes::selection_axes(
+        &item.mesh,
+        &scene.selection,
+        glam::DMat4::IDENTITY,
+        None,
+    ))
 }
-/// D18-A's frame for an averaged normal `y`: Y along it, Z as near world Z
-/// as it can be (world X when Y is along Z).
+/// A frame with Y along normal `y`, Z as near world Z as it can be (world
+/// X when Y is along Z). Local's lone points use it (`piece_axes`); the
+/// Selection axes no longer do (A-SEL, `selection_basis`).
 fn basis_from_up(y: DVec3) -> DMat3 {
     let projected = DVec3::Z - y * y.z;
     let z = if projected.length() > 1e-8 {
@@ -294,23 +228,6 @@ fn basis_from_up(y: DVec3) -> DMat3 {
     };
     let x = y.cross(z).normalize();
     DMat3::from_cols(x, y, x.cross(y).normalize())
-}
-/// One flag per mesh point, set for `points`; refuses an out-of-range id.
-fn point_flags(mesh: &crate::Mesh, points: impl Iterator<Item = u32>) -> Result<Vec<bool>> {
-    let mut flags = vec![false; mesh.vertices.len()];
-    for v in points {
-        *flags.get_mut(v as usize).ok_or("Invalid selected point")? = true;
-    }
-    Ok(flags)
-}
-/// Indices of the polygons whose point list passes `keep`, in one pass.
-fn faces_where(mesh: &crate::Mesh, keep: impl Fn(&[u32]) -> bool) -> Vec<u32> {
-    mesh.faces
-        .iter()
-        .enumerate()
-        .filter(|(_, f)| keep(&f.vertices))
-        .map(|(i, _)| i as u32)
-        .collect()
 }
 impl ActionContext {
     pub fn resolve(self, scene: &Scene) -> Result<ActionFrame> {
@@ -341,12 +258,15 @@ impl ActionContext {
         let center = if let CenterMode::Element(p) | CenterMode::Screen(p) = self.center {
             p.point()
         } else if self.center == CenterMode::SelectionBorder {
-            let border = border_points(scene, &vertices);
-            border
-                .iter()
-                .map(|&v| item.mesh.vertices[v as usize])
-                .sum::<DVec3>()
-                / border.len().max(1) as f64
+            // C-BORDER: the box middle of the border edges' points; with no
+            // border edge (or in Edge / Vertex mode) as Selection.
+            let border =
+                crate::selection_axes::selection_border_points(&item.mesh, &scene.selection);
+            if border.is_empty() {
+                box_centre(vertices.iter().map(|&v| item.mesh.vertices[v as usize]))
+            } else {
+                box_centre(border.iter().map(|&v| item.mesh.vertices[v as usize]))
+            }
         } else if self.center == CenterMode::Origin {
             DVec3::ZERO
         } else {
@@ -379,35 +299,6 @@ pub fn box_centre(points: impl Iterator<Item = DVec3>) -> DVec3 {
         |(lo, hi), p| (lo.min(p), hi.max(p)),
     );
     (lo + hi) / 2.
-}
-
-/// Points on the border of the selected polygons (edges used by one
-/// selected polygon); the moved points when there is no such border.
-fn border_points(scene: &Scene, moved: &BTreeSet<u32>) -> Vec<u32> {
-    let (Some(item), Mode::Polygon) = (scene.active(), scene.selection.mode) else {
-        return moved.iter().copied().collect();
-    };
-    let mut uses: std::collections::BTreeMap<(u32, u32), usize> = Default::default();
-    for &f in &scene.selection.faces {
-        let Some(face) = item.mesh.faces.get(f as usize) else {
-            continue;
-        };
-        let n = face.vertices.len();
-        for i in 0..n {
-            let (a, b) = (face.vertices[i], face.vertices[(i + 1) % n]);
-            *uses.entry((a.min(b), a.max(b))).or_default() += 1;
-        }
-    }
-    let border: BTreeSet<u32> = uses
-        .iter()
-        .filter(|(_, n)| **n == 1)
-        .flat_map(|((a, b), _)| [*a, *b])
-        .collect();
-    if border.is_empty() {
-        moved.iter().copied().collect()
-    } else {
-        border.into_iter().collect()
-    }
 }
 
 /// Local (AC-scale-Local, AC-rotate-Local, ACL-01..04): each moved point's
@@ -805,7 +696,7 @@ pub fn line_frame_basis(tool_axes: DMat3, along: DVec3) -> DMat3 {
 
 /// The spreads and directions of `points` about their average, most
 /// spread first: the covariance's eigenpairs by cyclic Jacobi rotations.
-fn principal_axes(points: &[DVec3]) -> [(f64, DVec3); 3] {
+pub(crate) fn principal_axes(points: &[DVec3]) -> [(f64, DVec3); 3] {
     let n = points.len() as f64;
     let mean = points.iter().copied().sum::<DVec3>() / n;
     let mut c = [[0f64; 3]; 3];

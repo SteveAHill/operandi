@@ -1,5 +1,16 @@
 # Milestone progress ledger
 
+- **Action Center rule sheet v6, step 1 (2026-11-27, branch ac-rewrite-1):**
+  Selection and Selection Border axes are the principal axes of the moved
+  points (A-SEL, `selection_axes.rs`): X the longest direction, Z the
+  thinnest; they never refuse a selection. Selection Border's centre is
+  the box middle of the edges shared with unselected polygons (C-BORDER;
+  Smooth Shift's Scale too). Under Symmetry the + side gives centre and
+  axes and drives the edit, the other side mirrors (S-01..S-04). Element
+  is the world origin with World axes until a pick. Not yet: the preview
+  through the pivot list, press routing, the menu table, Item mode,
+  falloff side sampling. Guide: interface/action-centers.md.
+  Provisional: ACR-Q01..Q08.
 - **Bug batch: grid depth, Text tip, tooltips (2026-11-25, branch claude/project-thread-mnzzuz):**
   the grid draws after the solid meshes, depth-tested (Perspective and
   orthographic depth both match the meshes'), so it shows over geometry

@@ -37,25 +37,23 @@ fn cases() -> Vec<Value> {
     doc["cases"].as_array().unwrap().clone()
 }
 
-const Q3: &str = "ACS-Q3: the custom axis frame (reference: tool Z along the axis, tool X world X made perpendicular; Operandi: D18-A Selection axes, Element from_z, Local ACS-12)";
+const Q3: &str = "ACS-Q3: the custom axis frame (reference: tool Z along the axis, tool X world X made perpendicular; Operandi: Element from_z, Local ACS-12)";
 const Q4: &str = "ACS-Q4: moved item, the reference picked the primary side from the centre's world X; Operandi tests it against the item's plane (ACS-08)";
+const Q5: &str = "ACR-Q09: AC-RULES v6 has every tool's typed values in the one A-SEL frame (the + side's, S-02), which the nine Selection / Selection Border Scale cases now match; this Rotate case was recorded turning about world Y instead";
+const Q6: &str = "ACR-Q10: A-SEL under Symmetry with a selected polygon lying across the plane: which of its points and whether its normal count (AC-RULES v6 S-02 doesn't say)";
 /// Cases that depend on an open question (case id, question). A listed
 /// case that passes still counts as a pass.
+///
+/// AC-RULES v6 (2026-11-27) took nine Selection and Selection Border Scale
+/// cases off this list: A-SEL from the + side's points gives the frame
+/// they were recorded with.
 const KNOWN_GAPS: &[(&str, &str)] = &[
-    ("ACS-H-border-x-pair-scale", Q3),
     ("ACS-H-element-x-pair-scale-clickFquad", Q3),
     ("ACS-H-element-x-pair-scale-clickNquad", Q3),
     ("ACS-H-local-x-pair-scale", Q3),
-    ("ACS-H-select-none-PC-scale", Q3),
-    ("ACS-H-select-none-pair-scale", Q3),
-    ("ACS-H-select-x-PC-scale", Q3),
-    ("ACS-H-select-x-onesideN-scale", Q3),
-    ("ACS-H-select-x-pair-scale-ptrNeg", Q3),
-    ("ACS-H-select-x-pair-scale", Q3),
-    ("ACS-H-select-x-pairNP-scale", Q3),
-    ("ACS-H-select-x-pairstraddle-scale", Q3),
-    ("ACS-H-select-y-pair-scale", Q3),
-    ("ACS-H-select-z-pair-scale", Q3),
+    ("ACS-H-select-x-pair-rotate", Q5),
+    ("ACS-H-select-x-PC-scale", Q6),
+    ("ACS-H-select-x-pairstraddle-scale", Q6),
     ("ACS-P5-move-c0.7_0.25_0.5-x-pair", Q4),
     ("ACS-P5-rotate-c0.7_0.25_0.5-x-pair", Q4),
     ("ACS-P5-move-c0.2_0.25_0.5-x-pair", Q4),

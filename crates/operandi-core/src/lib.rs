@@ -769,6 +769,8 @@ pub mod haul;
 pub mod pivot_service;
 #[path = "tools/preset_store.rs"]
 mod preset_store;
+#[path = "transforms/selection_axes.rs"]
+pub mod selection_axes;
 #[path = "tools/tool_preset.rs"]
 pub mod tool_preset;
 #[path = "tools/tool_reset.rs"]

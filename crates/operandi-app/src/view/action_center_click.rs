@@ -10,6 +10,23 @@ pub(super) enum CenterClick {
 }
 
 impl Operandi {
+    /// Element or Screen chosen by name (the Action Center menu, a pie).
+    /// Element is in force at once (C-ELEM, A-ELEM, AC-RULES v6): until
+    /// something is picked it is the world origin with World axes, not
+    /// whatever Action Center was on before. Then the next click picks.
+    /// Screen still waits for its click (a later step of the rule sheet).
+    pub(super) fn choose_center_click(&mut self, kind: CenterClick) {
+        if kind == CenterClick::Element
+            && !matches!(self.editor.action_context.center, CenterMode::Element(_))
+        {
+            self.run(Command::ActionContext(ActionContext {
+                center: CenterMode::Element(operandi_core::PickedPoint::default()),
+                axis: AxisOrientation::World,
+            }));
+        }
+        self.await_center_click(kind);
+    }
+
     /// Wait for the click that places an Element or Screen centre.
     pub(super) fn await_center_click(&mut self, kind: CenterClick) {
         self.center_click = Some(kind);

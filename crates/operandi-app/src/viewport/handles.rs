@@ -535,10 +535,26 @@ impl Operandi {
             if self.editor.action_context.axis == AxisOrientation::Selection
                 && let Some(frame) = l.action_frame
             {
+                // The Shift arrow follows the selection's average normal,
+                // as without Selection axes; the Selection frame's Z when
+                // the normals cancel (A-SEL puts a flat selection's normal
+                // on Z; it was on Y before AC-RULES v6). The Inset arrow is
+                // the frame's X, the selection's long direction, laid
+                // square to it.
+                let normal = self
+                    .bevel_normal(operandi_core::NormalOf::Polygons)
+                    .unwrap_or(frame.basis.z_axis);
                 return if axis == 0 {
-                    frame.basis.y_axis
+                    normal
                 } else {
-                    frame.basis.z_axis
+                    frame
+                        .basis
+                        .x_axis
+                        .reject_from(normal)
+                        .try_normalize()
+                        .unwrap_or_else(|| {
+                            frame.basis.y_axis.reject_from(normal).normalize_or_zero()
+                        })
                 };
             }
             // Existing face-local Bevel roles; freeze directions from stage base.
