@@ -10156,3 +10156,15 @@ Built: what a press off the handle does under each Action Center (`ActionContext
 - ACR-Q19 Item mode is unchanged; its presses come with the Item-mode step.
 - ACR-Q20 In a UV view with a UV tool on, Element picks the UV point or edge under every click (UVT-133 was one click).
 
+## Action Center rule sheet v6, step 3: one pivot service (2026-11-27, branch ac-rewrite-3, provisional)
+
+Built: the pivot service resolves a drag's base once into groups (`pivot_service::Resolved`: handle, and per mesh its groups with identity, frame, twin frame and targets carrying role and side); the transform tools' preview, handle and handle drag read only that. Local's axes are their own axis rule (`AxisOrientation::Local`), so the two mixing rules exist. Where the sheet left room:
+
+- ACR-Q21 Local axes with one centre under Symmetry: the frame is the last-selected element's cluster's; when that cluster is on the other side of the plane from the primary centre, its mirror image is used (the frame its twin has), so the primary side still takes the values as entered.
+- ACR-Q22 Local axes with one centre and nothing selected: no cluster holds a last-selected element, so the tool's own axes (World).
+- ACR-Q23 The primary frame is the service's when the tool starts, when the Action Center, Symmetry or a placed centre changes, and on Reset; between drags Move and Transform still carry it along with what they moved (the handle follows the selection even under Origin, as before). The groups are resolved about that carried frame.
+- ACR-Q24 S-09 is unchanged in this step: a Local cluster on the other side is edited in `LocalPiece::mirrored`, which keeps X pointing along +X; the review's inward-facing case (the twin's frame should be the exact mirror image) is still open.
+- ACR-Q25 Under Local the handle shows the last-selected cluster's own frame also when that cluster is on the non-primary side under Symmetry (as before); its values are then the mirror image of what the arrows suggest.
+- ACR-Q26 A falloff that reaches past the selection (Soft Selection, Coplanar, Element) adds its points to the groups, as before; in Vertex mode they can join Local clusters, and the handle now follows the same clusters the edit uses.
+- ACR-Q27 The Default Action Center preferences list no Local centre or Local axis yet (menu table, step 5); the bridge takes `axis: "local"`.
+

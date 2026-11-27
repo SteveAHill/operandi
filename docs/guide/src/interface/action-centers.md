@@ -29,6 +29,17 @@ The top line of the menu shows the center and the axis in use. The **Center** an
 
 With nothing selected, "what the tool moves" is the whole mesh.
 
+## Mix a center and an axis
+
+The **Center** and **Axis** submenus let you keep one half of an Action Center and change the other. The top line of the menu always shows both.
+
+**Local** is the one that needs a word of explanation, because it works on each connected piece (each *cluster*) of your selection separately:
+
+- **Local** center with another axis, for example **Local** and then **Axis > World**: each cluster still turns and scales about its own middle, but all of them use that one set of axes. Handy for scaling many separate panels flat along the world Y direction, each in place.
+- Another center with **Local** axes, for example **Local** and then **Center > Origin**: everything turns and scales about that one center, with the axes of the cluster you selected last.
+
+The handle always shows the center and axes your values are measured in. Under **Local** it sits on the cluster you selected last.
+
 ## Selection and Selection Border
 
 Both give the handle axes that follow the shape of what you selected, so the arrows line up with your model instead of with the world:

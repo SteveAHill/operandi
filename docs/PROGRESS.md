@@ -1,5 +1,17 @@
 # Milestone progress ledger
 
+- **Action Center rule sheet v6, step 3: one pivot service (2026-11-27, branch ac-rewrite-3):**
+  `PivotRequest::resolve` answers once per drag base with the handle and,
+  per mesh, groups (stable identity, frame, twin frame, targets with
+  their Symmetry role and side); `Editor::live_pivots` keeps it on the
+  live tool and checks it against what it read. Move, Rotate, Scale
+  (Stretch) and Transform's preview, handle and handle drag read only
+  that; the preview no longer gathers targets, clusters, mirror roles or
+  frames. Local's axes are `AxisOrientation::Local`, so Local centre +
+  another axis and another centre + Local axes work (mixing rules). A
+  refused live switch restores the placed-centre marker. Behaviour is
+  otherwise unchanged. Not yet: Item mode, the menu table, falloff side
+  sampling, S-09's mirrored frame. Provisional: ACR-Q21..Q27.
 - **Action Center rule sheet v6, step 2: presses (2026-11-27, branch ac-rewrite-2, GitHub #32, #39):**
   with a transform tool on, a press off the handle follows the Action
   Center's rule (`ActionContext::press`, `element_center.rs`): Element
