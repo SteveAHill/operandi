@@ -26,6 +26,10 @@ best.
    Multilayer, then open each with Load Image...: the PNG has the glow;
    both EXR files are as rendered, with no glow (BG-Q4).
 9. Save the scene, close, reopen: the tab shows the same settings.
+9b. Select the Final Color output in the Shader Tree: its Properties have
+    no Bloom, Bloom Threshold or Bloom Radius rows any more (BG-Q2). A
+    scene saved by an older build with the output's Bloom on opens with
+    Bloom ticked in this tab.
 10. Render again with **F9** while the tab is on: small renders show the
     glow as they fill in; at 4K the picture renders plain and the tab
     says the effects appear when it finishes, then they appear.

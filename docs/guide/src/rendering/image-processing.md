@@ -56,6 +56,7 @@ The picture updates as you change each value. Each change is one undo step, and 
 
 - **Only Final Color.** Bloom and Glare change the Final Color picture. Depth, Normal and the other outputs keep their true numbers, so they stay usable for compositing.
 - **Saved with the scene.** The settings are part of the scene's render settings and are saved with it.
+- **The one place for Bloom.** The Final Color render output no longer has Bloom rows of its own. A scene saved with them on opens with **Bloom** ticked here instead, at the same **Threshold**, full **Intensity** and about the same reach.
 - **In saved pictures.** **Save Image...** in a picture format (PNG, JPEG, TIFF, Targa, BMP) writes the picture as the window shows it, Bloom and Glare included, and so do renders saved to your Pictures folder or to a path a script gives. Float files (OpenEXR, OpenEXR Multilayer and Radiance HDR) keep the numbers as rendered, without Bloom and Glare, so they stay clean for compositing. The Render window's history keeps every render as it was rendered, so you can change the settings on an older render later.
 - **While it renders.** Small pictures show the effects as they render. On big pictures, where working them out takes longer, the render shows without them and they appear when it finishes.
 - **Every slot.** The tab's settings belong to the open scene and apply to whichever picture the window shows.

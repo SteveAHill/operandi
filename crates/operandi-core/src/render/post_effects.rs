@@ -143,6 +143,56 @@ impl PostEffects {
     }
 }
 
+impl crate::Scene {
+    /// Old files: a Final Color output's own Bloom (removed, Jason BG-Q2)
+    /// becomes the scene's Bloom when the scene has none of its own, at
+    /// the same threshold, full strength and about the same reach. Every
+    /// output's old Bloom fields are then cleared, so nothing writes them.
+    pub(crate) fn move_old_output_bloom(&mut self) {
+        use crate::shader_tree::{NodeKind, OutputEffect};
+        let fresh = crate::render_outputs::OutputSettings::default();
+        let tree = &self.shader_tree;
+        let finals: Vec<_> = tree
+            .outputs
+            .keys()
+            .filter(|id| {
+                matches!(
+                    tree.get(**id).map(|n| &n.kind),
+                    Some(NodeKind::RenderOutput(OutputEffect::FinalColor))
+                )
+            })
+            .copied()
+            .collect();
+        let mut old = None;
+        for (id, s) in &mut self.shader_tree.outputs {
+            if finals.contains(id) && s.bloom && old.is_none() {
+                old = Some((s.bloom_threshold, s.bloom_radius));
+            }
+            s.bloom = fresh.bloom;
+            s.bloom_threshold = fresh.bloom_threshold;
+            s.bloom_radius = fresh.bloom_radius;
+        }
+        let Some((threshold, radius)) = old else {
+            return;
+        };
+        if self.render.post.bloom != Bloom::default() {
+            return;
+        }
+        // The old radius was a share of the diagonal, a blur of about a
+        // third of it; the new one is a share of the width reaching two
+        // sigma. Measured on the render frame.
+        let [w, h] = self.render.frame.map(|v| f64::from(v.max(1)));
+        let reach = radius * (w * w + h * h).sqrt() * 2.0 / 3.0 / w;
+        self.render.post.bloom = Bloom {
+            enabled: true,
+            threshold: threshold.clamp(0.0, MAX_THRESHOLD),
+            intensity: 1.0,
+            radius: reach.clamp(*RADIUS_RANGE.start(), *RADIUS_RANGE.end()),
+            tint: [1.0; 3],
+        };
+    }
+}
+
 /// A float RGB picture, row by row.
 struct Plane {
     w: usize,

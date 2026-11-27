@@ -1028,6 +1028,8 @@ fn decode_document(
         scene.xyz_items_to_x_first();
     }
     scene.settle_environment_transforms();
+    // The Final Color output's old Bloom rows become the scene's Bloom.
+    scene.move_old_output_bloom();
     if doc.version < ENVIRONMENT_VERSION && has_cameras_lights(&scene) {
         scene.ensure_environment()?;
     }
