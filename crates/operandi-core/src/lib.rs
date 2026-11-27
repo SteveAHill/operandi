@@ -494,6 +494,8 @@ mod meshop_flood_weight;
 mod meshop_geodesic_weight;
 #[path = "meshops/meshop_hard_edge.rs"]
 mod meshop_hard_edge;
+#[path = "meshops/meshop_lace.rs"]
+mod meshop_lace;
 #[path = "meshops/meshop_lattice.rs"]
 pub mod meshop_lattice;
 #[path = "meshops/meshop_loop_slice.rs"]

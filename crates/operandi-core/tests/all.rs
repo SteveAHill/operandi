@@ -467,6 +467,8 @@ mod meshop_element_selection;
 mod meshop_falloff_batch7;
 #[path = "meshop_hard_edge.rs"]
 mod meshop_hard_edge;
+#[path = "meshop_lace.rs"]
+mod meshop_lace;
 #[path = "meshop_loop_slice.rs"]
 mod meshop_loop_slice;
 #[path = "meshop_part_tag.rs"]
