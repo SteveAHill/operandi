@@ -402,8 +402,12 @@ fn m11_history_hidden_items_identity_and_scene_state() {
         ..Default::default()
     }))
     .unwrap();
-    assert!(e.dispatch(Command::Visibility(id)).is_err());
+    // UIC-307: the eye toggle settles the move first (showing the mesh
+    // again), then Move starts again; toggle it back hidden.
+    e.dispatch(Command::Visibility(id)).unwrap();
+    assert!(e.scene.active().unwrap().visible);
     e.dispatch(Command::Drop).unwrap();
+    e.dispatch(Command::Visibility(id)).unwrap();
     assert_eq!(mesh, e.scene.active().unwrap().mesh);
     assert!(!e.scene.active().unwrap().visible);
     e.dispatch(Command::Workplane(Workplane {

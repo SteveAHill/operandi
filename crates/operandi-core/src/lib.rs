@@ -715,6 +715,8 @@ pub mod multi_active;
 pub mod multi_tools;
 #[path = "transforms/multi_transform.rs"]
 pub mod multi_transform;
+#[path = "tools/tool_yield.rs"]
+mod tool_yield;
 pub use multi_active::ComponentSelection;
 #[path = "scene_items/scene.rs"]
 pub mod scene;
@@ -765,6 +767,8 @@ pub mod haul;
 pub mod pivot_service;
 #[path = "tools/preset_store.rs"]
 mod preset_store;
+#[path = "transforms/selection_axes.rs"]
+pub mod selection_axes;
 #[path = "tools/tool_preset.rs"]
 pub mod tool_preset;
 #[path = "tools/tool_reset.rs"]

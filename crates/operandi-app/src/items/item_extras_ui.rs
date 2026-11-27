@@ -154,8 +154,7 @@ impl Operandi {
         let Some((item, x)) = self.primary_extras() else {
             return;
         };
-        let idle = self.editor.live.is_none();
-        ui.gated_ui(crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE), |ui| {
+        ui.gated_ui(None, |ui| {
             ui.spacing_mut().item_spacing.y = 2.;
             let options = Choice::ALL.map(|v| (v, v.label()));
             ui.gated_ui(crate::unavailable::unless(!item.is_locked(), crate::unavailable::LOCKED), |ui| {
@@ -271,8 +270,7 @@ impl Operandi {
         let Some((_, x)) = self.primary_extras() else {
             return;
         };
-        let idle = self.editor.live.is_none();
-        ui.gated_ui(crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE), |ui| {
+        ui.gated_ui(None, |ui| {
             ui.spacing_mut().item_spacing.y = 2.;
             self.item_picker(ui, "item-redirect", "Redirect", x.redirect, ExtraEdit::Redirect);
             for walk in Walk::ALL {
@@ -326,110 +324,104 @@ impl Operandi {
         if self.rig_user_channel_rows(ui) {
             ui.separator();
         }
-        let idle = self.editor.live.is_none();
-        ui.gated_ui(
-            crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE),
-            |ui| {
-                ui.spacing_mut().item_spacing.y = 2.;
-                for ch in &x.channels {
-                    let name = ch.name.clone();
-                    if ch.kind == ChannelType::Divider {
-                        ui.separator();
-                        ui.horizontal(|ui| {
-                            ui.strong(ch.label());
-                            if ui.small_button("Remove").clicked() {
-                                self.run_extra(ExtraEdit::RemoveChannel(name.clone()));
-                            }
-                        });
-                        continue;
-                    }
+        ui.gated_ui(None, |ui| {
+            ui.spacing_mut().item_spacing.y = 2.;
+            for ch in &x.channels {
+                let name = ch.name.clone();
+                if ch.kind == ChannelType::Divider {
+                    ui.separator();
                     ui.horizontal(|ui| {
-                        crate::option_row::label(ui, ch.label()).on_hover_text(format!(
-                            "{} ({})",
-                            ch.name,
-                            ch.kind.label()
-                        ));
-                        match (&ch.value, ch.kind) {
-                            (ChannelValue::Bool(b), _) => {
-                                let mut on = *b;
-                                if ui.checkbox(&mut on, "").changed() {
-                                    self.run_extra(ExtraEdit::ChannelValue(
-                                        name.clone(),
-                                        ChannelValue::Bool(on),
-                                    ));
-                                }
-                            }
-                            (ChannelValue::Text(t), _) => {
-                                let key =
-                                    egui::Id::new(("channel-text", &name, self.common_targets()));
-                                let mut text: String =
-                                    ui.data_mut(|d| d.get_temp(key).unwrap_or_else(|| t.clone()));
-                                let r = ui.add(TextEdit::singleline(&mut text).desired_width(120.));
-                                self.text_editors.insert(r.id);
-                                crate::numeric_tab::register(ui, &r, Some(&text));
-                                if r.changed() {
-                                    ui.data_mut(|d| d.insert_temp(key, text.clone()));
-                                }
-                                if r.lost_focus() {
-                                    ui.data_mut(|d| d.remove::<String>(key));
-                                    if crate::numeric_tab::accepted(&r) && &text != t {
-                                        self.run_extra(ExtraEdit::ChannelValue(
-                                            name.clone(),
-                                            ChannelValue::Text(text),
-                                        ));
-                                    }
-                                }
-                            }
-                            (ChannelValue::Number(n), kind) => {
-                                let (scale, suffix) = match kind {
-                                    ChannelType::Distance => (1.0, " m"),
-                                    ChannelType::Angle => (180.0 / std::f64::consts::PI, "°"),
-                                    ChannelType::Percent => (100.0, " %"),
-                                    _ => (1.0, ""),
-                                };
-                                let key =
-                                    egui::Id::new(("channel-num", &name, self.common_targets()));
-                                let mut shown: f64 =
-                                    ui.data_mut(|d| d.get_temp(key).unwrap_or(n * scale));
-                                let mut drag = crate::numeric_tab::DragValue::new(&mut shown)
-                                    .speed(0.1)
-                                    .suffix(suffix);
-                                if kind == ChannelType::Integer {
-                                    drag = drag.fixed_decimals(0);
-                                }
-                                let r = ui.add(drag);
-                                if r.changed() {
-                                    ui.data_mut(|d| d.insert_temp(key, shown));
-                                }
-                                if r.drag_stopped()
-                                    || r.lost_focus()
-                                    || (r.changed() && !r.dragged() && !r.has_focus())
-                                {
-                                    ui.data_mut(|d| d.remove::<f64>(key));
-                                    if (shown / scale - n).abs() > 1e-12 {
-                                        self.run_extra(ExtraEdit::ChannelValue(
-                                            name.clone(),
-                                            ChannelValue::Number(shown / scale),
-                                        ));
-                                    }
-                                }
-                            }
-                            _ => {}
-                        }
-                        if ui
-                            .small_button("✕")
-                            .on_hover_text("Remove this channel")
-                            .clicked()
-                        {
+                        ui.strong(ch.label());
+                        if ui.small_button("Remove").clicked() {
                             self.run_extra(ExtraEdit::RemoveChannel(name.clone()));
                         }
                     });
+                    continue;
                 }
-                ui.add_space(4.);
-                self.add_user_channel_button(ui);
-                ui.weak("User channels are stored with the item; nothing links them yet");
-            },
-        );
+                ui.horizontal(|ui| {
+                    crate::option_row::label(ui, ch.label()).on_hover_text(format!(
+                        "{} ({})",
+                        ch.name,
+                        ch.kind.label()
+                    ));
+                    match (&ch.value, ch.kind) {
+                        (ChannelValue::Bool(b), _) => {
+                            let mut on = *b;
+                            if ui.checkbox(&mut on, "").changed() {
+                                self.run_extra(ExtraEdit::ChannelValue(
+                                    name.clone(),
+                                    ChannelValue::Bool(on),
+                                ));
+                            }
+                        }
+                        (ChannelValue::Text(t), _) => {
+                            let key = egui::Id::new(("channel-text", &name, self.common_targets()));
+                            let mut text: String =
+                                ui.data_mut(|d| d.get_temp(key).unwrap_or_else(|| t.clone()));
+                            let r = ui.add(TextEdit::singleline(&mut text).desired_width(120.));
+                            self.text_editors.insert(r.id);
+                            crate::numeric_tab::register(ui, &r, Some(&text));
+                            if r.changed() {
+                                ui.data_mut(|d| d.insert_temp(key, text.clone()));
+                            }
+                            if r.lost_focus() {
+                                ui.data_mut(|d| d.remove::<String>(key));
+                                if crate::numeric_tab::accepted(&r) && &text != t {
+                                    self.run_extra(ExtraEdit::ChannelValue(
+                                        name.clone(),
+                                        ChannelValue::Text(text),
+                                    ));
+                                }
+                            }
+                        }
+                        (ChannelValue::Number(n), kind) => {
+                            let (scale, suffix) = match kind {
+                                ChannelType::Distance => (1.0, " m"),
+                                ChannelType::Angle => (180.0 / std::f64::consts::PI, "°"),
+                                ChannelType::Percent => (100.0, " %"),
+                                _ => (1.0, ""),
+                            };
+                            let key = egui::Id::new(("channel-num", &name, self.common_targets()));
+                            let mut shown: f64 =
+                                ui.data_mut(|d| d.get_temp(key).unwrap_or(n * scale));
+                            let mut drag = crate::numeric_tab::DragValue::new(&mut shown)
+                                .speed(0.1)
+                                .suffix(suffix);
+                            if kind == ChannelType::Integer {
+                                drag = drag.fixed_decimals(0);
+                            }
+                            let r = ui.add(drag);
+                            if r.changed() {
+                                ui.data_mut(|d| d.insert_temp(key, shown));
+                            }
+                            if r.drag_stopped()
+                                || r.lost_focus()
+                                || (r.changed() && !r.dragged() && !r.has_focus())
+                            {
+                                ui.data_mut(|d| d.remove::<f64>(key));
+                                if (shown / scale - n).abs() > 1e-12 {
+                                    self.run_extra(ExtraEdit::ChannelValue(
+                                        name.clone(),
+                                        ChannelValue::Number(shown / scale),
+                                    ));
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                    if ui
+                        .small_button("✕")
+                        .on_hover_text("Remove this channel")
+                        .clicked()
+                    {
+                        self.run_extra(ExtraEdit::RemoveChannel(name.clone()));
+                    }
+                });
+            }
+            ui.add_space(4.);
+            self.add_user_channel_button(ui);
+            ui.weak("User channels are stored with the item; nothing links them yet");
+        });
     }
 
     /// CP-U02: Add User Channel... with Username, Channel Name, Type,
@@ -534,80 +526,74 @@ impl Operandi {
             ui.weak("Select an item");
             return;
         };
-        let idle = self.editor.live.is_none();
-        ui.gated_ui(
-            crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE),
-            |ui| {
-                ui.spacing_mut().item_spacing.y = 2.;
-                for tag in &x.tags {
-                    let kind = tag.kind.clone();
-                    let multiline = kind == COMMENT_TAG;
-                    self.extra_text_row(
-                        ui,
-                        &format!("tag-{kind}"),
-                        &tag.kind,
-                        &tag.value,
-                        multiline,
-                        move |t| ExtraEdit::SetTag(kind.clone(), t),
-                    );
-                }
-                ui.horizontal(|ui| {
-                    let custom = egui::Id::new("custom-tag-name");
-                    ui.menu_button("Add Tags", |ui| {
-                        if x.tags.iter().all(|t| t.kind != COMMENT_TAG)
-                            && ui.button(COMMENT_TAG).clicked()
-                        {
-                            self.run_extra(ExtraEdit::SetTag(COMMENT_TAG.into(), String::new()));
-                            ui.close();
-                        }
-                        ui.separator();
-                        let mut name: String =
-                            ui.data_mut(|d| d.get_temp(custom).unwrap_or_default());
-                        let r =
-                            ui.add(TextEdit::singleline(&mut name).hint_text("Custom tag type"));
-                        self.text_editors.insert(r.id);
-                        crate::numeric_tab::register(ui, &r, Some(&name));
-                        ui.data_mut(|d| d.insert_temp(custom, name.clone()));
-                        let ok =
-                            !name.trim().is_empty() && x.tags.iter().all(|t| t.kind != name.trim());
-                        if ui
-                            .gated(
-                                crate::unavailable::unless(
-                                    ok,
-                                    if name.trim().is_empty() {
-                                        "Type a tag type first"
-                                    } else {
-                                        "The item already has that tag"
-                                    },
-                                ),
-                                Button::new("Add Custom Tag"),
-                            )
-                            .clicked()
-                        {
-                            self.run_extra(ExtraEdit::SetTag(name.trim().into(), String::new()));
-                            ui.data_mut(|d| d.remove::<String>(custom));
-                            ui.close();
-                        }
-                    });
-                    ui.gated_ui(
-                        crate::unavailable::unless(
-                            !x.tags.is_empty(),
-                            "The item has no tags to remove",
-                        ),
-                        |ui| {
-                            ui.menu_button("Remove Tags", |ui| {
-                                for tag in &x.tags {
-                                    if ui.button(&tag.kind).clicked() {
-                                        self.run_extra(ExtraEdit::RemoveTag(tag.kind.clone()));
-                                        ui.close();
-                                    }
-                                }
-                            });
-                        },
-                    );
+        ui.gated_ui(None, |ui| {
+            ui.spacing_mut().item_spacing.y = 2.;
+            for tag in &x.tags {
+                let kind = tag.kind.clone();
+                let multiline = kind == COMMENT_TAG;
+                self.extra_text_row(
+                    ui,
+                    &format!("tag-{kind}"),
+                    &tag.kind,
+                    &tag.value,
+                    multiline,
+                    move |t| ExtraEdit::SetTag(kind.clone(), t),
+                );
+            }
+            ui.horizontal(|ui| {
+                let custom = egui::Id::new("custom-tag-name");
+                ui.menu_button("Add Tags", |ui| {
+                    if x.tags.iter().all(|t| t.kind != COMMENT_TAG)
+                        && ui.button(COMMENT_TAG).clicked()
+                    {
+                        self.run_extra(ExtraEdit::SetTag(COMMENT_TAG.into(), String::new()));
+                        ui.close();
+                    }
+                    ui.separator();
+                    let mut name: String = ui.data_mut(|d| d.get_temp(custom).unwrap_or_default());
+                    let r = ui.add(TextEdit::singleline(&mut name).hint_text("Custom tag type"));
+                    self.text_editors.insert(r.id);
+                    crate::numeric_tab::register(ui, &r, Some(&name));
+                    ui.data_mut(|d| d.insert_temp(custom, name.clone()));
+                    let ok =
+                        !name.trim().is_empty() && x.tags.iter().all(|t| t.kind != name.trim());
+                    if ui
+                        .gated(
+                            crate::unavailable::unless(
+                                ok,
+                                if name.trim().is_empty() {
+                                    "Type a tag type first"
+                                } else {
+                                    "The item already has that tag"
+                                },
+                            ),
+                            Button::new("Add Custom Tag"),
+                        )
+                        .clicked()
+                    {
+                        self.run_extra(ExtraEdit::SetTag(name.trim().into(), String::new()));
+                        ui.data_mut(|d| d.remove::<String>(custom));
+                        ui.close();
+                    }
                 });
-            },
-        );
+                ui.gated_ui(
+                    crate::unavailable::unless(
+                        !x.tags.is_empty(),
+                        "The item has no tags to remove",
+                    ),
+                    |ui| {
+                        ui.menu_button("Remove Tags", |ui| {
+                            for tag in &x.tags {
+                                if ui.button(&tag.kind).clicked() {
+                                    self.run_extra(ExtraEdit::RemoveTag(tag.kind.clone()));
+                                    ui.close();
+                                }
+                            }
+                        });
+                    },
+                );
+            });
+        });
     }
 
     /// In 3D views: Pivot and Center markers, Dimensions and Notes of the

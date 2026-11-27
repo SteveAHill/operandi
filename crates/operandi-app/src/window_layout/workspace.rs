@@ -1261,11 +1261,18 @@ impl Operandi {
                     AxisOrientation::World
                 };
                 let context = ActionContext { center, axis };
+                // Tooltips per UIC-04.
+                let tip = if center == CenterMode::SelectionBorder {
+                    "Middle of the edges where the selected polygons meet the rest of the mesh, with axes that follow the selection's shape (X along its length)"
+                } else {
+                    "Center of the selection, with the World axes"
+                };
                 self.action_context_choice(
                     ui,
                     Button::selectable(current.center == center, center.label()),
                     context,
-                );
+                )
+                .on_hover_text(tip);
             }
             // F4/F6: the centre is placed by the next viewport click.
             for (kind, label) in [
@@ -1274,7 +1281,7 @@ impl Operandi {
             ] {
                 let on = current.center.label() == label;
                 if ui.add(Button::selectable(on, label)).clicked() {
-                    self.await_center_click(kind);
+                    self.choose_center_click(kind);
                     ui.close();
                 }
             }
@@ -1288,8 +1295,8 @@ impl Operandi {
                 selection,
             )
             .on_hover_text(
-                // Spec: D18-A
-                "Center of the selection, with axes from the average normal of its polygons (or the polygons around the selected edges or points)",
+                // A-SEL (AC-RULES v6); tooltip per UIC-04.
+                "Center of the selection, with axes that follow its shape: X along its longest direction, Z through its thinnest (a flat patch's normal)",
             );
             let origin = ActionContext {
                 center: CenterMode::Origin,

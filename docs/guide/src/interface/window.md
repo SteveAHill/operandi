@@ -98,6 +98,13 @@ When a tool is active, two more parts appear: the **Tool handles** in the
 leave the tool. [Bevel (polygons)](../modeling/polygon-bevel.md) shows
 both.
 
+A tool stays on while you use the rest of the window. Change a value in
+**Properties**, click a button in the **Items** list or the **Mesh
+Stack**, or press **N** for a new mesh: if the tool has already changed
+something, that change is kept as its own undo step, the new command runs,
+and the tool starts again on what is selected now. Clicks in the 3D view
+still don't select while a tool is on: select first, then pick the tool.
+
 ## Common tasks
 
 ### Move a panel or bar

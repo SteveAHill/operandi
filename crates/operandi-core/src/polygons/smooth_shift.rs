@@ -75,8 +75,9 @@ pub enum SmoothShiftPivot {
     /// The middle of the shifted selection's bounding box: no action
     /// centre, Selection, Selection Center Auto Axis and Automatic.
     SelectionBox,
-    /// The average of the shifted selection's border points (Selection
-    /// Border); the box middle when the selection has no border.
+    /// The box middle of the shifted points on the selection's border
+    /// (Selection Border, C-BORDER: edges shared with an unselected
+    /// polygon); the whole box middle when the selection has no border.
     SelectionBorder,
     /// One point (Origin, Element, Screen). With `mirror`, points on the
     /// far side of that symmetry plane scale about the point's mirror
@@ -93,8 +94,8 @@ pub enum SmoothShiftPivot {
     /// when nothing is on +), the other side scaling about its mirror
     /// image and seam points about its foot on the plane, as `Point`.
     HalfBox(crate::Symmetry),
-    /// As `HalfBox` with Selection Border's centre: the average of the
-    /// half's shifted border points.
+    /// As `HalfBox` with Selection Border's centre: the box middle of the
+    /// shifted border points on that half.
     HalfBorder(crate::Symmetry),
 }
 
@@ -299,48 +300,32 @@ pub fn smooth_shift_geometry_about(
         }
     };
     let all_box = || box_middle(&mut shifted.values().chain(back.values()).copied());
-    let border_of_selection = || -> BTreeSet<u32> {
-        let mut chosen_uses: BTreeMap<_, usize> = BTreeMap::new();
-        for &fi in &chosen {
-            let vs = &source.faces[fi].vertices;
-            for (i, &v) in vs.iter().enumerate() {
-                *chosen_uses
-                    .entry(edge_key(v, vs[(i + 1) % vs.len()]))
-                    .or_default() += 1;
-            }
-        }
-        chosen_uses
-            .iter()
-            .filter(|(_, n)| **n == 1)
-            .flat_map(|(&(a, b), _)| [a, b])
-            .collect()
-    };
+    // C-BORDER (AC-RULES v6), as the transform tools' Selection Border:
+    // the points of the edges the selection shares with other polygons.
+    let border_of_selection =
+        || crate::selection_axes::border_points(source, chosen.iter().copied());
     // ACS-01 (pivot_service::half_points): the half a Symmetry centre is
     // measured on, by the side each shifted point started on.
     let pivot = match pivot {
         SmoothShiftPivot::HalfBox(symmetry) | SmoothShiftPivot::HalfBorder(symmetry) => {
             let starts: Vec<u32> = shifted.keys().map(|&(_, v)| v).collect();
-            let half: BTreeSet<u32> = crate::pivot_service::half_points(source, &starts, symmetry)
+            let border: Vec<u32> = matches!(pivot, SmoothShiftPivot::HalfBorder(_))
+                .then(border_of_selection)
+                .unwrap_or_default()
                 .into_iter()
                 .collect();
-            let border = matches!(pivot, SmoothShiftPivot::HalfBorder(_))
-                .then(border_of_selection)
-                .unwrap_or_default();
-            let on_border: Vec<DVec3> = shifted
-                .iter()
-                .filter(|((_, v), _)| half.contains(v) && border.contains(v))
-                .map(|(_, &q)| q)
+            // S-01 picks the half among the border's points, or among all
+            // the shifted points when the selection has no border.
+            let from = if border.is_empty() { &starts } else { &border };
+            let half: BTreeSet<u32> = crate::pivot_service::half_points(source, from, symmetry)
+                .into_iter()
                 .collect();
-            let at = if on_border.is_empty() {
-                box_middle(
-                    &mut shifted
-                        .iter()
-                        .filter(|((_, v), _)| half.contains(v))
-                        .map(|(_, &q)| q),
-                )
-            } else {
-                on_border.iter().sum::<DVec3>() / on_border.len() as f64
-            };
+            let at = box_middle(
+                &mut shifted
+                    .iter()
+                    .filter(|((_, v), _)| half.contains(v))
+                    .map(|(_, &q)| q),
+            );
             SmoothShiftPivot::Point {
                 at,
                 mirror: Some(symmetry),
@@ -356,15 +341,15 @@ pub fn smooth_shift_geometry_about(
         }
         SmoothShiftPivot::SelectionBorder => {
             let border = border_of_selection();
-            let points: Vec<DVec3> = shifted
-                .iter()
-                .filter(|((_, v), _)| border.contains(v))
-                .map(|(_, &q)| q)
-                .collect();
-            Some(if points.is_empty() {
+            Some(if border.is_empty() {
                 all_box()
             } else {
-                points.iter().sum::<DVec3>() / points.len() as f64
+                box_middle(
+                    &mut shifted
+                        .iter()
+                        .filter(|((_, v), _)| border.contains(v))
+                        .map(|(_, &q)| q),
+                )
             })
         }
         SmoothShiftPivot::Point { mirror: None, at } => Some(at),

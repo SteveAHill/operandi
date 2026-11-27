@@ -68,6 +68,9 @@ mod symmetrize_panel;
 mod symmetry_ui;
 use crate::prefs_file::PrefsFile;
 use snaps_panel::SnapPreset;
+#[cfg(test)]
+#[path = "view/ac_rules_step1_tests.rs"]
+mod ac_rules_step1_tests;
 #[path = "view/action_center_click.rs"]
 mod action_center_click;
 #[path = "files/app_environment.rs"]
@@ -1191,6 +1194,9 @@ struct Operandi {
     /// `Camera::handle_zoom`) as `handles` last found it; 1 with A1 off.
     /// Point squares drawn with those handles use it.
     handle_zoom: std::cell::Cell<f32>,
+    /// #40: where the live tool's arrows start, in world space, as
+    /// `handles` last placed them; axis drags track the pointer along it.
+    handle_origin: std::cell::Cell<Option<DVec3>>,
     /// LP-SUN-13 places the user stored (sun-locations.json).
     sun_locations: light_tier3_ui::SunLocations,
     /// The top-bar Drop Action choice (drop_action_ui.rs).
@@ -1961,6 +1967,7 @@ impl Operandi {
             selection_preferences: Default::default(),
             handle_preferences: Default::default(),
             handle_zoom: std::cell::Cell::new(1.),
+            handle_origin: std::cell::Cell::new(None),
             sun_locations: Default::default(),
             drop_action: Default::default(),
             item_list: Default::default(),
@@ -4840,6 +4847,9 @@ mod pen_interactive_tests;
 #[path = "create_tools/solid_sketch_ui_tests.rs"]
 mod solid_sketch_ui_tests;
 
+#[cfg(test)]
+#[path = "viewport/handle_tracking_tests.rs"]
+mod handle_tracking_tests;
 #[cfg(test)]
 #[path = "transforms/scale_offset_tests.rs"]
 mod scale_offset_tests;
