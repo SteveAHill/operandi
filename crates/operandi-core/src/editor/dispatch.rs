@@ -426,10 +426,20 @@ impl Editor {
                 | Command::SelectItems(_)
                 | Command::ToggleItemSelection(_)
                 | Command::SelectGroup(_)
-        ) && self.preset.is_none()
-            && self.selection_start.is_none()
+        ) && self.selection_keeps_tool()
             && let Some(live) = self.live.as_ref()
-            && live.tool.transforms_items()
+        {
+            let tool = live.tool;
+            return self.retarget_transform(tool, cmd);
+        }
+        // Grow and Shrink (Shift+Up/Down) re-target a live transform tool
+        // the same way in component modes (UIC-306, Jason 2026-11-27).
+        if matches!(
+            &cmd,
+            Command::Selection(crate::SelectionOperation::Grow | crate::SelectionOperation::Shrink)
+        ) && self.scene.selection.mode != Mode::Item
+            && self.selection_keeps_tool()
+            && let Some(live) = self.live.as_ref()
         {
             let tool = live.tool;
             return self.retarget_transform(tool, cmd);

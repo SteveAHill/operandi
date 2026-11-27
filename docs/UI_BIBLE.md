@@ -322,6 +322,15 @@ Version 1, 2026-11-07. Behaviour only. Open questions and exceptions are tracked
   Duplicate and Paste placing, Pen, Tube and Path points). If the tool
   can't apply, the click changes nothing and the status line says why.
   [OP] (the maintainer, 2026-11-25.)
+- **UIC-306** Grow and Shrink keep a transform tool live. While Move,
+  Rotate, Scale or Transform is on, Grow (Shift+Up) and Shrink
+  (Shift+Down) change the component selection without dropping the tool:
+  the drag so far stays as its own undo step, the selection change is the
+  next step, and the tool starts again on the new selection with a zero
+  offset and its handle placed by the current Action Center, as when
+  another item is clicked in the Items tree. Clicks in a 3D view still
+  never select while a tool is on (UIC-78); other tools (Bevel, Inset,
+  ...) still need Drop first. [OP] (Jason 2026-11-27.)
 
 ## 8. Dialogs (command option boxes)
 

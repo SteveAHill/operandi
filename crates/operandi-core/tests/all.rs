@@ -257,6 +257,8 @@ mod gradient;
 mod group_locators;
 #[path = "group_material_extras.rs"]
 mod group_material_extras;
+#[path = "grow_shrink_keeps_tool.rs"]
+mod grow_shrink_keeps_tool;
 #[path = "haul.rs"]
 mod haul;
 #[path = "heavy_mesh_bench.rs"]

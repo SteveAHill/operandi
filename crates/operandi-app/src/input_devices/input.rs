@@ -996,6 +996,12 @@ pub fn matches_chord(text: &str, key: eframe::egui::Key, mods: Modifiers) -> boo
             && expected.mac_cmd == mods.mac_cmd
     })
 }
+/// Actions that keep a live Move, Rotate, Scale or Transform tool and
+/// re-target it instead of needing Drop first (UIC-306).
+pub fn keeps_transform(action: &str) -> bool {
+    matches!(action, "Grow" | "Shrink")
+}
+
 pub fn available(action: &str, mode: operandi_core::Mode, live: bool) -> bool {
     match action {
         "Grow"

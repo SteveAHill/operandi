@@ -3521,7 +3521,12 @@ impl Operandi {
                             && input::available(
                                 action,
                                 self.editor.scene.selection.mode,
-                                self.editor_tool_active()
+                                (self.editor_tool_active()
+                                    // UIC-306: Grow/Shrink re-target a live
+                                    // transform tool between drags.
+                                    && !(input::keeps_transform(action)
+                                        && self.editor.selection_keeps_tool()
+                                        && !self.pointer_held))
                                     || self.edge_click.is_some()
                                     || self.vertex_weld,
                             )
