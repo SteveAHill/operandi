@@ -997,6 +997,14 @@ impl PaintStroke {
     /// takes each pixel's colour from the source (PNT-96).
     fn lay(&mut self, center: DVec2, hits: &[(u32, f32)], colours: &[Option<[f32; 3]>]) {
         let offset = self.clone_offset;
+        // Clone's source texels, binned once for the whole dab.
+        let bins = match offset {
+            Some(offset) if self.tool == PaintTool::Clone => {
+                let reach = self.hits_reach(center, hits) + SAMPLE_REACH;
+                self.screen_bins(center + offset, reach)
+            }
+            _ => HashMap::new(),
+        };
         for (k, &(i, dab)) in hits.iter().enumerate() {
             let t = self.texels[i as usize];
             // A tip with its own colour (Sphere, Image) lays that colour.
@@ -1015,7 +1023,7 @@ impl PaintStroke {
                 let Some(offset) = offset else {
                     return;
                 };
-                let Some(src) = self.sample(&self.base.clone(), t.screen + offset) else {
+                let Some(src) = self.sample(&bins, &self.base.clone(), t.screen + offset) else {
                     continue;
                 };
                 self.source.insert(t.pixel, src);
@@ -1065,9 +1073,11 @@ impl PaintStroke {
         self.smudge_from = Some(center);
         let opacity = self.settings.opacity as f32;
         let before = self.current.clone();
+        let reach = self.hits_reach(center, hits) + SAMPLE_REACH;
+        let bins = self.screen_bins(center - delta, reach);
         for &(i, dab) in hits {
             let t = self.texels[i as usize];
-            let Some(src) = self.sample(&before, t.screen - delta) else {
+            let Some(src) = self.sample(&bins, &before, t.screen - delta) else {
                 continue;
             };
             let cur = before.get(t.pixel as usize);
@@ -1150,24 +1160,87 @@ impl PaintStroke {
         }
     }
 
+    /// How far the dab's texels `hits` reach from its `center`.
+    fn hits_reach(&self, center: DVec2, hits: &[(u32, f32)]) -> f64 {
+        hits.iter()
+            .map(|&(i, _)| self.texels[i as usize].screen.distance(center))
+            .fold(0., f64::max)
+    }
+
+    /// Screen bins one point wide over the texels within `reach` of
+    /// `center`, each holding the texel nearest its middle, so [`sample`]
+    /// finds the texel under a point in a few lookups however densely the
+    /// texels lie. Smudge and Clone ask once per texel under the dab; a
+    /// scan of the 16-point cells for each froze the app with a zoomed-out
+    /// 1024 image (test drive 2026-11-27). Empty in the UV view, which
+    /// looks pixels up directly.
+    ///
+    /// [`sample`]: Self::sample
+    fn screen_bins(&mut self, center: DVec2, reach: f64) -> HashMap<(i32, i32), u32> {
+        let mut bins: HashMap<(i32, i32), (f64, u32)> = HashMap::new();
+        if self.uv.is_some() {
+            return HashMap::new();
+        }
+        self.place_near(center, reach);
+        let r2 = reach * reach;
+        let (cx0, cy0) = (
+            ((center.x - reach) / CELL).floor() as i32,
+            ((center.y - reach) / CELL).floor() as i32,
+        );
+        let (cx1, cy1) = (
+            ((center.x + reach) / CELL).floor() as i32,
+            ((center.y + reach) / CELL).floor() as i32,
+        );
+        for cy in cy0..=cy1 {
+            for cx in cx0..=cx1 {
+                for &i in self.cells.get(&(cx, cy)).map(Vec::as_slice).unwrap_or(&[]) {
+                    let p = self.texels[i as usize].screen;
+                    if p.distance_squared(center) > r2 {
+                        continue;
+                    }
+                    let key = (p.x.floor() as i32, p.y.floor() as i32);
+                    let middle = DVec2::new(f64::from(key.0) + 0.5, f64::from(key.1) + 0.5);
+                    let d = p.distance_squared(middle);
+                    let slot = bins.entry(key).or_insert((d, i));
+                    if d < slot.0 {
+                        *slot = (d, i);
+                    }
+                }
+            }
+        }
+        bins.into_iter().map(|(k, (_, i))| (k, i)).collect()
+    }
+
     /// The colour of `image` where the view shows screen point `q`: the
-    /// nearest reachable, visible texel within `SAMPLE_REACH` points.
-    /// Zoomed in on a small image the texels sit several points apart, so
-    /// a two-point reach found none and Smudge and Clone painted nothing
-    /// (test drive 2026-11-26).
-    fn sample(&mut self, image: &PaintImage, q: DVec2) -> Option<[f32; 4]> {
+    /// nearest texel in `bins` within `SAMPLE_REACH` points, when it is
+    /// visible. Zoomed in on a small image the texels sit several points
+    /// apart, so a two-point reach found none and Smudge and Clone painted
+    /// nothing (test drive 2026-11-26).
+    fn sample(
+        &mut self,
+        bins: &HashMap<(i32, i32), u32>,
+        image: &PaintImage,
+        q: DVec2,
+    ) -> Option<[f32; 4]> {
         if self.uv.is_some() {
             return self.uv_pixel(q).map(|p| image.get(p as usize));
         }
-        self.place_near(q, 2. * CELL);
-        let (cx, cy) = ((q.x / CELL).floor() as i32, (q.y / CELL).floor() as i32);
+        let (qx, qy) = (q.x.floor() as i32, q.y.floor() as i32);
         let mut best: Option<(f64, u32)> = None;
-        for y in cy - 1..=cy + 1 {
-            for x in cx - 1..=cx + 1 {
-                let Some(list) = self.cells.get(&(x, y)) else {
-                    continue;
-                };
-                for &i in list {
+        // Rings of bins outward; a texel in ring r is at least r - 1 points
+        // away, so once one that near is found, no further ring can beat it.
+        for ring in 0..=SAMPLE_REACH.ceil() as i32 {
+            if best.is_some_and(|(d, _)| d.sqrt() <= f64::from(ring - 1)) {
+                break;
+            }
+            for y in qy - ring..=qy + ring {
+                for x in qx - ring..=qx + ring {
+                    if (x - qx).abs() != ring && (y - qy).abs() != ring {
+                        continue;
+                    }
+                    let Some(&i) = bins.get(&(x, y)) else {
+                        continue;
+                    };
                     let d = self.texels[i as usize].screen.distance_squared(q);
                     if d <= SAMPLE_REACH * SAMPLE_REACH && best.is_none_or(|(b, _)| d < b) {
                         best = Some((d, i));

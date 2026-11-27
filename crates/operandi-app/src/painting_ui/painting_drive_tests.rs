@@ -321,3 +321,49 @@ fn smudge_and_clone_work_on_a_small_image_seen_close_up() {
         a.status
     );
 }
+
+/// Zoomed out on a 1024 image (dozens of texels per screen point), a
+/// Smudge or Clone dab looked up each texel's source by scanning the
+/// 16-point cells around it, and one stroke froze the app (test drive
+/// 2026-11-27, the live bridge smoke test). It now takes moments.
+#[test]
+fn smudge_and_clone_stay_quick_zoomed_out_on_a_big_image() {
+    let (mut a, ctx) = sphere(1024);
+    a.camera.distance *= 8.;
+    for _ in 0..2 {
+        let _ = draw(&mut a, &ctx, SIZE, vec![]);
+    }
+    a.execute("operandi.paint.airbrush");
+    a.execute("operandi.paint.set size:30 fg:1,1,1");
+    stroke(&mut a, &ctx, vec2(-15., 0.), 8);
+    let t = Instant::now();
+    a.execute("operandi.paint.smudge");
+    let before = pixels(&a);
+    // Down from inside the white line out over the black.
+    let c = a.viewport_rect.center();
+    let _ = draw(&mut a, &ctx, SIZE, vec![Event::PointerMoved(c)]);
+    let _ = draw(&mut a, &ctx, SIZE, vec![pointer(c, true, Modifiers::NONE)]);
+    for k in 1..=10 {
+        let q = c + vec2(0., k as f32 * 3.);
+        let _ = draw(&mut a, &ctx, SIZE, vec![Event::PointerMoved(q)]);
+    }
+    let end = c + vec2(0., 30.);
+    let _ = draw(
+        &mut a,
+        &ctx,
+        SIZE,
+        vec![pointer(end, false, Modifiers::NONE)],
+    );
+    let _ = draw(&mut a, &ctx, SIZE, vec![]);
+    assert_ne!(*pixels(&a), *before, "smudge moved paint");
+    a.execute("operandi.paint.clone");
+    let _ = draw(&mut a, &ctx, SIZE, vec![pointer(c, true, Modifiers::CTRL)]);
+    let _ = draw(&mut a, &ctx, SIZE, vec![pointer(c, false, Modifiers::CTRL)]);
+    stroke(&mut a, &ctx, vec2(-20., 20.), 8);
+    // Generous for an unoptimised build; the frozen version took minutes.
+    assert!(
+        t.elapsed() < Duration::from_secs(60),
+        "took {:?}",
+        t.elapsed()
+    );
+}
