@@ -4157,6 +4157,11 @@ mod form_editor_pie_tests;
 #[cfg(test)]
 #[path = "window_layout/form_editor_tests.rs"]
 mod form_editor_tests;
+#[path = "window_layout/form_icons.rs"]
+mod form_icons;
+#[cfg(test)]
+#[path = "window_layout/form_icons_tests.rs"]
+mod form_icons_tests;
 #[path = "nodes/graph_editor.rs"]
 mod graph_editor;
 #[path = "create_tools/guides_ui.rs"]

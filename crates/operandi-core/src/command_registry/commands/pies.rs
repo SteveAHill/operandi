@@ -36,6 +36,24 @@ pub(super) const COMMANDS: &[Entry] = &[
         .args(&[arg("index", INT, N), opt("line", TEXT, N, None), opt("sub", TEXT, N, None), opt("label", TEXT, N, None), opt("form", TEXT, N, None)])
         .example("operandi.form.slot index:2 line:{View Right} label:Right form:my.pie")
         .ui(),
+    // Pick (UIC-212's name): the next button clicked fills a control
+    // instead of running (UIC-160, UIC-314).
+    script("operandi.form.pick", View, "Pick: the next click on any toolbox, toolbar or menu button doesn't run it but puts its command line and icon (and its label, when the control has none) on control index: of form:; bare toggles. Esc or a right-click stops.")
+        .operandi()
+        .args(&[arg("index", INT, N), opt("form", TEXT, N, None), opt("on", BOOL, N, None)])
+        .example("operandi.form.pick index:2 form:my.pie")
+        .ui(),
+    // UIC-314: a control's icon, built in by name or a custom file.
+    script("operandi.form.setIcon", View, "Sets control index: of form:'s icon: name: a built-in icon, file: a PNG, JPEG or SVG (copied into the data folder's Layouts/Icons), neither clears it.")
+        .operandi()
+        .args(&[arg("index", INT, N), opt("name", TEXT, N, None), opt("file", ArgType::Path, N, None), opt("form", TEXT, N, None)])
+        .example("operandi.form.setIcon index:0 name:action-center form:my.pie")
+        .ui(),
+    script("operandi.form.chooseIcon", View, "Choose File…: asks for a picture (PNG, JPEG or SVG) to be control index: of form:'s icon (UIC-314).")
+        .operandi()
+        .args(&[arg("index", INT, N), opt("form", TEXT, N, None)])
+        .example("operandi.form.chooseIcon index:0 form:my.pie")
+        .ui(),
     script("operandi.form.swap", View, "Swaps slots a: and b: of pie form: (the Form Editor's drag between slots); the other slots stay where they are.")
         .operandi()
         .args(&[arg("a", INT, N), arg("b", INT, N), opt("form", TEXT, N, None)])

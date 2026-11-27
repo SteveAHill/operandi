@@ -111,6 +111,7 @@ impl Operandi {
         let s = (width / RING.x).min(1.);
         let (area, _) = ui.allocate_exact_size(RING * s, Sense::hover());
         let pie = crate::pie_forms::pie_from_form(&self.forms, form);
+        let pictures = self.slot_pictures(ui.ctx(), &pie);
         let painter = ui.painter_at(area);
         painter.rect_filled(area, 6., theme::chrome::background());
         // The name plate in the centre.
@@ -185,7 +186,7 @@ impl Operandi {
                     pos2(r.left() + 4., r.center().y - size / 2.),
                     Vec2::splat(size),
                 );
-                icons::paint(ui, ir, icon);
+                pie_menu::paint_slot_icon(ui, ir, &icon, pictures[i], true);
             }
             let hint = match entry {
                 Some(e) if e.sub.is_some() => format!("{place}: opens {}", e.command),
@@ -300,15 +301,176 @@ impl Operandi {
         }
         if kind != Kind::Empty {
             self.form_text_field(ui, "Label", &id, Some(i), "label", &label);
-            let icon = control
-                .as_ref()
-                .and_then(|c| c.icon.clone())
-                .unwrap_or_default();
-            self.form_text_field(ui, "Icon", &id, Some(i), "icon", &icon);
-            if !icon.is_empty() && icons::Icon::from_slug(&icon).is_none() {
-                ui.colored_label(theme::error(), format!("No icon called {icon}"));
+            // UIC-314: built-in icon, custom file, or none.
+            if let Some(c) = &control {
+                self.icon_picker(ui, &id, i, c);
             }
         }
+    }
+
+    /// Pick and History ▾ beside a Command field: Pick fills control `i`
+    /// of `form` from the next button clicked (UIC-212's Pick); History
+    /// offers recent lines, each set by `set_line`'s command (UIC-160).
+    pub(super) fn command_sources(
+        &mut self,
+        ui: &mut Ui,
+        form: &str,
+        i: usize,
+        set_line: impl Fn(&str) -> String,
+    ) {
+        let picking = self.pie_edit.pick.as_ref() == Some(&(form.to_owned(), i));
+        let mut chosen = None;
+        ui.horizontal(|ui| {
+            ui.add_space(100.);
+            if ui
+                .add(Button::new("Pick").selected(picking))
+                .on_hover_text(
+                    "Click, then click any toolbox, toolbar or menu button: its line and icon go here instead of it running. Esc or a right-click stops.",
+                )
+                .clicked()
+            {
+                self.execute(&format!("operandi.form.pick index:{i} form:{form}"));
+            }
+            let recent = self.recent_lines();
+            ui.menu_button("History ▾", |ui| {
+                if recent.is_empty() {
+                    ui.weak("No commands run yet");
+                }
+                for line in recent {
+                    if ui.button(&line).clicked() {
+                        chosen = Some(line);
+                        ui.close();
+                    }
+                }
+            });
+        });
+        if let Some(line) = chosen {
+            self.execute(&set_line(&line));
+        }
+    }
+
+    /// The icon picker (UIC-314): a swatch opening Browse Icons (a
+    /// searchable grid of the built-in icons), Choose File… for a custom
+    /// picture, and Clear; the chosen name or file shows underneath.
+    pub(super) fn icon_picker(&mut self, ui: &mut Ui, form: &str, i: usize, c: &Control) {
+        let builtin = c.icon.as_deref().and_then(icons::Icon::from_slug);
+        let picture = c
+            .icon_file
+            .clone()
+            .and_then(|p| self.workbench_icon(ui.ctx(), &p));
+        let mut picked: Option<String> = None;
+        ui.horizontal(|ui| {
+            ui.add_sized([96., 18.], egui::Label::new("Icon"));
+            let swatch = ui
+                .add_sized([28., 28.], Button::new(""))
+                .on_hover_text("Browse Icons");
+            let inner = swatch.rect.shrink(4.);
+            match (&c.icon_file, picture, builtin) {
+                (Some(path), _, _) => pie_menu::paint_slot_icon(
+                    ui,
+                    inner,
+                    &pie_menu::SlotIcon::File(path.clone()),
+                    picture,
+                    true,
+                ),
+                (None, _, Some(icon)) => icons::paint(ui, inner, icon),
+                (None, _, None) => {
+                    ui.painter().text(
+                        inner.center(),
+                        Align2::CENTER_CENTER,
+                        "—",
+                        FontId::proportional(12.),
+                        theme::weak_text(),
+                    );
+                }
+            }
+            egui::Popup::menu(&swatch).show(|ui| {
+                ui.set_width(300.);
+                ui.label(RichText::new("Browse Icons").strong());
+                let edit = ui.add(
+                    egui::TextEdit::singleline(&mut self.form_editor.icon_search)
+                        .hint_text("Search icons")
+                        .desired_width(ui.available_width()),
+                );
+                crate::numeric_tab::register(ui, &edit, None);
+                let words: Vec<String> = self
+                    .form_editor
+                    .icon_search
+                    .to_lowercase()
+                    .split_whitespace()
+                    .map(str::to_owned)
+                    .collect();
+                // The studio's icons, stored by the name forms use.
+                let shown: Vec<(icons::Icon, &str)> = crate::rendered_icons::RENDERED
+                    .iter()
+                    .map(|(icon, _)| (*icon, icon.slug()))
+                    .filter(|(_, slug)| {
+                        let name = slug.replace(['-', '_'], " ");
+                        !slug.is_empty() && words.iter().all(|w| name.contains(w.as_str()))
+                    })
+                    .collect();
+                egui::ScrollArea::vertical()
+                    .max_height(260.)
+                    .show(ui, |ui| {
+                        ui.horizontal_wrapped(|ui| {
+                            for (icon, slug) in &shown {
+                                let r = ui
+                                    .add_sized(
+                                        [32., 32.],
+                                        Button::new("").selected(builtin == Some(*icon)),
+                                    )
+                                    .on_hover_text(slug.replace('-', " "));
+                                icons::paint(ui, r.rect.shrink(5.), *icon);
+                                if r.clicked() {
+                                    picked = Some((*slug).to_owned());
+                                }
+                            }
+                        });
+                        if shown.is_empty() {
+                            ui.weak("No icon matches");
+                        }
+                    });
+            });
+            if ui.button("Choose File…").clicked() {
+                self.execute(&format!("operandi.form.chooseIcon index:{i} form:{form}"));
+            }
+            let has = c.icon.is_some() || c.icon_file.is_some();
+            if ui
+                .gated(
+                    crate::unavailable::unless(has, "No icon to clear"),
+                    Button::new("Clear"),
+                )
+                .clicked()
+            {
+                self.execute(&format!("operandi.form.setIcon index:{i} form:{form}"));
+            }
+        });
+        if let Some(slug) = picked {
+            self.execute(&format!(
+                "operandi.form.setIcon index:{i} name:{slug} form:{form}"
+            ));
+        }
+        // What was chosen, read only.
+        ui.horizontal(|ui| {
+            ui.add_space(100.);
+            match (&c.icon_file, &c.icon) {
+                (Some(path), _) if !std::path::Path::new(path).exists() => {
+                    ui.colored_label(theme::error(), format!("Missing file: {path}"));
+                }
+                (Some(path), _) => {
+                    ui.weak(path);
+                }
+                (None, Some(slug)) if builtin.is_none() => {
+                    ui.colored_label(theme::error(), format!("No icon called {slug}"));
+                }
+                (None, Some(slug)) => {
+                    ui.weak(slug.replace('-', " "));
+                }
+                (None, None) => {
+                    ui.weak("No icon");
+                }
+            }
+        });
     }
 
     /// A command slot's line: typed (set on Enter or leaving the field) or
@@ -347,19 +509,18 @@ impl Operandi {
                     chosen = Some(text.trim().to_owned());
                 }
             }
-            let recent = self.recent_lines();
-            ui.menu_button("History ▾", |ui| {
-                if recent.is_empty() {
-                    ui.weak("No commands run yet");
-                }
-                for line in recent {
-                    if ui.button(&line).clicked() {
-                        chosen = Some(line);
-                        ui.close();
-                    }
-                }
-            });
         });
+        // Pick and History beside it; a line from either keeps a command
+        // slot's label (a new slot shows its line until it gets one).
+        let keep = if current.is_empty() { "" } else { label };
+        let set = |line: &str| {
+            format!(
+                "operandi.form.slot index:{i} line:{} label:{} form:{id}",
+                word(line),
+                word(keep)
+            )
+        };
+        self.command_sources(ui, id, i, set);
         if let Some(line) = chosen {
             self.form_editor.pie_kind = None;
             // A slot that was a command keeps its label; a new one shows

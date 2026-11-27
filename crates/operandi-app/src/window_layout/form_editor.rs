@@ -81,6 +81,8 @@ pub(super) struct State {
     pub rects: BTreeMap<String, Rect>,
     /// A pie slot being dragged onto another (its pie and slot).
     pie_drag: Option<(String, usize)>,
+    /// Browse Icons' search text (UIC-314).
+    icon_search: String,
     /// A pie slot whose editor shows a command field (`false`) or the
     /// sub-pie pick (`true`) before it holds one.
     pie_kind: Option<(String, usize, bool)>,
@@ -578,6 +580,9 @@ impl Operandi {
                 {
                     std::fs::create_dir_all(folder).map_err(|e| e.to_string())?;
                 }
+                // UIC-314: custom icon files go along, beside the form.
+                let mut form = form;
+                crate::form_icons::copy_icons_beside(&mut form, &path)?;
                 std::fs::write(&path, form.to_json())
                     .map_err(|e| format!("Couldn't save {id}: {e}"))?;
                 Ok(format!("Saved form {id} to {}", path.display()))
@@ -983,23 +988,16 @@ impl Operandi {
                 "command",
                 c.command.as_deref().unwrap_or_default(),
             );
+            // Pick and History beside the line (UIC-212, UIC-160).
+            self.command_sources(ui, id, i, |line| {
+                format!(
+                    "operandi.form.set attr:command value:{} index:{i} form:{id}",
+                    word(line)
+                )
+            });
             self.form_text_field(ui, "Tooltip", id, Some(i), "tooltip", &c.tooltip);
-            self.form_text_field(
-                ui,
-                "Icon",
-                id,
-                Some(i),
-                "icon",
-                c.icon.as_deref().unwrap_or_default(),
-            );
-            self.form_text_field(
-                ui,
-                "Icon File",
-                id,
-                Some(i),
-                "iconFile",
-                c.icon_file.as_deref().unwrap_or_default(),
-            );
+            // UIC-314: built-in icon, custom file, or none.
+            self.icon_picker(ui, id, i, c);
             self.form_text_field(
                 ui,
                 "Shortcut",

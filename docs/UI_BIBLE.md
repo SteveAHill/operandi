@@ -102,6 +102,12 @@ Version 1, 2026-11-07. Behaviour only. Open questions and exceptions are tracked
 - **UIC-313** The pie's name sits in the centre, with its slots radiating
   out around it. A sub-pie shows its own name there.
   [Owner-approved, 2026-11-27: UIC-308..313]
+- **UIC-314** A control's icon (pie slot, toolbox, toolbar or menu
+  button) is chosen from a searchable grid of built-in icons or from a
+  custom image file, or cleared. Pick (UIC-212) fills it with the picked
+  button's icon. A custom file is copied into the user's data folder and
+  travels inside exported pies and forms; a missing file shows a
+  placeholder. [OP] [Owner-approved, 2026-11-27]
 
 ## 3. Tabs and buttons
 

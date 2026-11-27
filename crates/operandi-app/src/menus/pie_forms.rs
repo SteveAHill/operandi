@@ -37,6 +37,10 @@ pub(crate) struct PieFile {
     /// The pie the file was exported from (the others are its sub-pies).
     pub pie: String,
     pub forms: Vec<Form>,
+    /// Custom icon files the forms wear, by name, base64 (UIC-314). A
+    /// control names one as `embedded:<name>` in its iconFile.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub icons: BTreeMap<String, String>,
 }
 
 /// An Import Pie waiting for the user's answer: these ids are taken.
@@ -53,6 +57,11 @@ pub(crate) struct State {
     pub import: Option<PendingImport>,
     /// The pie Export Pie's save panel is for.
     pub export: Option<String>,
+    /// Pick is on for this control (form, index): the next button clicked
+    /// fills it (UIC-314, form_icons.rs).
+    pub pick: Option<(String, usize)>,
+    /// The control a Choose File… panel is for (UIC-314).
+    pub icon_target: Option<(String, usize)>,
 }
 
 /// The pie that form `form` describes.
@@ -86,6 +95,7 @@ fn slot_entry(store: &FormStore, c: &Control) -> Option<Entry> {
             label,
             command: line.clone(),
             icon: c.icon.clone(),
+            icon_file: c.icon_file.clone(),
             sub: None,
         });
     }
@@ -105,6 +115,7 @@ fn slot_entry(store: &FormStore, c: &Control) -> Option<Entry> {
         label,
         command: pie_menu::line(id),
         icon: c.icon.clone(),
+        icon_file: c.icon_file.clone(),
         sub: Some(id.clone()),
     })
 }
@@ -145,7 +156,7 @@ pub(crate) fn would_loop(store: &FormStore, form: &str, sub: &str) -> bool {
 }
 
 /// A pie form's controls padded with empty slots to the eight places.
-fn padded(form: &mut Form) {
+pub(crate) fn padded(form: &mut Form) {
     while form.controls.len() < SLOTS {
         form.controls.push(empty_slot());
     }
@@ -431,15 +442,18 @@ impl Operandi {
             Some(_) => return Err(format!("{id} isn't a pie")),
             None => return Err(format!("No pie called {id}")),
         }
-        let forms = reachable(&self.forms, id)
+        let mut forms: Vec<Form> = reachable(&self.forms, id)
             .iter()
             .filter_map(|p| self.forms.get(p).cloned())
             .filter(|f| f.style == Style::Pie)
             .collect();
+        // UIC-314: custom icon files travel inside the file.
+        let icons = crate::form_icons::embed_icons(&mut forms);
         Ok(PieFile {
             version: FILE_VERSION,
             pie: id.to_owned(),
             forms,
+            icons,
         })
     }
 
@@ -498,8 +512,8 @@ impl Operandi {
             .filter(|f| self.forms.get(&f.id).is_some() || f.id == pie_menu::LAYOUTS)
             .map(|f| f.id.clone())
             .collect();
-        let mut forms = file.forms;
-        let mut root = file.pie;
+        let mut forms = file.forms.clone();
+        let mut root = file.pie.clone();
         match on_clash {
             "ask" if !clashes.is_empty() => {
                 let names = clashes.join(", ");
@@ -544,6 +558,8 @@ impl Operandi {
         if forms.iter().any(|f| f.id == pie_menu::LAYOUTS) {
             return Err("pie.layouts is the Layouts pie; rename the pie in the file".into());
         }
+        // UIC-314: the file's custom icons go into this user's icons folder.
+        crate::form_icons::unpack_icons(self, &mut forms, &file.icons)?;
         for f in forms {
             self.forms.save(f)?;
         }

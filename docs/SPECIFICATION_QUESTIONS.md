@@ -2913,6 +2913,30 @@ Provisional:
 - **PM-Q22 Sub-pie slots.** A sub-pie slot shows its own label or else
   the sub-pie's name, with a small triangle at its outer end pointing
   away from the centre (a tiny flat glyph, not an icon).
+- **PM-Q23 Pick (Form Editor, 2026-11-27).** Pick sits beside History
+  under a Command field (pie slots and every button control). The next
+  click on a button drawn in the window (toolbox, toolbar, workbench, the
+  in-window menus) fills the control: its line, the icon the clicked
+  button wears (its own, else its tool's), and its label only when the
+  control has none. The control is found by its line among all forms, so
+  a line on several buttons takes the first form's look. Lines the Form
+  Editor itself runs (operandi.form.*, operandi.pie.*, workbench edits)
+  still run while picking, and a key's line is never picked. The native
+  macOS menu bar's entries can't be picked (they aren't clicks in the
+  window). The pointer is the system pointing hand while picking (Jason,
+  2026-11-27), for Pick to Add too.
+- **PM-Q24 Icons (UIC-314).** Browse Icons lists the icon studio's icons
+  (rendered set), stored by the name forms already use; a custom file
+  (PNG, JPEG or SVG, drawn at up to 64 px) replaces a built-in icon on
+  that control and the other way round. Choosing a file copies it into
+  the data folder's Layouts/Icons (the same picture again reuses the copy;
+  another picture with the same name becomes name-2). Clear removes both.
+- **PM-Q25 Icons in files.** Export Pie embeds each custom file (base64,
+  by name) and Import Pie writes them into the importer's Layouts/Icons.
+  Save Form, which has no Import Form yet, copies them into a
+  "<form> icons" folder beside the saved file and names those copies.
+  A missing file draws a dashed box with "?" in the pie and the editor,
+  and the editor says "Missing file".
 
 ## Texture Locators, stage 1 (texture-locators, 2026-11-07), provisional
 

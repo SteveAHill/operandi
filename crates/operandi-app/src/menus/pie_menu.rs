@@ -175,6 +175,8 @@ pub struct Entry {
     /// An icon slug (`icons::Icon::from_slug`) drawn per the pie's icon
     /// mode.
     pub icon: Option<String>,
+    /// A custom icon file, worn instead of `icon` (UIC-314).
+    pub icon_file: Option<String>,
     /// The sub-pie this slot opens in place (UIC-310), by id.
     pub sub: Option<String>,
 }
@@ -185,6 +187,7 @@ impl Entry {
             label: label.into(),
             command: command.into(),
             icon: None,
+            icon_file: None,
             sub: None,
         }
     }
@@ -222,18 +225,32 @@ impl Pie {
             .and_then(Option::as_ref)
     }
     /// Whether slot `i` shows its icon, and its label (UIC-309). An icon
-    /// mode asking for an icon the slot hasn't got shows the label.
-    pub fn shows(&self, i: usize) -> (Option<icons::Icon>, bool) {
+    /// mode asking for an icon the slot hasn't got shows the label. A
+    /// custom file wins over a built-in icon (UIC-314).
+    pub fn shows(&self, i: usize) -> (Option<SlotIcon>, bool) {
         let Some(e) = self.slot(i) else {
             return (None, false);
         };
-        let icon = e.icon.as_deref().and_then(icons::Icon::from_slug);
+        let icon = e.icon_file.clone().map(SlotIcon::File).or_else(|| {
+            e.icon
+                .as_deref()
+                .and_then(icons::Icon::from_slug)
+                .map(SlotIcon::Builtin)
+        });
         match (self.icons, icon) {
             (IconMode::Text, _) | (_, None) => (None, true),
             (IconMode::Icon, Some(i)) => (Some(i), false),
             (IconMode::Both, Some(i)) => (Some(i), true),
         }
     }
+}
+
+/// The icon a slot wears (UIC-314).
+#[derive(Clone, Debug, PartialEq)]
+pub enum SlotIcon {
+    Builtin(icons::Icon),
+    /// A custom picture's path; a missing file draws a placeholder.
+    File(String),
 }
 
 pub fn is_pie(action: &str) -> bool {
@@ -1108,6 +1125,7 @@ impl Operandi {
             .and_then(|i| open.pie.slot(i))
             .and_then(|e| self.slot_unavailable(e, open.open_ids()));
         let open = open.clone();
+        let pictures = self.slot_pictures(ctx, &open.pie);
         let screen = ctx.content_rect();
         egui::Area::new(Id::new("pie-menu"))
             .order(Order::Foreground)
@@ -1116,8 +1134,57 @@ impl Operandi {
                 // Covers the window so nothing under the pie takes the
                 // pointer while it is open.
                 ui.allocate_rect(screen, Sense::click_and_drag());
-                paint(ui, &open, &statuses, why.as_deref());
+                paint(ui, &open, &statuses, &pictures, why.as_deref());
             });
+    }
+
+    /// Each slot's custom icon picture, loaded once (UIC-314); `None` for
+    /// a slot without one or whose file is missing (a placeholder shows).
+    pub(crate) fn slot_pictures(&mut self, ctx: &Context, pie: &Pie) -> [Option<TextureId>; SLOTS] {
+        std::array::from_fn(|i| match pie.shows(i).0 {
+            Some(SlotIcon::File(path)) => self.workbench_icon(ctx, &path),
+            _ => None,
+        })
+    }
+}
+
+/// Paint a slot's icon in `at`: a built-in icon, a custom picture, or for
+/// a custom file that won't load a dashed placeholder box (UIC-314).
+pub(crate) fn paint_slot_icon(
+    ui: &Ui,
+    at: Rect,
+    icon: &SlotIcon,
+    picture: Option<TextureId>,
+    enabled: bool,
+) {
+    match (icon, picture) {
+        (SlotIcon::Builtin(icon), _) if enabled => icons::paint(ui, at, *icon),
+        (SlotIcon::Builtin(icon), _) => icons::paint_faded(ui, at, *icon),
+        (SlotIcon::File(_), Some(texture)) => {
+            let tint = if enabled {
+                Color32::WHITE
+            } else {
+                Color32::from_white_alpha(90)
+            };
+            ui.painter().image(
+                texture,
+                at,
+                Rect::from_min_max(pos2(0., 0.), pos2(1., 1.)),
+                tint,
+            );
+        }
+        (SlotIcon::File(_), None) => {
+            let stroke = Stroke::new(1.0f32, theme::disabled_text());
+            ui.painter()
+                .rect_stroke(at.shrink(1.), 2., stroke, StrokeKind::Inside);
+            ui.painter().text(
+                at.center(),
+                Align2::CENTER_CENTER,
+                "?",
+                FontId::proportional(at.height() * 0.6),
+                theme::disabled_text(),
+            );
+        }
     }
 }
 
@@ -1244,7 +1311,13 @@ fn box_exit(half: Vec2, d: Vec2) -> f32 {
 
 /// Paint a pie: its name in the centre with an arrow toward the
 /// highlighted slot, then the slots' buttons.
-fn paint(ui: &Ui, open: &Open, statuses: &[Option<Status>], why: Option<&str>) {
+fn paint(
+    ui: &Ui,
+    open: &Open,
+    statuses: &[Option<Status>],
+    pictures: &[Option<TextureId>; SLOTS],
+    why: Option<&str>,
+) {
     let painter = ui.painter();
     let c = open.center;
     let fill = theme::popup_fill();
@@ -1358,11 +1431,7 @@ fn paint(ui: &Ui, open: &Open, statuses: &[Option<Status>], why: Option<&str>) {
         let mut x = room.center().x - width / 2.;
         if let Some(icon) = icon {
             let at = Rect::from_min_size(pos2(x, room.center().y - ICON / 2.), Vec2::splat(ICON));
-            if status.enabled {
-                icons::paint(ui, at, icon);
-            } else {
-                icons::paint_faded(ui, at, icon);
-            }
+            paint_slot_icon(ui, at, &icon, pictures[i], status.enabled);
             x += ICON + ICON_GAP;
         }
         if let Some(galley) = label {

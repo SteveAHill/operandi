@@ -42,6 +42,30 @@ from the pies before this branch.
 - [ ] Holds Sub-pie: only pies that don't lead back are listed. Pick
       pie.shading.
 
+## Pick and icons (UIC-314)
+
+- [ ] my.pie slot editor: Pick sits next to History under Command. Click
+      Pick: the pointer is the system pointing hand. Click the toolbox's
+      Bevel button: Bevel doesn't run; the slot gets its line and icon,
+      and its label (the slot had none). Undo Edit takes it back.
+- [ ] Pick again, then Esc: picking stops, nothing changes. Pick, then
+      right-click: the same.
+- [ ] Workbench Pick to Add also shows the pointing hand.
+- [ ] Select a toolbox form's button (e.g. toolbox.edge): Pick and
+      History sit under its Command too, and the icon picker replaces the
+      old Icon / Icon File text fields.
+- [ ] Icon swatch opens Browse Icons: type "bev" narrows the grid; click
+      an icon: the swatch and the slot (pie and ring) wear it; its name
+      shows under the swatch.
+- [ ] Choose File… a PNG, then an SVG: the slot wears each; the path
+      under the swatch is in the data folder's Layouts/Icons. Delete the
+      original file: the slot still shows it.
+- [ ] Delete the copy in Layouts/Icons and reopen: the slot shows a
+      dashed "?" box, the editor says "Missing file", nothing breaks.
+- [ ] Clear: no icon (the label shows).
+- [ ] Export Pie with a custom icon, import it on another data folder
+      (or after deleting Layouts/Icons): the icon comes back.
+
 ## Sub-pies (UIC-310)
 
 - [ ] Open my.pie (Open Pie button, or its key), point at the sub-pie

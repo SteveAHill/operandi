@@ -84,6 +84,8 @@ pub(super) enum Choose {
         folder: PathBuf,
         name: Option<String>,
     },
+    /// A picture for a control's custom icon (UIC-314): PNG, JPEG or SVG.
+    IconFile { folder: PathBuf },
     /// A folder (new ones can be made in the panel), starting in `folder`.
     Folder {
         folder: PathBuf,
@@ -171,6 +173,8 @@ pub(super) enum Purpose {
     ExportPie,
     /// Import Pie: read the chosen pie file.
     ImportPie,
+    /// Choose File… for the control in `pie_edit.icon_target` (UIC-314).
+    FormIcon,
 }
 
 /// A native panel shown as a sheet on the window. It doesn't block: a modal
@@ -331,6 +335,18 @@ pub(super) fn start(request: Choose, purpose: Purpose) -> Pending {
                         Box::pin(async move { path(f.await) })
                     }
                 }
+            }
+            Choose::IconFile { folder } => {
+                let types: Vec<String> = ["png", "jpg", "jpeg", "svg"]
+                    .iter()
+                    .flat_map(|e| [e.to_string(), e.to_ascii_uppercase()])
+                    .collect();
+                let f = D::new()
+                    .set_title("Choose Icon")
+                    .set_directory(folder)
+                    .add_filter("PNG, JPEG or SVG picture", &types)
+                    .pick_file();
+                Box::pin(async move { path(f.await) })
             }
             Choose::Script { folder } => {
                 let f = D::new()
@@ -663,6 +679,7 @@ impl super::Operandi {
             Purpose::RunScript => self.python_run_file(&path),
             Purpose::ExportPie => self.export_pie_chosen(path),
             Purpose::ImportPie => self.import_pie_chosen(path),
+            Purpose::FormIcon => self.form_icon_chosen(path),
             Purpose::ImportMaterialX(beside) => self.import_materialx_from(&path, beside),
             Purpose::ExportMaterialX(node) => self.export_materialx_to(path, node),
             Purpose::PresetBrowserRoot => {

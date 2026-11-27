@@ -1,4 +1,4 @@
-<!-- help-ids: operandi.pie.open, operandi.pie.assignKey, operandi.pie.export, operandi.pie.import, operandi.form.slot, operandi.form.swap ; template: concept ; since: 0.1.0 -->
+<!-- help-ids: operandi.pie.open, operandi.pie.assignKey, operandi.pie.export, operandi.pie.import, operandi.form.slot, operandi.form.swap, operandi.form.pick, operandi.form.setIcon, operandi.form.chooseIcon ; template: concept ; since: 0.1.0 -->
 # Pie menus
 
 A pie menu is a ring of up to eight commands that opens around the
@@ -58,14 +58,38 @@ Pies are edited in the **Form Editor** (**System > Form Editor**), under
 1. Click a pie in the tree. On the right, a ring shows its eight slots as
    the pie lays them out, with its name in the middle.
 2. Click a slot. Below the ring, choose what it **Holds**:
-   - **Command**: type a command line in **Command** and press Enter, or
-     pick one you ran recently from **History**.
+   - **Command**: type a command line in **Command** and press Enter,
+     pick one you ran recently from **History**, or use **Pick** (below).
    - **Sub-pie**: choose the pie it opens. Only pies that don't lead back
      to this one are listed.
    - **Empty**: the slot stays blank and keeps its place.
-3. Give the slot a **Label**, and an **Icon** if you like.
+3. Give the slot a **Label**, and an **Icon** if you like (below).
 4. To move a slot, drag it onto another slot: the two swap places and the
    rest stay where they are.
+
+### Taking a command from a button
+
+1. Click **Pick** next to **Command**. The pointer turns into a pointing
+   hand.
+2. Click any button in the toolbox, a toolbar or a menu in the window.
+   It doesn't run: its command goes into the slot, with its icon, and its
+   label if the slot has none yet.
+
+Press **Esc** or right-click to stop picking without choosing. Every
+button you select in the Form Editor has the same **Pick** next to its
+**Command**, and the same icon choices below.
+
+### Choosing an icon
+
+- Click the square icon button next to **Icon** to **Browse Icons**: type
+  part of a name to narrow the grid, then click an icon.
+- **Choose File…** uses a picture of your own (PNG, JPEG or SVG).
+  Operandi keeps a copy in its data folder, so moving or deleting the
+  original doesn't matter.
+- **Clear** takes the icon off.
+
+The icon's name, or the copied file, shows under the button. If an icon
+file has gone missing, the slot shows a box with a question mark instead.
 
 **Icons** in the pie's properties chooses whether slots show their label,
 their icon, or both. A slot without an icon always shows its label.
@@ -98,7 +122,7 @@ A key set while **Keys for** shows a layout works in that layout only.
 ## Sharing a pie
 
 **Export Pie…** saves the selected pie to one file together with every
-sub-pie it opens. **Import Pie…** (next to **New Pie**) reads such a file.
+sub-pie it opens, and any icon pictures of your own that they use. **Import Pie…** (next to **New Pie**) reads such a file.
 
 If a pie in the file has the same id as one you already have, Operandi
 asks first:
