@@ -89,6 +89,11 @@ pub enum AxisOrientation {
     Parent,
     /// The mesh item's own axes (Pivot; ACS table).
     Item,
+    /// A-LOCAL: each cluster's own axes (`local_clusters`). With a centre
+    /// rule that has one centre, the axes of the cluster holding the
+    /// last-selected element (AC-RULES v6, "Mixing rules"). Resolved by
+    /// the pivot service.
+    Local,
 }
 /// An orthonormal frame stored in nanometre steps like `PickedPoint`, so
 /// contexts stay comparable. Columns X, Y, Z.
@@ -131,6 +136,7 @@ impl AxisOrientation {
             Self::Screen(_) => "Screen",
             Self::Parent => "Parent",
             Self::Item => "Item",
+            Self::Local => "Local",
         }
     }
     pub fn basis(self) -> Result<DMat3> {
@@ -144,6 +150,7 @@ impl AxisOrientation {
             )),
             Self::Element(frame) | Self::Screen(frame) => Ok(frame.basis()),
             Self::Parent | Self::Item => Err("Item axes come from the item hierarchy".into()),
+            Self::Local => Err("Local axes come from the selection's clusters".into()),
             _ => Err("Unsupported action-axis plane".into()),
         }
     }
@@ -152,6 +159,14 @@ impl AxisOrientation {
 pub struct ActionContext {
     pub center: CenterMode,
     pub axis: AxisOrientation,
+}
+impl ActionContext {
+    /// The Local Action Center: each cluster about its own centre
+    /// (C-LOCAL) with its own axes (A-LOCAL).
+    pub const LOCAL: Self = Self {
+        center: CenterMode::Local,
+        axis: AxisOrientation::Local,
+    };
 }
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ActionFrame {
@@ -291,10 +306,12 @@ impl ActionContext {
             // AC-22: Selection Center Auto Axis takes its centre from the
             // selection but its axes from the chosen axis rule (World major
             // axes by default), never from the selection's normals.
-            basis: if self.axis == AxisOrientation::Selection {
-                selection_basis(scene)?
-            } else {
-                self.axis.basis()?
+            basis: match self.axis {
+                AxisOrientation::Selection => selection_basis(scene)?,
+                // The tool's own axes; the pivot service puts each
+                // cluster's axes in their place (`PivotRequest::resolve`).
+                AxisOrientation::Local => DMat3::IDENTITY,
+                axis => axis.basis()?,
             },
         })
     }
@@ -319,13 +336,13 @@ pub fn box_centre(points: impl Iterator<Item = DVec3>) -> DVec3 {
 /// nothing selected), local X the other one nearest the item's X. A piece
 /// with neither a spread nor a normal keeps the tool's axes; a straight
 /// line turns the tool axis nearest it onto itself (AC-73). Item space;
-/// `LocalPiece::frame` places it in the world. Built once per preview,
-/// from the selection's neighbourhood.
-pub fn local_piece_frames(
+/// `LocalPiece::frame` places it in the world. Built once per drag base by
+/// the pivot service, from the selection's neighbourhood.
+pub fn local_clusters(
     mesh: &crate::Mesh,
     moved: &BTreeSet<u32>,
     selection: &crate::Selection,
-) -> std::collections::BTreeMap<u32, LocalPiece> {
+) -> LocalClusters {
     use std::collections::BTreeMap;
     let index: BTreeMap<u32, usize> = moved.iter().enumerate().map(|(i, &v)| (v, i)).collect();
     let mut parent: Vec<usize> = (0..moved.len()).collect();
@@ -481,10 +498,43 @@ pub fn local_piece_frames(
             )
         })
         .collect();
-    points
+    // Clusters are numbered in the order of their lowest point, so a
+    // cluster keeps its number however the selection was made.
+    let mut number: BTreeMap<usize, usize> = BTreeMap::new();
+    let mut out = LocalClusters::default();
+    for (i, &v) in points.iter().enumerate() {
+        let r = root(&mut parent, i);
+        let cluster = *number.entry(r).or_insert_with(|| {
+            out.pieces.push(pieces[&r]);
+            out.pieces.len() - 1
+        });
+        out.of.insert(v, cluster);
+    }
+    out
+}
+
+/// The clusters of a Local selection (`local_clusters`): each cluster's
+/// piece, and which cluster every moved point belongs to. Two clusters
+/// that happen to have the same centre and axes are still two.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LocalClusters {
+    pub pieces: Vec<LocalPiece>,
+    /// Moved point → index into `pieces`.
+    pub of: std::collections::BTreeMap<u32, usize>,
+}
+
+/// Each moved point's piece (`local_clusters`, without the clusters'
+/// identity).
+pub fn local_piece_frames(
+    mesh: &crate::Mesh,
+    moved: &BTreeSet<u32>,
+    selection: &crate::Selection,
+) -> std::collections::BTreeMap<u32, LocalPiece> {
+    let clusters = local_clusters(mesh, moved, selection);
+    clusters
+        .of
         .iter()
-        .enumerate()
-        .map(|(i, &v)| (v, pieces[&root(&mut parent, i)]))
+        .map(|(&v, &cluster)| (v, clusters.pieces[cluster]))
         .collect()
 }
 

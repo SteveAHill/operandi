@@ -40,9 +40,15 @@ fn run(c: &Value) -> std::result::Result<(), String> {
     e.scene.selection.mode = Mode::Polygon;
     e.scene.selection.faces = indices(&input["selected_polygons"]);
     e.synchronize_identities().unwrap();
+    let center = center(id);
     e.dispatch(Command::ActionContext(ActionContext {
-        center: center(id),
-        axis: AxisOrientation::World,
+        center,
+        // Local by name is Local's centre with Local's axes.
+        axis: if center == CenterMode::Local {
+            AxisOrientation::Local
+        } else {
+            AxisOrientation::World
+        },
     }))
     .map_err(|x| format!("context refused: {x}"))?;
     e.dispatch(Command::Activate(Tool::Scale))

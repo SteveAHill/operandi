@@ -46,7 +46,12 @@ fn fixture(center: CenterMode) -> Editor {
     e.scene.selection.faces = vec![0, 1, 2];
     e.dispatch(Command::ActionContext(ActionContext {
         center,
-        axis: AxisOrientation::World,
+        // Local by name is Local's centre with Local's axes.
+        axis: if center == CenterMode::Local {
+            AxisOrientation::Local
+        } else {
+            AxisOrientation::World
+        },
     }))
     .unwrap();
     e
@@ -199,7 +204,7 @@ fn local_with_symmetry_mirrors_each_islands_frame() {
     e.scene.selection.faces = vec![0, 1, 2, 3];
     e.dispatch(Command::ActionContext(ActionContext {
         center: CenterMode::Local,
-        axis: AxisOrientation::World,
+        axis: AxisOrientation::Local,
     }))
     .unwrap();
     e.symmetry.axis = Some(0);

@@ -359,7 +359,7 @@ fn run_hands_on(case: &Value) -> std::result::Result<(), String> {
             axis: AxisOrientation::Selection,
         },
         "Origin" => world(CenterMode::Origin),
-        "Local" => world(CenterMode::Local),
+        "Local" => ActionContext::LOCAL,
         "Parent" => ActionContext {
             center: CenterMode::Parent,
             axis: AxisOrientation::Parent,
@@ -409,7 +409,7 @@ fn run_local(case: &Value) -> std::result::Result<(), String> {
     let mut e = editor(case);
     e.dispatch(Command::ActionContext(ActionContext {
         center: CenterMode::Local,
-        axis: AxisOrientation::World,
+        axis: AxisOrientation::Local,
     }))
     .map_err(|x| x.to_string())?;
     e.dispatch(Command::Activate(tool))
@@ -506,30 +506,53 @@ fn pair_editor(symmetry: Symmetry) -> Editor {
     e
 }
 
-/// Rulebook §1: the service's answer is a list of pivots. Off: one pivot
-/// driving every selected point. Symmetry X: the primary pivot on the +
-/// half (ACS-01) driving the + quad, and its mirror image driving the −
-/// quad (ACS-04).
+/// The service's answer is the handle plus the groups (AC-RULES v6). Off:
+/// one group driving every selected point as entered. Symmetry X: still
+/// one group, about the primary pivot on the + half (S-01); its targets
+/// carry their role, the + quad's points primary and the − quad's the
+/// other side, which are edited through the mirror (S-04), so their pivot
+/// is the mirror image of the primary one.
 #[test]
 #[cfg(operandi_specs)]
-fn the_service_lists_a_primary_and_a_mirrored_pivot() {
+fn the_service_lists_one_group_with_each_points_role() {
+    use operandi_core::pivot_service::{GroupId, Role};
     let e = pair_editor(Symmetry::OFF);
-    let off = e.pivot_request(&e.scene, Tool::Scale).pivots().unwrap();
-    assert_eq!(off.pivots.len(), 1);
-    assert_eq!(off.pivots[0].points.len(), 8);
+    let off = e.pivot_request(&e.scene, Tool::Scale).resolve().unwrap();
     assert!(off.primary.is_none());
-    assert!(off.pivots[0].frame.center.distance(dvec3(0., 0.25, 0.5)) < 1e-9);
+    assert_eq!(off.items.len(), 1);
+    let group = &off.items[0].groups[0];
+    assert_eq!((off.items[0].groups.len(), group.id), (1, GroupId::Whole));
+    assert_eq!(group.targets.len(), 8);
+    assert!(
+        group
+            .targets
+            .iter()
+            .all(|t| t.role == Role::Primary && t.side.is_none())
+    );
+    assert!(group.frame.center.distance(dvec3(0., 0.25, 0.5)) < 1e-9);
+    assert_eq!(off.handle, group.frame);
 
     let e = pair_editor(Symmetry::x());
-    let on = e.pivot_request(&e.scene, Tool::Scale).pivots().unwrap();
+    let on = e.pivot_request(&e.scene, Tool::Scale).resolve().unwrap();
     assert_eq!(on.primary, Some(Side::Positive));
-    assert_eq!(on.pivots.len(), 2);
-    let (primary, mirrored) = (&on.pivots[0], &on.pivots[1]);
-    assert!(!primary.mirrored && mirrored.mirrored);
-    assert!(primary.frame.center.distance(dvec3(1.5, 0.25, 0.5)) < 1e-9);
-    assert!(mirrored.frame.center.distance(dvec3(-1.5, 0.25, 0.5)) < 1e-9);
-    assert_eq!(primary.points, [0, 1, 2, 3]);
-    assert_eq!(mirrored.points, [4, 5, 6, 7]);
+    let item = &on.items[0];
+    let group = &item.groups[0];
+    assert_eq!((item.groups.len(), group.id), (1, GroupId::Whole));
+    assert!(group.frame.center.distance(dvec3(1.5, 0.25, 0.5)) < 1e-9);
+    assert_eq!(group.twin, group.frame);
+    assert_eq!(on.handle, group.frame);
+    let mirrored = item.map.mirror_frame(group.frame);
+    assert!(mirrored.center.distance(dvec3(-1.5, 0.25, 0.5)) < 1e-9);
+    let with = |role: Role, side: Side| -> Vec<u32> {
+        group
+            .targets
+            .iter()
+            .filter(|t| t.role == role && t.side == Some(side))
+            .map(|t| t.point)
+            .collect()
+    };
+    assert_eq!(with(Role::Primary, Side::Positive), [0, 1, 2, 3]);
+    assert_eq!(with(Role::Other, Side::Negative), [4, 5, 6, 7]);
 }
 
 /// ACS-20 with Symmetry and no placed centre: Smooth Shift's Scale works

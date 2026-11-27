@@ -178,6 +178,7 @@ impl Editor {
         let frame = self.action_context_frame(context)?;
         let previous_context = self.action_context;
         let previous_frame = self.live.as_ref().and_then(|live| live.action_frame);
+        let previous_placed = self.live.as_ref().and_then(|live| live.placed_centre);
         let previous_bend_center = self.live.as_ref().map(|live| live.params.bend.base);
         let parameters = self
             .live
@@ -211,11 +212,14 @@ impl Editor {
             && let Err(error) = self.preview(parameters, false)
         {
             // Transform preview validates its local candidate before
-            // publishing scene/params. Restore only the frame/context
-            // staged above; never clone or commit the undo history.
+            // publishing scene/params. Restore what was staged above (the
+            // context, the frame and the placed-centre marker, so a
+            // refused change leaves the whole live state as it was);
+            // never clone or commit the undo history.
             self.action_context = previous_context;
             if let Some(live) = &mut self.live {
                 live.action_frame = previous_frame;
+                live.placed_centre = previous_placed;
                 if let Some(center) = previous_bend_center {
                     live.params.bend.base = center;
                 }

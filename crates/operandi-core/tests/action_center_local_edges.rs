@@ -60,7 +60,12 @@ fn tapered_mug(center: CenterMode, taper: f64) -> Editor {
     e.scene.selection.edges = vec![(SIDES, 2 * SIDES), (SIDES + 4, 2 * SIDES + 4)];
     e.dispatch(Command::ActionContext(ActionContext {
         center,
-        axis: AxisOrientation::World,
+        // Local by name is Local's centre with Local's axes.
+        axis: if center == CenterMode::Local {
+            AxisOrientation::Local
+        } else {
+            AxisOrientation::World
+        },
     }))
     .unwrap();
     e
@@ -275,21 +280,19 @@ fn ac_t75_local_handle_follows_the_last_selected_polygon() {
     e.dispatch(Command::Mode(Mode::Polygon)).unwrap();
     e.dispatch(Command::ActionContext(ActionContext {
         center: CenterMode::Local,
-        axis: AxisOrientation::World,
+        axis: AxisOrientation::Local,
     }))
     .unwrap();
-    let handle_y = |e: &Editor| {
+    // The pivot service's handle: the frame of the cluster holding the
+    // last-selected element.
+    let handle = |e: &Editor| {
         e.pivot_request(&e.scene, Tool::Move)
-            .local_handle_basis()
-            .expect("a Local handle frame")
-            .y_axis
-    };
-    let handle_at = |e: &Editor| {
-        e.pivot_request(&e.scene, Tool::Move)
-            .local_handle_frame()
+            .resolve()
             .unwrap()
-            .center
+            .handle
     };
+    let handle_y = |e: &Editor| handle(e).basis.y_axis;
+    let handle_at = |e: &Editor| handle(e).center;
     e.scene.selection.faces = vec![0, 1];
     close(handle_y(&e), DVec3::Y, "F last: level handle");
     // The handle sits on F's centre, not between the two (Jason 11-21).
@@ -308,11 +311,8 @@ fn ac_t75_local_handle_follows_the_last_selected_polygon() {
         axis: AxisOrientation::World,
     }))
     .unwrap();
-    assert!(
-        e.pivot_request(&e.scene, Tool::Move)
-            .local_handle_basis()
-            .is_none()
-    );
+    let request = e.pivot_request(&e.scene, Tool::Move);
+    assert_eq!(request.resolve().unwrap().handle, request.frame().unwrap());
 }
 
 /// AC-03: two polygons on the wall with an unselected row between them are

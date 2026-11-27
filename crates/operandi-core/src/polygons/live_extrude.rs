@@ -203,6 +203,7 @@ impl Editor {
                 action_frame: stage.frame,
                 placed_centre: None,
                 preview_error: None,
+                pivots: Default::default(),
             })
         };
         self.extrude_moved_caps = if cursor == 0 {
@@ -594,6 +595,7 @@ impl Editor {
                 params: p,
                 applied: false,
                 preview_error: None,
+                pivots: Default::default(),
                 action_frame: Some(self.pivot_request(&self.scene, Tool::Extrude).frame()?),
                 placed_centre: None,
             });
@@ -664,6 +666,7 @@ impl Editor {
                         params: s.armed_params,
                         applied: false,
                         preview_error: None,
+                        pivots: Default::default(),
                         action_frame: s.frame,
                         placed_centre: None,
                     });

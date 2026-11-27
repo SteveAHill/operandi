@@ -71,7 +71,12 @@ fn ac_scene(center: CenterMode) -> Editor {
     e.scene.selection.faces = vec![0, 1, 2];
     e.dispatch(Command::ActionContext(ActionContext {
         center,
-        axis: AxisOrientation::World,
+        // Local by name is Local's centre with Local's axes.
+        axis: if center == CenterMode::Local {
+            AxisOrientation::Local
+        } else {
+            AxisOrientation::World
+        },
     }))
     .unwrap();
     e

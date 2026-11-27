@@ -19,6 +19,7 @@ impl Editor {
             crate::AxisOrientation::Selection
                 | crate::AxisOrientation::Parent
                 | crate::AxisOrientation::Item
+                | crate::AxisOrientation::Local
         ) {
             context.axis.basis()?;
         }

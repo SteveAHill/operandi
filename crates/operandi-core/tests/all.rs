@@ -29,6 +29,8 @@ mod absolute_scaling_spec;
 mod ac_rules_step1;
 #[path = "ac_rules_step2.rs"]
 mod ac_rules_step2;
+#[path = "ac_rules_step3.rs"]
+mod ac_rules_step3;
 #[path = "ac_symmetry_rulebook.rs"]
 mod ac_symmetry_rulebook;
 #[path = "action_center_islands.rs"]
