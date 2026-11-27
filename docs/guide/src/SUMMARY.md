@@ -7,6 +7,7 @@
     - [Panels and docking]()
     - [Items list](panels/items-list.md)
     - [Tool Properties](panels/tool-properties.md)
+    - [Action Centers](interface/action-centers.md)
     - [Properties panel](panels/properties.md)
     - [Mesh Stack selections](panels/mesh-stack-selections.md)
     - [Tool steps in the Mesh Stack](panels/mesh-stack-tool-steps.md)
