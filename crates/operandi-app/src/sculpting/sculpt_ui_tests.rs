@@ -1293,10 +1293,12 @@ fn the_form_locks_are_the_sculpt_tab_switches() {
     assert!(a.sculpt.settings.lock_borders);
 }
 
-/// Push, Smooth and Move moved onto the row-list form too (SCQ-12):
-/// Sculpt Mode first, Stroke rows in the brush block, the tip section.
+/// SPM-10..30: Push, Smooth and Move on the row-list form, with their
+/// starting values (Normal Mode Average on Push, Offset Amount 25 % on
+/// Smooth and 100 % on Move).
 #[test]
 fn push_smooth_and_move_use_the_row_list_form() {
+    use crate::tool_form::ToolFields;
     let (mut a, _ctx) = app();
     for (brush, want) in [
         (
@@ -1324,17 +1326,7 @@ fn push_smooth_and_move_use_the_row_list_form() {
         ),
         (
             SculptBrush::Smooth,
-            &[
-                "Sculpt Mode",
-                "Offset Amount",
-                "Soft Filter",
-                "—",
-                "Interpolation Step",
-                "Continuous Stroke",
-                "Curve Constraint",
-                "—",
-                "(own)",
-            ],
+            &["Sculpt Mode", "Offset Amount", "Soft Filter", "—", "(own)"],
         ),
         (
             SculptBrush::Move,
@@ -1342,23 +1334,21 @@ fn push_smooth_and_move_use_the_row_list_form() {
                 "Sculpt Mode",
                 "Move Mode",
                 "Move Back Faces",
-                "Offset Mode",
-                "Offset Distance",
                 "Offset Amount",
                 "Smooth Amount",
-                "Smooth Mode",
-                "Normal Mode",
-                "Density Mode",
                 "Rigid UVs",
-                "—",
-                "Interpolation Step",
-                "Continuous Stroke",
                 "—",
                 "(own)",
             ],
         ),
     ] {
         a.activate_sculpt(brush);
+        let p = crate::sculpt_ui::SculptFields::params(&a).unwrap();
+        match brush {
+            SculptBrush::Push => assert_eq!(p.normal_mode, NormalMode::Average),
+            SculptBrush::Smooth => assert_eq!(p.offset_amount, 0.25),
+            _ => assert_eq!(p.offset_amount, 1.),
+        }
         let s = form_sections(&a);
         assert_eq!(s.len(), 2, "{brush:?}: brush block and tip, no Stroke");
         assert_eq!(s[0].1, want, "{brush:?}");

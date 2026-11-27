@@ -20,12 +20,9 @@ pointer, so you can push a whole area around in one stroke.
 | **Move Mode** | **Normal**: points follow the pointer. **Slide**: they slide along the surface instead of lifting off it. | Normal |
 | **Move Back Faces** | Also grabs the points inside the brush that face away from you, so the far side of the model moves with the near side. | Off |
 | **Offset Amount** | How closely the grabbed points follow the pointer. | 100 % |
+| **Smooth Amount** | How strongly Shift smooths instead of moving. | 50 % |
 | **Rigid UVs** | Greyed: Operandi's brushes don't move UVs yet. | Off |
 | **Lock Borders**, **Lock Corners** | Keep points on open edges, or only border corners, from moving. The same switches as in the Sculpt tab. | Off, On |
-
-Rows that only matter for brushes that lay dabs (**Offset Mode**,
-**Density Mode**, **Interpolation Step** and others) are greyed, because
-Move follows the pointer instead.
 
 ## Tips
 

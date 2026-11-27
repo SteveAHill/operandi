@@ -22,11 +22,11 @@ Open the **Sculpt** toolbox tab (between Deform and Edit).
    Pressure, Uniform; Density Mode lists Additive, Attenuated, Maximum
    Stroke and a greyed Maximum Map; Paint Mode, Set Color, Color and
    Alpha are greyed with a note on hover. Tick Lock Borders in the panel:
-   the Sculpt tab's Lock Borders ticks too. Click Move: Sculpt Mode, then
-   Move Mode; Offset Mode, Offset Distance, Normal Mode, Density Mode,
-   Interpolation Step and Continuous Stroke are greyed. Smooth shows
-   Sculpt Mode, Offset Amount and a greyed Soft Filter. [SC-102, SC-120,
-   SC-123, SI-04, SI-15, SI-16, SI-20..24]
+   the Sculpt tab's Lock Borders ticks too. Click Move: Sculpt Mode, Move
+   Mode, Move Back Faces, Offset Amount (100 %), Smooth Amount, greyed
+   Rigid UVs, then the locks. Smooth shows Sculpt Mode, Offset Amount
+   (25 %), a greyed Soft Filter and the locks. [SI-04, SI-15, SI-16,
+   SI-20..24, SPM-22..30]
 4. With Push on, click Hard Tip: the tip section becomes **Hard Brush**
    with Soft Border instead of Shape Preset and Brush Settings. Back on
    the Smooth tip, click **Brush Settings**: a popover with In/Out Weight

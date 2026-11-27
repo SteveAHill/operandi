@@ -4256,17 +4256,15 @@ picks the spec leaves open, all provisional:
   the back. Built: a Move setting **Move Back Faces** (off by default) that
   also grabs points facing away inside the tip. Open: does the reference
   Move grab back faces, and should the default be on? Needs a hands-on check.
-- **SCQ-12 Push, Smooth and Move forms** (sculpt-inflate SI §2, 2026-11-27).
-  The Inflate spec gives Inflate's rows exactly; the other three moved onto
-  the same row-list form with a provisional reading: Push = Inflate's rows
-  plus Normal Mode (no Paint Mode); Smooth = Sculpt Mode, Offset Amount,
-  greyed Soft Filter, then Step / Continuous / Curve Constraint; Move =
-  Sculpt Mode, Move Mode, Move Back Faces, the greyed offset and dab rows
-  (SCQ-01), greyed Rigid UVs, Step / Continuous. All end with the locks.
-  Open: their exact rows, dividers and Sculpt Mode lists (SI-Q2), and
-  Curve Constraint's order (SI-19 lists Background 3D before 2D, SCT §2
-  the other way; kept SCT's). Lock Borders / Lock Corners are stacked one
-  per row (UIC-115), not side by side as SI-24 says.
+- **SCQ-12 Push, Smooth and Move forms** (2026-11-27). *Answered by spec
+  BEHAVIOR-SCULPT-PUSH-SMOOTH-MOVE (SPM-01..30), built as written:* Push =
+  Inflate's rows with Normal Mode (Average) and no Paint Mode; Smooth =
+  Sculpt Mode, Offset Amount, greyed Soft Filter; Move = Sculpt Mode, Move
+  Mode, Move Back Faces, Offset Amount, Smooth Amount, greyed Rigid UVs.
+  The four list Sculpt Mode's three choices and Curve Constraint as None,
+  Background 3D, Background 2D. Open: SPM-01 puts Lock Borders / Lock
+  Corners side by side on one row; kept stacked per UIC-115 until Jason
+  decides.
 - **PH-Q37 Handles on Cone, Ellipsoid, Torus, Capsule, Text** (#37; Q-CN-06,
   NPR-Q01 leave them open). Built (provisional): once drawn, move arrows at
   the centre and a radius square at each end of each axis; Ellipsoid and

@@ -324,7 +324,7 @@ pub(crate) fn toolbox_rows(brush: SculptBrush) -> (Vec<Row>, Vec<Row>) {
             ],
             vec![],
         ),
-        // Push is Inflate's twin with Normal Mode (provisional, SCQ-12).
+        // SPM-10..21: Inflate's rows with Normal Mode, no Paint Mode.
         SculptBrush::Push => (
             vec![
                 SculptMode,
@@ -346,38 +346,18 @@ pub(crate) fn toolbox_rows(brush: SculptBrush) -> (Vec<Row>, Vec<Row>) {
             ],
             vec![],
         ),
-        // SC-120: Smooth's only brush row is Offset Amount; SCT-50 adds
-        // Soft Filter (provisional layout, SCQ-12).
-        SculptBrush::Smooth => (
-            vec![
-                SculptMode,
-                OffsetAmount,
-                SoftFilter,
-                Divider,
-                Step,
-                Continuous,
-                CurveConstraint,
-            ],
-            vec![],
-        ),
-        // SCT-49: Move Mode after Sculpt Mode; Rigid UVs is UV-only
-        // (provisional layout, SCQ-12).
+        // SPM-22..24: Smooth's short form.
+        SculptBrush::Smooth => (vec![SculptMode, OffsetAmount, SoftFilter], vec![]),
+        // SPM-25..30: no offset-mode, smoothing-mode, density or stroke
+        // rows (Move doesn't lay dabs).
         SculptBrush::Move => (
             vec![
                 SculptMode,
                 MoveMode,
                 MoveBackFaces,
-                OffsetMode,
-                OffsetDistance,
                 OffsetAmount,
                 SmoothAmount,
-                SmoothMode,
-                NormalMode,
-                DensityMode,
                 RigidUvs,
-                Divider,
-                Step,
-                Continuous,
             ],
             vec![],
         ),
@@ -501,12 +481,17 @@ fn row_field(
     let grab = brush.kind() == operandi_core::sculpt::BrushKind::Grab;
     let grab_why = "Move follows the pointer; Offset Amount scales how far (provisional, SCQ-01)";
     let no_dabs = "Move doesn't lay dabs";
+    // The brushes the SI / SPM specs cover.
+    let foundation = matches!(
+        brush,
+        SculptBrush::Inflate | SculptBrush::Push | SculptBrush::Smooth | SculptBrush::Move
+    );
     Some(match row {
         Row::Divider | Row::Locks => return None,
         Row::SculptMode => {
-            // SI-10: Inflate lists three choices; the others five (SCT §2,
-            // SI-Q2).
-            let three = brush == SculptBrush::Inflate;
+            // SI-10, SPM: the four foundation brushes list three choices;
+            // the toolbox brushes five (SCT §2, SI-Q2).
+            let three = foundation;
             let modes: &[(SculptMode, &str)] = if three {
                 &[
                     (SculptMode::Automatic, "Automatic"),
@@ -737,11 +722,21 @@ fn row_field(
         Row::CurveConstraint => tf::choice(
             "sculpt_curve_constraint",
             "Curve Constraint",
-            &[
-                (CurveConstraint::None, "None"),
-                (CurveConstraint::Background2D, "Background 2D"),
-                (CurveConstraint::Background3D, "Background 3D"),
-            ],
+            // SI-19 / SPM: 3D before 2D on the foundation brushes; SCT §2
+            // lists 2D first on the toolbox brushes.
+            if foundation {
+                &[
+                    (CurveConstraint::None, "None"),
+                    (CurveConstraint::Background3D, "Background 3D"),
+                    (CurveConstraint::Background2D, "Background 2D"),
+                ]
+            } else {
+                &[
+                    (CurveConstraint::None, "None"),
+                    (CurveConstraint::Background2D, "Background 2D"),
+                    (CurveConstraint::Background3D, "Background 3D"),
+                ]
+            },
             |p: &BrushSettings| p.curve_constraint,
             |p, c| p.curve_constraint = c,
         )
