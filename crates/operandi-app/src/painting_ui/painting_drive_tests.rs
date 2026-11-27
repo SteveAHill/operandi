@@ -201,10 +201,17 @@ fn paint_4096_stroke_probe() {
         tool: Tool::Sphere,
         destination: operandi_core::UnitDestination::ExistingMesh,
     });
+    // OPERANDI_PROBE_RESOLUTION compares another size (default 4096).
+    let res: u32 = std::env::var("OPERANDI_PROBE_RESOLUTION")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(4096);
     let t = Instant::now();
-    a.execute("operandi.paint.addTexture kind:color resolution:4096 color:0,0,0");
+    a.execute(&format!(
+        "operandi.paint.addTexture kind:color resolution:{res} color:0,0,0"
+    ));
     println!(
-        "add 4096 texture: {:.0} ms",
+        "add {res} texture: {:.0} ms",
         t.elapsed().as_secs_f64() * 1e3
     );
     a.camera.view = crate::camera::View::Front;
@@ -260,7 +267,7 @@ fn paint_4096_stroke_probe() {
         let undo = t.elapsed();
         a.execute("app.redo");
         println!(
-            "4096 stroke {n}: press {:.1} ms, drag mean {:.1} ms, slowest {:.1} ms, release {:.1} ms, undo {:.1} ms",
+            "{res} stroke {n}: press {:.1} ms, drag mean {:.1} ms, slowest {:.1} ms, release {:.1} ms, undo {:.1} ms",
             ms(press),
             ms(total) / 29.,
             ms(worst),
