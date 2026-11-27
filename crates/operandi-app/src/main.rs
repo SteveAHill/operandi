@@ -331,6 +331,11 @@ mod material_gpu_tests;
 mod material_layout;
 #[path = "commands/mcp.rs"]
 mod mcp;
+#[path = "commands/mcp_pointer.rs"]
+mod mcp_pointer;
+#[cfg(test)]
+#[path = "commands/mcp_pointer_tests.rs"]
+mod mcp_pointer_tests;
 #[path = "menus/menu_forms.rs"]
 mod menu_forms;
 #[path = "polygons/mesh_cleanup_dialog.rs"]
@@ -621,6 +626,9 @@ mod painting_brush;
 #[cfg(all(test, feature = "painting"))]
 #[path = "painting_ui/painting_brush_tests.rs"]
 mod painting_brush_tests;
+#[cfg(all(test, feature = "painting"))]
+#[path = "painting_ui/painting_drive_tests.rs"]
+mod painting_drive_tests;
 #[cfg(all(test, feature = "painting"))]
 #[path = "painting_ui/painting_highlight_tests.rs"]
 mod painting_highlight_tests;
@@ -4018,6 +4026,8 @@ impl eframe::App for Operandi {
         if let Some(bench) = &mut self.drag_bench {
             input.events.append(&mut bench.events);
         }
+        // The MCP bridge's pointer_stroke (mcp_pointer.rs).
+        self.mcp_take_stroke_input(input);
         // Puck buttons press their shortcuts as keys (space_mouse/buttons.rs).
         self.space_mouse_take_events(&mut input.events);
         self.native_numbers = native::take_numbers();
