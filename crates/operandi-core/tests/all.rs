@@ -179,6 +179,8 @@ mod edge_bevel_measured;
 mod edge_bevel_normal_map;
 #[path = "edge_bevel_options.rs"]
 mod edge_bevel_options;
+#[path = "edge_bevel_roundness.rs"]
+mod edge_bevel_roundness;
 #[path = "edge_bevel_stuck.rs"]
 mod edge_bevel_stuck;
 #[path = "edge_bevel_support.rs"]
