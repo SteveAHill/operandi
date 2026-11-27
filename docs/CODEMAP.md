@@ -111,7 +111,7 @@ at the top of `src/`.
 | Node View panel (registry kind, follows the Shader Tree selection, docks under the views) | `operandi-app/src/nodes/node_material_ui.rs`, `node_edit_ui.rs`, `panel_docking.rs` `reveal_registry_panel` |
 | Closing a registry panel (header ×, Close Panel, Node View toggle, window close) | `operandi-app/src/window_layout/panel_close.rs`, `node_view_open.rs` `toggle_node_view` |
 | Shader tree and materials | `operandi-core/src/materials/shader_tree.rs`, `shader_eval.rs`, `shader_wgsl.rs`, `material.rs`; MaterialX graphs `materialx/` (`cycles.rs` translation, `graph.rs`, the tree's own form `tree.rs` + `tree_library.rs`, docs/MATERIALX_GRAPHS.md); graph layers in the viewport `graph_view.rs` (+ `shader_func.rs`/`.wgsl`, `cycles_noise.rs`) |
-| Action centre, falloff, symmetry, snapping layers | `action_center.rs`, `falloff.rs`, `symmetry*.rs` (core); `snapping.rs` (app) |
+| Action centre, falloff, symmetry, snapping layers | `action_center.rs`, `selection_axes.rs` (Selection axes, Selection Border), `pivot_service.rs`, `falloff.rs`, `symmetry*.rs` (core); `snapping.rs` (app) |
 | App start-up, module list, top-level frame loop | `operandi-app/src/main.rs` |
 | Toolbox buttons, icons and tooltips per tool | `operandi-app/src/tools/tool_info.rs`, `toolbox.rs`, `icons.rs` |
 | Tool Properties panel | `operandi-app/src/tools/live_fields.rs` (live tools), `tool_form.rs` (field lists), `form/` (shared rows) |

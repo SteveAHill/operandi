@@ -10185,3 +10185,20 @@ Spec schematic-2026-11-24 (BEHAVIOR-SCHEMATIC, LXO-SCHEMATIC-FORMAT). Readings w
   file as format 16.0. The app's budget is half the free memory (at least
   1 GiB), so T7 opens on any machine with about 2.2 GiB free.
 
+
+## Action Center rule sheet v6, step 1 (2026-11-27, branch ac-rewrite-1, provisional)
+
+Built: A-SEL (Selection axes = principal axes of the moved points),
+C-BORDER (box middle of the edges shared with unselected polygons), S-01..S-04
+for both, Element in force when chosen. Where the sheet left room:
+
+- ACR-Q01 A-SEL with nothing selected: the sheet says "the points the tool moves", which is then every point of the mesh. Built that way (it was World before); a whole cube still gets World through the tie rule.
+- ACR-Q02 A-SEL's Z sign, "the moved polygons' summed normal": built as the unit normals of the selected polygons; in Edge and Vertex mode the polygons using the selected edges or points; under Symmetry only polygons with a point on the side that votes. A polygon across the plane therefore votes on the + side.
+- ACR-Q03 A-SEL with a centre placed on the − side (S-07 meets S-02): the axes come from the selected points on the side the centre was placed on, so centre, axes and the driving side agree. The sheet only says "+ side". Reset Action Center brings the + side's frame back.
+- ACR-Q04 A-SEL ties: "within 1e-6 (relative)" is measured on the spreads' variances, relative to the largest one.
+- ACR-Q05 C-BORDER's box is taken in world space (the sheet says item space only for C-SEL); with no border edge it is C-SEL's item-space box.
+- ACR-Q06 A selection with points only on the − side gets World axes under Symmetry (S-02 "none there → World"), though its centre comes from the − side (S-01). Built as written; it looks odd on a one-sided selection.
+- ACR-Q07 Polygon Bevel and Twist Bevel read the old "normal on Y" frame. Bevel's Shift arrow now follows the selection's average normal under Selection axes too, and its Inset arrow the frame's X laid square to it. Twist Bevel's Rotation Axis = Action Axis reads the frame's Z under Selection axes (the flat-patch normal), Y under every other axis rule.
+- ACR-Q08 Smooth Shift and Thicken's Scale about Selection Border uses the same C-BORDER (box middle of the shifted border points; it was their average, over edges used by one selected polygon).
+- ACR-Q09 **Sheet against a recorded case.** Rulebook case ACS-H-select-x-pair-rotate (Selection, Symmetry X, a tilted pair, Rotate Y 30° typed) was recorded turning about world Y. The sheet puts every tool's typed values in the one A-SEL frame, whose Y there is world Z. Built as the sheet says; the case is listed as a known gap in `ac_symmetry_rulebook.rs`. The nine Selection and Selection Border Scale cases of the same rulebook now pass with that frame (they were known gaps before).
+- ACR-Q10 A-SEL under Symmetry with a selected polygon lying across the plane (rulebook cases ACS-H-select-x-PC-scale and -pairstraddle-scale, still known gaps): the sheet doesn't say whether such a polygon's + side points and its normal count. Built: its points strictly on the + side count, and its normal too.

@@ -68,6 +68,9 @@ mod symmetrize_panel;
 mod symmetry_ui;
 use crate::prefs_file::PrefsFile;
 use snaps_panel::SnapPreset;
+#[cfg(test)]
+#[path = "view/ac_rules_step1_tests.rs"]
+mod ac_rules_step1_tests;
 #[path = "view/action_center_click.rs"]
 mod action_center_click;
 #[path = "files/app_environment.rs"]

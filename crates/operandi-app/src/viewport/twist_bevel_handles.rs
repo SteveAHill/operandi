@@ -137,7 +137,7 @@ impl Operandi {
                 // Falls back to world Y, as the geometry does.
                 let to_local = world.inverse();
                 l.action_frame
-                    .map(|f| to_local.transform_vector3(f.basis.y_axis))
+                    .map(|f| to_local.transform_vector3(self.editor.action_axis(f)))
                     .unwrap_or_else(|| to_local.transform_vector3(DVec3::Y))
                     .normalize_or(base.normal)
             }),

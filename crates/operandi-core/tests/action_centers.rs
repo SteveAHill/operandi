@@ -258,10 +258,13 @@ fn acs_availability_matches_dispatch_without_mutating_stage_or_history() {
             let geometry = e.scene.clone();
             e.dispatch(Command::ActionContext(selection)).unwrap();
             assert_eq!(e.scene, geometry);
-            close(
-                e.live.as_ref().unwrap().action_frame.unwrap().basis.y_axis,
-                DVec3::new(1., 1., 0.).normalize(),
-            );
+            // A-SEL (AC-RULES v6): the cap and the side next to it make an
+            // L. It is thinnest along their shared normal direction (Z)
+            // and longest across the L (X); Y is what is left.
+            let basis = e.live.as_ref().unwrap().action_frame.unwrap().basis;
+            close(basis.x_axis, DVec3::new(1., -1., 0.).normalize());
+            close(basis.y_axis, -DVec3::Z);
+            close(basis.z_axis, DVec3::new(1., 1., 0.).normalize());
             e.dispatch(Command::Preview(Parameters {
                 delta: DVec3::Y * 0.01,
                 shift: 0.01,
@@ -375,8 +378,10 @@ fn act_auto_01_02_automatic_uses_the_bounding_box_centre() {
     assert!(e.scene.selection.faces.is_empty());
 }
 
-/// ACS-EM: Selection (centre and axes) works in Edge and Vertex mode from
-/// the selected edges' or points' polygons, and on a moved mesh.
+/// ACS-EM: Selection (centre and axes) works in Edge and Vertex mode, and
+/// on a moved mesh. The axes are A-SEL's (AC-RULES v6): they follow the
+/// shape of the selected points, and the polygons round them only say
+/// which way Z points.
 #[test]
 fn acs_selection_in_edge_and_vertex_mode() {
     let selection = ActionContext {
@@ -414,22 +419,30 @@ fn acs_selection_in_edge_and_vertex_mode() {
                 let pa = mesh.vertices[a as usize];
                 let pb = mesh.vertices[b as usize];
                 close(frame.center, (pa + pb) / 2.);
-                close(frame.basis.y_axis, up);
-            }
-            Mode::Vertex => {
-                // Every polygon round the top's four points: the cap and the
-                // four sides, whose normals cancel sideways.
-                close(frame.center, DVec3::new(3., 2., 0.));
-                close(frame.basis.y_axis, DVec3::Y);
+                // One edge: X runs along it (pointing the positive way).
+                let along = (pb - pa).normalize();
+                close(frame.basis.x_axis, along * along.element_sum().signum());
+                // Z is on the side of its two polygons.
+                assert!(frame.basis.z_axis.dot(up) > 0.5, "{:?}", frame.basis);
+                close(
+                    frame.basis.y_axis,
+                    frame.basis.z_axis.cross(frame.basis.x_axis),
+                );
             }
             _ => {
+                // The top's four points, or the top polygon: a square, so
+                // X and Y tie and X goes to world X; Z is its normal (the
+                // sides round the points cancel sideways).
                 close(frame.center, DVec3::new(3., 2., 0.));
-                close(frame.basis.y_axis, DVec3::Y);
+                close(frame.basis.x_axis, DVec3::X);
+                close(frame.basis.y_axis, -DVec3::Z);
+                close(frame.basis.z_axis, DVec3::Y);
             }
         }
         e.dispatch(Command::Cancel).unwrap();
     }
-    // Nothing selected: the whole mesh, World axes; Auto Axis falls back too.
+    // Nothing selected: the whole mesh, a cube, which has no longer side,
+    // so World axes; Auto Axis falls back too.
     for mode in [Mode::Edge, Mode::Vertex, Mode::Polygon] {
         let mut e = fixture();
         e.scene.selection.mode = mode;

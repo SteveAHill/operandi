@@ -870,7 +870,7 @@ impl Operandi {
                 return true;
             }
             if let Some(kind) = center_click_named(rest) {
-                self.await_center_click(kind);
+                self.choose_center_click(kind);
                 return true;
             }
         }
