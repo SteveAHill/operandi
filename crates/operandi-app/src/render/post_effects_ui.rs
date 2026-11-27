@@ -201,6 +201,9 @@ impl Operandi {
         let previous = self.editor.history.undo_fold.replace(gesture);
         self.run(Command::SetRenderSettings(s));
         self.editor.history.undo_fold = previous;
+        // The picture (drawn after this panel) shows the change this
+        // frame, not on the next pointer move.
+        self.refresh_post();
     }
 }
 
