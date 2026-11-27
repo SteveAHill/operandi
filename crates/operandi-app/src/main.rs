@@ -4479,6 +4479,9 @@ mod inset_shift_tests;
 #[path = "items/item_list_header_tests.rs"]
 mod item_list_header_tests;
 #[cfg(test)]
+#[path = "viewport/item_rollover_tests.rs"]
+mod item_rollover_tests;
+#[cfg(test)]
 #[path = "input_devices/key_toggles_tests.rs"]
 mod key_toggles_tests;
 #[cfg(test)]

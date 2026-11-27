@@ -470,6 +470,13 @@ impl Operandi {
             // only the primary (a set: one lookup per face).
             let item_picked: std::collections::HashSet<u64> =
                 self.editor.scene.selected_items().into_iter().collect();
+            // Item mode pre-highlights the pointer's whole item, not the
+            // polygon under it; a selected item keeps showing selected.
+            let whole_rollover = hover
+                .and_then(|(i, _, _)| self.whole_item_rollover(i))
+                .filter(|i| !item_picked.contains(i));
+            let polygon_rollovers =
+                polygon_rollovers && self.editor.scene.selection.mode != Mode::Item;
             for (
                 _,
                 id,
@@ -492,6 +499,7 @@ impl Operandi {
                 let pre = (hover.is_some_and(|(i, f, _)| i == *id && f == *fi as u32)
                     && self.editor.live.is_none()
                     && polygon_rollovers)
+                    || whole_rollover == Some(*id)
                     || drop_flags
                         .as_ref()
                         .is_some_and(|(i, flags)| i == id && flags.get(*fi).copied() == Some(true));
@@ -672,9 +680,11 @@ impl Operandi {
                             continue;
                         }
                         let selected = whole || picked[source];
-                        let pre = hover.is_some_and(|(i, f, _)| i == item.id && f == source as u32)
+                        let pre = (hover
+                            .is_some_and(|(i, f, _)| i == item.id && f == source as u32)
                             && self.editor.live.is_none()
-                            && polygon_rollovers;
+                            && polygon_rollovers)
+                            || whole_rollover == Some(item.id);
                         if !wireframe {
                             let base = if selected {
                                 palette::selection_fill()
@@ -1045,6 +1055,7 @@ impl Operandi {
                     materials: None,
                     env_picture: None,
                     whole_selected: Default::default(),
+                    whole_rollover: Default::default(),
                     topology,
                 };
                 if let Some((env, picture)) = env_light.clone() {
@@ -1230,6 +1241,9 @@ impl Operandi {
                         let (seams, generation, placement) =
                             self.resident_cache.seams(item, matrix, live);
                         draw.seams.push((item.id, generation, seams, placement));
+                    }
+                    if whole_rollover == Some(item.id) {
+                        draw.whole_rollover.insert(item.id);
                     }
                     if let Some((id, f, _)) = hover
                         && id == item.id

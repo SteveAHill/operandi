@@ -570,6 +570,10 @@ pub mod viewport {
     pub fn rollover() -> Color32 {
         color(ColorId::Rollover)
     }
+    /// A whole item's rollover fill in Item mode (the Face rollover).
+    pub fn rollover_face() -> Color32 {
+        color(ColorId::RolloverFace)
+    }
     /// The rollover of polygon `face`, by its kind: Face, Subdivision or
     /// Catmull-Clark (points and edges use the Generic rollover).
     pub fn polygon_rollover(mesh: &operandi_core::Mesh, face: usize) -> Color32 {
