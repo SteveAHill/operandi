@@ -2868,6 +2868,51 @@ Provisional:
   Longer labels widen their button outward. The pointer over a button
   picks it even where a diagonal's corner reaches into a side's wedge.
   The greyed-entry reason shows under the whole pie.
+- **PM-Q14 Pies as forms (pie engine, 2026-11-27).** A pie is a form
+  with style `pie` (UIC-308); its first eight controls are the slots,
+  clockwise from the top, and an empty slot is a `space` control. Shipped
+  pies keep icon mode Text (labels only, as before); a New Pie starts with
+  eight empty slots and Both. The Layouts pie stays generated (its slots
+  are the layouts), opened through the same engine, and can't be exported
+  or used as a sub-pie.
+- **PM-Q15 Sub-pie gesture.** Picking a sub-pie slot (releasing the key
+  over it, or clicking it) opens the sub-pie in place at the same centre
+  instead of closing (UIC-310). The key is up by then, so the sub-pie
+  waits for a click. Esc, or a click in the centre's dead zone, goes back
+  one level; in the outermost pie both still close it, as before.
+- **PM-Q16 Loops.** Setting a sub-pie that leads back to the pie is
+  refused (`operandi.form.slot`), and the Form Editor only offers pies
+  that don't. A loop that arrives another way (a hand-edited file, an
+  import over existing pies) greys the slot naming a pie that is already
+  open, with the reason.
+- **PM-Q17 Any line's state.** A slot whose line isn't one of the pies'
+  own view, shading, toggle, falloff or action-centre lines or an Input
+  Map action is greyed from its command's answer and, when the answer is
+  "on", shows a filled dot. A line no command has is red and does
+  nothing (UIC-221); an `@macro` line counts as known, as on toolbox
+  buttons (UIC-222), until macros exist.
+- **PM-Q18 The name in the centre (UIC-313).** One line, at most 130 px,
+  ending in "…" when longer, on a small plate that replaces the dot; the
+  arrow toward the highlighted slot sits just outside the plate.
+- **PM-Q19 Input Map rows.** Shipped pies keep their old row names (Pie:
+  View Direction ...); the saved map stores the line `operandi.pie.open
+  <id>`, and a map or layout key saved with the old names moves to the
+  new lines. A user pie's row comes after the factory actions, named
+  "Pie: <its name>". Assign Key opens the Input Map on that row, waiting
+  for its keys; nothing is saved until Save Input Map.
+- **PM-Q20 Pie files (UIC-312).** Export Pie writes JSON (`.oppie`):
+  version, the pie's id and its form with every sub-pie form it reaches.
+  Without a file panel it saves to the data folder's Saved Pies folder,
+  as Save Form does (LAY-Q67). Import Pie with an id that is taken asks
+  Rename / Replace / Cancel; Rename gives `<id>.2` (then .3 ...) and
+  points slots at the renamed sub-pies; Replace saves over the user's
+  copy (Revert still brings a shipped pie back).
+- **PM-Q21 Dragging slots.** In the Form Editor's ring, dragging a slot
+  onto another swaps the two (`operandi.form.swap`), so every other slot
+  keeps its place, rather than moving the rest along.
+- **PM-Q22 Sub-pie slots.** A sub-pie slot shows its own label or else
+  the sub-pie's name, with a small triangle at its outer end pointing
+  away from the centre (a tiny flat glyph, not an icon).
 
 ## Texture Locators, stage 1 (texture-locators, 2026-11-07), provisional
 
