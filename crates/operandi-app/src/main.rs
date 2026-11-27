@@ -1272,6 +1272,10 @@ struct Operandi {
     /// When the one-time Trackball Rotation offer appeared (egui time), while
     /// it shows (trackball_offer.rs).
     trackball_offer: Option<f64>,
+    /// UIC-189: floating windows are on top this frame (an Operandi window
+    /// has the keyboard), and when one last had it (floating_level.rs).
+    floating_on_top: bool,
+    floating_focused_at: Option<f64>,
     viewport_rect: Rect,
     /// The views (views.rs): their layout, each view's camera and rect, the
     /// active one (whose camera is `camera`), and the one being drawn.
@@ -2005,6 +2009,8 @@ impl Operandi {
             viewport_gpu: None,
             last_drawable: [0, 0],
             trackball_offer: None,
+            floating_on_top: false,
+            floating_focused_at: None,
             viewport_rect: Rect::NOTHING,
             views: operandi_layout::Layout::single_viewport(),
             cameras: BTreeMap::new(),
@@ -4039,6 +4045,7 @@ impl eframe::App for Operandi {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.frame_stats.begin();
         self.frame_ctx = Some(ctx.clone());
+        self.update_floating_level(ctx);
         if let Some(text) = self.copy_next.take() {
             ctx.copy_text(text);
         }
@@ -4148,6 +4155,8 @@ pub(crate) fn same_document(a: &Scene, b: &Scene) -> bool {
 mod drag_readout;
 #[path = "window_layout/floating.rs"]
 mod floating;
+#[path = "window_layout/floating_level.rs"]
+mod floating_level;
 #[path = "window_layout/form_editor.rs"]
 mod form_editor;
 #[cfg(test)]
