@@ -8980,7 +8980,8 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   triangle's frame), saved with the step (Jason 2026-11-26); Rebind is a
   Properties button that measures it again. A changed point count below
   or missing target polygons pass the mesh through and ask for Rebind.
-  Unclear: whether Rebind needs its own command for scripts.
+  Scripts rebind with `deformer.rebind deformer:op:<item>:<op>`
+  (Operandi's own name, 2026-11-27).
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges
