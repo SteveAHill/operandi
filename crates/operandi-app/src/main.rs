@@ -69,6 +69,9 @@ mod symmetry_ui;
 use crate::prefs_file::PrefsFile;
 use snaps_panel::SnapPreset;
 #[cfg(test)]
+#[path = "view/ac_press_tests.rs"]
+mod ac_press_tests;
+#[cfg(test)]
 #[path = "view/ac_rules_step1_tests.rs"]
 mod ac_rules_step1_tests;
 #[path = "view/action_center_click.rs"]
@@ -928,7 +931,9 @@ struct Operandi {
     /// Solid Sketch's pick-up question (solid_sketch_ui.rs).
     solid_sketch_ask: Option<solid_sketch_ui::SketchAsk>,
     /// Element or Screen action center waiting for its viewport click.
-    center_click: Option<action_center_click::CenterClick>,
+    /// A Snaps and Precision preset waits for the click that sets its
+    /// centre (`snaps_panel.rs`).
+    preset_center_click: bool,
     /// A Bevel handle drag was released (used when `bevel_redrag_stacks`).
     bevel_dragged: bool,
     /// Does a handle drag after a released one start a new bevel?
@@ -1799,7 +1804,7 @@ impl Operandi {
             set_position: None,
             scale_offset: None,
             solid_sketch_ask: None,
-            center_click: None,
+            preset_center_click: false,
             bevel_dragged: false,
             bevel_redrag_stacks: BEVEL_REDRAG_STACKS,
             set_material: None,

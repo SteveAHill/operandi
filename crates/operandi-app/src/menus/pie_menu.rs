@@ -578,11 +578,15 @@ pub(super) fn center_name(context: &ActionContext) -> Option<&'static str> {
     .find(|n| center_named(n).as_ref() == Some(context))
 }
 
-fn center_click_named(name: &str) -> Option<action_center_click::CenterClick> {
+/// The Action Centers that aren't one fixed pair: Element takes its pick
+/// and Screen its place from the view (`action_center_click.rs`).
+fn center_from_view(name: &str) -> bool {
+    // Match arms, so `pie_phrase_choices_match_the_registry` reads the
+    // names.
+    #[allow(clippy::match_like_matches_macro)]
     match name {
-        "element" => Some(action_center_click::CenterClick::Element),
-        "screen" => Some(action_center_click::CenterClick::Screen),
-        _ => None,
+        "element" | "screen" => true,
+        _ => false,
     }
 }
 
@@ -704,7 +708,7 @@ impl Operandi {
                 };
                 return (why, Mark::Choice(active));
             }
-            if center_click_named(rest).is_some() {
+            if center_from_view(rest) {
                 return (
                     None,
                     Mark::Choice(current.center.label().eq_ignore_ascii_case(rest)),
@@ -865,12 +869,20 @@ impl Operandi {
                         "Correct or revert invalid numeric fields before changing Action Center"
                             .into();
                 } else {
-                    self.run(Command::ActionContext(context));
+                    self.choose_action_context(context);
                 }
                 return true;
             }
-            if let Some(kind) = center_click_named(rest) {
-                self.choose_center_click(kind);
+            if center_from_view(rest) {
+                if !self.field_errors.is_empty() {
+                    self.status =
+                        "Correct or revert invalid numeric fields before changing Action Center"
+                            .into();
+                } else if rest == "element" {
+                    self.choose_element_center();
+                } else {
+                    self.choose_screen_center();
+                }
                 return true;
             }
         }
