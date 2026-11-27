@@ -207,11 +207,16 @@ impl Pending {
 /// the interchange formats) although choosing them worked. Upper-case
 /// spellings are listed for platforms that match case-sensitively.
 fn readable(scene: bool) -> Vec<String> {
-    let mut list: Vec<&str> = vec!["lxo"];
+    let mut list: Vec<String> = vec!["lxo".into()];
     if scene {
-        list.push("opscene");
+        list.push("opscene".into());
     }
-    list.extend(operandi_core::interchange::IMPORT_EXTENSIONS);
+    // Built-in types, then those of kits that are on (KIT-1).
+    list.extend(
+        operandi_core::interchange::import_extensions()
+            .into_iter()
+            .map(|(ext, _)| ext),
+    );
     list.iter()
         .flat_map(|e| [e.to_string(), e.to_ascii_uppercase()])
         .collect()
@@ -745,10 +750,8 @@ mod tests {
         assert_eq!(&imports[..2], ["lxo", "LXO"]);
         assert_eq!(&open[..4], ["lxo", "LXO", "opscene", "OPSCENE"]);
         assert_eq!(&open[4..], &imports[2..]);
-        assert_eq!(
-            imports.len(),
-            2 + 2 * operandi_core::interchange::IMPORT_EXTENSIONS.len()
-        );
+        // Built-in types first; a kit's (kit_commands_tests) may follow.
+        assert!(imports.len() >= 2 + 2 * operandi_core::interchange::IMPORT_EXTENSIONS.len());
         for (pair, extension) in imports[2..]
             .as_chunks::<2>()
             .0

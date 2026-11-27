@@ -11,6 +11,7 @@ mod general;
 mod graph_editor;
 mod item_transforms;
 mod items;
+mod kits;
 mod libraries;
 mod nodes;
 mod phrases;
@@ -101,6 +102,7 @@ const SECTIONS: &[&[Entry]] = &[
     nodes::COMMANDS,
     presets_layouts::COMMANDS,
     libraries::COMMANDS,
+    kits::COMMANDS,
     statistics::COMMANDS,
     selection_sets::COMMANDS,
     sculpt::COMMANDS,

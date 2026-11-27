@@ -296,6 +296,8 @@ mod item_list_ui;
 mod items_tree;
 #[path = "input_devices/key_toggles.rs"]
 mod key_toggles;
+#[path = "kits/kit_commands.rs"]
+mod kit_commands;
 #[path = "selections/lasso.rs"]
 mod lasso;
 #[path = "window_layout/layout.rs"]
@@ -1565,6 +1567,7 @@ impl Operandi {
             app.set_mcp(&cc.egui_ctx, true);
         }
         let _ = std::fs::create_dir_all(app.environment.paths().data_root());
+        app.load_kits();
         app.first_run_tip();
         app.viewport_preferences = viewport_preferences::ViewportPreferences::load(
             &app.environment.paths().viewport_display(),
@@ -4488,6 +4491,9 @@ mod item_list_header_tests;
 #[cfg(test)]
 #[path = "input_devices/key_toggles_tests.rs"]
 mod key_toggles_tests;
+#[cfg(test)]
+#[path = "kits/kit_commands_tests.rs"]
+mod kit_commands_tests;
 #[cfg(test)]
 #[path = "selections/lasso_ui_tests.rs"]
 mod lasso_ui_tests;

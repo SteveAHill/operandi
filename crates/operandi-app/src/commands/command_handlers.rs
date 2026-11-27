@@ -2247,6 +2247,19 @@ fn tables(r: &mut Commands) {
     });
     on(r, &["operandi.help.whatsThis"], |a, _| a.toggle_help_mode());
     on(r, &["operandi.update.check"], |a, _| a.check_for_updates());
+    // Kits (kit_commands.rs).
+    on_words(
+        r,
+        &[
+            "operandi.kit.disable",
+            "operandi.kit.enable",
+            "operandi.kit.install",
+            "operandi.kit.list",
+            "operandi.kit.openFolder",
+            "operandi.kit.reload",
+        ],
+        |a, c| a.kit_command(c.entry.name, c.rest),
+    );
     // Online libraries (online_library_ui.rs).
     on_words(
         r,

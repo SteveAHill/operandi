@@ -1,5 +1,17 @@
 # Milestone progress ledger
 
+- **Kit framework, slice 1 (2026-11-27, branch kits-framework-1):** kit
+  API 1 (docs/KITS.md). `kit.toml` manifest with strict checks, a Kits
+  folder in the data folder, `kits.toml` for which kits are on (off after
+  install), install from zip or folder, and importers run as helper
+  programs (protocol 1: `<helper> import <in> <out>`, glTF/PLY/FBX/USD
+  back, `note:` lines, stderr tail on failure, time limit). Kit file types
+  join File > Import and drag-and-drop (KIT-1). `operandi.kit.list`,
+  `.install`, `.enable`, `.disable`, `.reload`, `.openFolder`; example kit
+  `examples/kits/off_import`, `scripts/package-kit.sh`. Not yet: Kits
+  window and trust prompt (commands only), import progress and Cancel
+  (the import blocks while the helper runs), exporters, kit commands, MCP
+  sidecar imports through kits. Guide: scripting/kits.md.
 - **Action Center rule sheet v6, step 1 (2026-11-27, branch ac-rewrite-1):**
   Selection and Selection Border axes are the principal axes of the moved
   points (A-SEL, `selection_axes.rs`): X the longest direction, Z the
