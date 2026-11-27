@@ -759,8 +759,11 @@ pub use deform_finish::{
     RelaxMeshOptions,
 };
 pub use topology_pen::{PenEdit, PenMode, TopologyPenOptions};
+#[path = "transforms/element_center.rs"]
+pub mod element_center;
 #[path = "tools/haul.rs"]
 pub mod haul;
+pub use element_center::{CenterPress, element_axes, element_frame};
 #[path = "transforms/pivot_service.rs"]
 pub mod pivot_service;
 #[path = "tools/preset_store.rs"]
