@@ -423,6 +423,8 @@ mod path_tool_view;
 mod pen_interactive_ui;
 #[path = "view/picking.rs"]
 mod picking;
+#[path = "menus/pie_forms.rs"]
+mod pie_forms;
 #[path = "menus/pie_menu.rs"]
 mod pie_menu;
 #[path = "uv/planar_texture_ui.rs"]
@@ -1077,6 +1079,9 @@ struct Operandi {
     retopo_stroke: Vec<DVec3>,
     /// Mesh Paint's click or stroke in progress (mesh_paint_ui.rs).
     mesh_paint: mesh_paint_ui::Gesture,
+    /// Mesh Paint's settings from its last use this session (#46): the
+    /// next start picks them up.
+    mesh_paint_memory: Option<operandi_core::mesh_paint::MeshPaintSettings>,
     /// Topology Pen's drag, weld and pre-highlight state.
     pen: topology_pen_ui::PenUi,
     /// Save Environment Preset…'s options dialog (environment_preset_ui.rs).
@@ -1376,6 +1381,8 @@ struct Operandi {
     /// The open pie menu (pie_menu.rs), and one asked for by name.
     pie: Option<pie_menu::Open>,
     pie_request: Option<String>,
+    /// Export Pie / Import Pie in progress (pie_forms.rs).
+    pie_edit: pie_forms::State,
     segment_detent_pixels: f64,
     native_numbers: Vec<native::NumberKey>,
     /// Numeric Enter as Tab: a keypad Enter press turned into Tab whose
@@ -1905,6 +1912,7 @@ impl Operandi {
             select_dialog: None,
             retopo_stroke: Vec::new(),
             mesh_paint: Default::default(),
+            mesh_paint_memory: None,
             pen: Default::default(),
             env_preset_dialog: None,
             gi_hint_shown: false,
@@ -2072,6 +2080,7 @@ impl Operandi {
             modeling_menu_requested: false,
             pie: None,
             pie_request: None,
+            pie_edit: Default::default(),
             segment_detent_pixels: 12.,
             native_numbers: Vec::new(),
             keypad_enter_held: false,
@@ -4172,8 +4181,16 @@ mod floating;
 #[path = "window_layout/form_editor.rs"]
 mod form_editor;
 #[cfg(test)]
+#[path = "window_layout/form_editor_pie_tests.rs"]
+mod form_editor_pie_tests;
+#[cfg(test)]
 #[path = "window_layout/form_editor_tests.rs"]
 mod form_editor_tests;
+#[path = "window_layout/form_icons.rs"]
+mod form_icons;
+#[cfg(test)]
+#[path = "window_layout/form_icons_tests.rs"]
+mod form_icons_tests;
 #[path = "nodes/graph_editor.rs"]
 mod graph_editor;
 #[path = "create_tools/guides_ui.rs"]
@@ -4736,6 +4753,9 @@ mod performance_tests;
 #[path = "tools/perf_snapshot_tests.rs"]
 mod perf_snapshot_tests;
 
+#[cfg(test)]
+#[path = "menus/pie_engine_tests.rs"]
+mod pie_engine_tests;
 #[cfg(test)]
 #[path = "menus/pie_menu_tests.rs"]
 mod pie_menu_tests;
