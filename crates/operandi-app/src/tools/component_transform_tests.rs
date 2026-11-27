@@ -525,10 +525,7 @@ fn local_scale_y_handle_drag_lengthens_two_leaning_edges() {
     .into();
     a.run(Command::Mode(Mode::Edge));
     a.editor.scene.selection.edges = vec![(8, 16), (12, 20)];
-    a.run(Command::ActionContext(operandi_core::ActionContext {
-        center: operandi_core::CenterMode::Local,
-        axis: operandi_core::AxisOrientation::World,
-    }));
+    a.run(Command::ActionContext(operandi_core::ActionContext::LOCAL));
     a.camera.view = View::Front;
     a.activate(Tool::Scale);
     let ctx = Context::default();
@@ -617,10 +614,7 @@ fn local_handle_sits_on_the_last_selected_cluster() {
     a.run(Command::NewMesh);
     a.editor.scene.active_mut().unwrap().mesh = tube(8).into();
     a.run(Command::Mode(Mode::Polygon));
-    a.run(Command::ActionContext(operandi_core::ActionContext {
-        center: operandi_core::CenterMode::Local,
-        axis: operandi_core::AxisOrientation::World,
-    }));
+    a.run(Command::ActionContext(operandi_core::ActionContext::LOCAL));
     let (low, high) = (1u32, 2 * 8 + 1);
     for order in [vec![low, high], vec![high, low]] {
         a.editor.scene.selection.faces = order.clone();
@@ -635,7 +629,7 @@ fn local_handle_sits_on_the_last_selected_cluster() {
         let normal = mesh.normal(last).normalize();
         let at = a.transform_handle_center();
         assert!((at - want).length() < 1e-9, "{order:?}: {at:?} != {want:?}");
-        let basis = a.local_handle_basis().expect("Local handle frame");
+        let basis = a.editor.handle_frame().expect("Local handle frame").basis;
         assert!(
             basis.z_axis.dot(normal) > 1. - 1e-9,
             "Z out of the wall: {basis:?}"

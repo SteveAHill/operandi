@@ -444,7 +444,7 @@ fn center_named(name: &str) -> Option<ActionContext> {
         },
         "selection auto axis" => world(CenterMode::SelectionAutoAxis),
         "origin" => world(CenterMode::Origin),
-        "local" => world(CenterMode::Local),
+        "local" => ActionContext::LOCAL,
         _ => return None,
     })
 }
@@ -538,9 +538,7 @@ impl Operandi {
             if let Some(context) = center_named(rest) {
                 let active = match context.center {
                     // The menu marks these by centre alone.
-                    CenterMode::SelectionAutoAxis | CenterMode::Local => {
-                        current.center == context.center
-                    }
+                    CenterMode::SelectionAutoAxis => current.center == context.center,
                     _ => current == context,
                 };
                 let why = if self.field_errors.is_empty() {

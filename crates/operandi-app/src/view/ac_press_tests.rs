@@ -417,7 +417,7 @@ fn other_centres_stay_put_under_a_press() {
         (CenterMode::Selection, AxisOrientation::Selection),
         (CenterMode::SelectionBorder, AxisOrientation::Selection),
         (CenterMode::SelectionAutoAxis, AxisOrientation::World),
-        (CenterMode::Local, AxisOrientation::World),
+        (CenterMode::Local, AxisOrientation::Local),
         (CenterMode::Pivot, AxisOrientation::Item),
         (CenterMode::Parent, AxisOrientation::Parent),
     ] {
