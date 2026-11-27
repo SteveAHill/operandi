@@ -163,6 +163,7 @@
     - [Online libraries](materials/online-libraries.md)
 - [Lights and cameras]()
 - [Rendering]()
+    - [Image Processing: Bloom and Glare](rendering/image-processing.md)
 - [Animation]()
     - [Channel panel](animation/channel-panel.md)
 - [Rigging]()

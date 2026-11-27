@@ -335,7 +335,7 @@ impl Bridge {
             ),
             def(
                 "render_settings_get",
-                "The scene's final-render settings: samples, denoise, adaptive_threshold, exposure (stops), the render camera and its picture size. Each field's unit is in units.",
+                "The scene's final-render settings: samples, denoise, adaptive_threshold, exposure (stops), Bloom and Glare (applied to the finished picture), the render camera and its picture size. Each field's unit is in units.",
                 json!({"type": "object", "properties": {}, "additionalProperties": false}),
             ),
             def(

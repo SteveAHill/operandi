@@ -4879,3 +4879,9 @@ Design: docs/MATERIALX_GRAPHS.md (stages 1-5).
 ## 2026-11-25 — Tool tab cycling (branch claude/project-thread-rjq1h8)
 
 - Ctrl+Tab opens the next tool tab, Ctrl+Shift+Tab the previous one (the real Control key on a Mac), wrapping at the ends, in strip order; only the strip's tabs count, and one tab or no strip does nothing. Each press switches at once, repeats step one tab each, the active tool stays, fields are confirmed first (as a click). Focus on a control in the old tab's drawer goes back to the viewport; elsewhere it stays. Works with a text or number field focused; a modal dialog, menu, pop-up or pie keeps the keys, and a mouse drag ignores them. Plain Tab is unchanged. Input Map actions "Next Tool Tab" / "Previous Tool Tab" (rebindable, shown in the tab tooltips); egui's Ctrl+Tab focus stepping and the Layout Switcher's default key are gone (tool_tab_cycle.rs). Provisional: TTC-Q01..Q06. GUI check: docs/TOOL_TAB_CYCLING_GUI_QA.md.
+
+## 2026-11-27 — Bloom and Glare (branch render-bloom-glare)
+
+- Render window ▸ Image Processing tab: Bloom (Threshold, Intensity, Radius as a share of the width, Tint) and Glare (Threshold, Intensity, Streaks 2/4/6/8, Angle, Length, Tint), on the linear picture before the view transform (`operandi_core::post_effects`, multi-threaded: Gaussian pyramid for Bloom, four-tap streak passes for Glare). Off by default; saved with the scene as `RenderSettings::post` (native v68). Each change is one "Render Settings" undo step and re-applies at once: the Recent Frames cache keeps the picture as rendered.
+- Final Color only; Save Image..., OpenEXR Multilayer's picture layer and renders saved to Pictures / an MCP path include them. `render_settings_get/set` take `bloom_*` / `glare_*`. Live renders show them while applying costs under 60 ms.
+- Provisional: BG-Q1..Q8 (in the merge note). GUI check: docs/BLOOM_GLARE_GUI_QA.md. Guide: rendering/image-processing.md.

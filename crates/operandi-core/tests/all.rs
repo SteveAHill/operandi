@@ -632,6 +632,8 @@ mod polygons_m17;
 mod polyscale_offset_clean_spec;
 #[path = "pose_tool.rs"]
 mod pose_tool;
+#[path = "post_effects.rs"]
+mod post_effects;
 #[path = "primitive_falloff.rs"]
 mod primitive_falloff;
 #[path = "primitive_falloff_numeric.rs"]
