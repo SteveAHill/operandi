@@ -331,6 +331,11 @@ mod material_gpu_tests;
 mod material_layout;
 #[path = "commands/mcp.rs"]
 mod mcp;
+#[path = "commands/mcp_pointer.rs"]
+mod mcp_pointer;
+#[cfg(test)]
+#[path = "commands/mcp_pointer_tests.rs"]
+mod mcp_pointer_tests;
 #[path = "menus/menu_forms.rs"]
 mod menu_forms;
 #[path = "polygons/mesh_cleanup_dialog.rs"]
@@ -416,6 +421,8 @@ mod path_tool_view;
 mod pen_interactive_ui;
 #[path = "view/picking.rs"]
 mod picking;
+#[path = "menus/pie_forms.rs"]
+mod pie_forms;
 #[path = "menus/pie_menu.rs"]
 mod pie_menu;
 #[path = "uv/planar_texture_ui.rs"]
@@ -619,6 +626,9 @@ mod painting_brush;
 #[cfg(all(test, feature = "painting"))]
 #[path = "painting_ui/painting_brush_tests.rs"]
 mod painting_brush_tests;
+#[cfg(all(test, feature = "painting"))]
+#[path = "painting_ui/painting_drive_tests.rs"]
+mod painting_drive_tests;
 #[cfg(all(test, feature = "painting"))]
 #[path = "painting_ui/painting_highlight_tests.rs"]
 mod painting_highlight_tests;
@@ -1369,6 +1379,8 @@ struct Operandi {
     /// The open pie menu (pie_menu.rs), and one asked for by name.
     pie: Option<pie_menu::Open>,
     pie_request: Option<String>,
+    /// Export Pie / Import Pie in progress (pie_forms.rs).
+    pie_edit: pie_forms::State,
     segment_detent_pixels: f64,
     native_numbers: Vec<native::NumberKey>,
     /// Numeric Enter as Tab: a keypad Enter press turned into Tab whose
@@ -2065,6 +2077,7 @@ impl Operandi {
             modeling_menu_requested: false,
             pie: None,
             pie_request: None,
+            pie_edit: Default::default(),
             segment_detent_pixels: 12.,
             native_numbers: Vec::new(),
             keypad_enter_held: false,
@@ -4020,6 +4033,8 @@ impl eframe::App for Operandi {
         if let Some(bench) = &mut self.drag_bench {
             input.events.append(&mut bench.events);
         }
+        // The MCP bridge's pointer_stroke (mcp_pointer.rs).
+        self.mcp_take_stroke_input(input);
         // Puck buttons press their shortcuts as keys (space_mouse/buttons.rs).
         self.space_mouse_take_events(&mut input.events);
         self.native_numbers = native::take_numbers();
@@ -4163,8 +4178,16 @@ mod floating;
 #[path = "window_layout/form_editor.rs"]
 mod form_editor;
 #[cfg(test)]
+#[path = "window_layout/form_editor_pie_tests.rs"]
+mod form_editor_pie_tests;
+#[cfg(test)]
 #[path = "window_layout/form_editor_tests.rs"]
 mod form_editor_tests;
+#[path = "window_layout/form_icons.rs"]
+mod form_icons;
+#[cfg(test)]
+#[path = "window_layout/form_icons_tests.rs"]
+mod form_icons_tests;
 #[path = "nodes/graph_editor.rs"]
 mod graph_editor;
 #[path = "create_tools/guides_ui.rs"]
@@ -4724,6 +4747,9 @@ mod performance_tests;
 #[path = "tools/perf_snapshot_tests.rs"]
 mod perf_snapshot_tests;
 
+#[cfg(test)]
+#[path = "menus/pie_engine_tests.rs"]
+mod pie_engine_tests;
 #[cfg(test)]
 #[path = "menus/pie_menu_tests.rs"]
 mod pie_menu_tests;
