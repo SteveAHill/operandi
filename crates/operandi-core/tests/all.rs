@@ -439,6 +439,8 @@ mod meshop_curve_convert;
 mod meshop_curve_fill;
 #[path = "meshop_curve_rebuild.rs"]
 mod meshop_curve_rebuild;
+#[path = "meshop_curve_rebuild_spans.rs"]
+mod meshop_curve_rebuild_spans;
 #[path = "meshop_curve_sweep.rs"]
 mod meshop_curve_sweep;
 #[path = "meshop_curve_winding.rs"]

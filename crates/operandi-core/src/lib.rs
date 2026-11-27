@@ -472,6 +472,8 @@ mod meshop_curve_deform_common;
 mod meshop_curve_fill;
 #[path = "meshops/meshop_curve_rebuild.rs"]
 mod meshop_curve_rebuild;
+#[path = "meshops/meshop_curve_rebuild_spans.rs"]
+mod meshop_curve_rebuild_spans;
 #[path = "meshops/meshop_curve_slice.rs"]
 mod meshop_curve_slice;
 #[path = "meshops/meshop_curve_sweep.rs"]

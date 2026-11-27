@@ -676,6 +676,7 @@ pub(crate) fn builtin() -> Vec<Arc<dyn OpDef>> {
     table.extend(crate::curve_ops::entries());
     table.extend(crate::meshop_curve_fill::entries());
     table.extend(crate::meshop_curve_rebuild::entries());
+    table.extend(crate::meshop_curve_rebuild_spans::entries());
     table.extend(crate::meshop_curve_sweep::entries());
     table.extend(crate::meshop_edges_to_curves::entries());
     table.extend(crate::meshop_curve_boolean::entries());
