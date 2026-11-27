@@ -10145,3 +10145,19 @@ for both, Element in force when chosen. Where the sheet left room:
 - ACR-Q08 Smooth Shift and Thicken's Scale about Selection Border uses the same C-BORDER (box middle of the shifted border points; it was their average, over edges used by one selected polygon).
 - ACR-Q09 **Sheet against a recorded case.** Rulebook case ACS-H-select-x-pair-rotate (Selection, Symmetry X, a tilted pair, Rotate Y 30° typed) was recorded turning about world Y. The sheet puts every tool's typed values in the one A-SEL frame, whose Y there is world Z. Built as the sheet says; the case is listed as a known gap in `ac_symmetry_rulebook.rs`. The nine Selection and Selection Border Scale cases of the same rulebook now pass with that frame (they were known gaps before).
 - ACR-Q10 A-SEL under Symmetry with a selected polygon lying across the plane (rulebook cases ACS-H-select-x-PC-scale and -pairstraddle-scale, still known gaps): the sheet doesn't say whether such a polygon's + side points and its normal count. Built: its points strictly on the + side count, and its normal too.
+
+## Action Center rule sheet v6, step 2: presses (2026-11-27, branch ac-rewrite-2, GitHub #32 and #39, provisional)
+
+Built: what a press off the handle does under each Action Center (`ActionContext::press`), Element picking on every press (C-ELEM, A-ELEM with Z on the normal), C-AUTO and C-SCREEN placing on every press, every other centre staying put. Where the sheet left room:
+
+- ACR-Q11 Screen before any press ("as C-AUTO"): the centre is Automatic's at the moment Screen is chosen and doesn't follow a later selection change until the next press. `CenterMode::Screen` holds a point; an unplaced Screen needs the data-model step.
+- ACR-Q12 A-ELEM, an edge's X: "the edge's own direction" has two ways round; built from its lower-numbered point to the other.
+- ACR-Q13 Presses pick or place while Move, Rotate, Scale or Transform is on. With no tool on a press still selects, and other tools keep their own press. The old one-shot click also worked before a tool was on; Element chosen then waits at the world origin for the first press with a transform tool.
+- ACR-Q14 The Snaps and Precision presets keep their own set-up click and their own axes (`PickedFrame::from_z`); while a preset runs, presses don't re-pick. That one click is still taken before the handles are tested.
+- ACR-Q15 C-AUTO's "work plane" is the plane the view's grid uses (XZ, YZ or XY through the work plane's centre, chosen per view unless fixed). A press that never meets it (edge-on, or behind the view) lands at the centre's own depth, facing the view.
+- ACR-Q16 A press that moves the centre first keeps what the tool did so far as its own step, as the old empty-space press did; section 7's "re-apply in the new frame" is for menu changes.
+- ACR-Q17 A placed centre snaps to the selection's own points, edges and polygons too (SN2-17 leaves what the tool moves out of a handle drag's targets; nothing moves while a centre is placed), and the search is at the pointer, not at the old centre's height above it.
+- ACR-Q18 Gone with VAC-Q02: a press on the selected element no longer puts a moved centre back (under None and Automatic every press places; under the others nothing moves).
+- ACR-Q19 Item mode is unchanged; its presses come with the Item-mode step.
+- ACR-Q20 In a UV view with a UV tool on, Element picks the UV point or edge under every click (UVT-133 was one click).
+
