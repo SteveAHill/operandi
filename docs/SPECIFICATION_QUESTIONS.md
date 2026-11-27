@@ -9163,6 +9163,13 @@ Spec: `docs/BEHAVIOR-USD-IMPORT.md` (Operandi's own format choice; Blender
   Constrain to Background (on/off, target, offset, double-sided) with the
   vertex tools' search along the last view pressed in.
 - **PNT-Q73** Clear Mask and Bake Falloff act on the active mesh.
+- **PNT-Q74** (test drive 2026-11-26) Zoomed in on a small image the
+  texels sit further apart on screen than the dabs (a couple of points),
+  and Smudge changed nothing. Smudge now pulls colour only once the drag
+  has gone one texel spacing (every dab when texels are dense, as
+  before), and Smudge and Clone look up to 8 points (was 2) for the
+  texel under a screen point. Provisional: the spec doesn't say how
+  sampling works between texels.
 - **USD-IQ18** (U4) A sidecar graph replaces a material only when its
   name is exactly the USD material's prim name (Blender writes both from
   the material's name; names Blender made safe for USD, with spaces or
