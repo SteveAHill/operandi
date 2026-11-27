@@ -4539,6 +4539,9 @@ mod perf_drags_tests;
 #[path = "view/perf_view_tests.rs"]
 mod perf_view_tests;
 #[cfg(test)]
+#[path = "render/perspective_camera_key_tests.rs"]
+mod perspective_camera_key_tests;
+#[cfg(test)]
 #[path = "render/picture_capture_tests.rs"]
 mod picture_capture_tests;
 #[cfg(test)]

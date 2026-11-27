@@ -1478,6 +1478,24 @@ impl Operandi {
         }
     }
 
+    /// Perspective View (numpad ".", SC-054 "Perspective (press again:
+    /// camera)"): any other view goes to Perspective; Perspective goes to
+    /// Camera view through the scene's camera (CL-17); Camera or Light
+    /// view goes back to Perspective. With no camera it stays Perspective
+    /// and the status line says why.
+    pub(crate) fn perspective_or_camera_view(&mut self) {
+        if self.camera.looks_through() {
+            self.leave_camera_view();
+            self.camera.view = View::Perspective;
+        } else if self.camera.view != View::Perspective {
+            self.camera.view = View::Perspective;
+        } else if view_camera(&self.editor.scene).is_some() {
+            self.enter_camera_view();
+        } else {
+            self.status = "Perspective view: no camera in the scene to look through".into();
+        }
+    }
+
     /// The view menu entry for Camera view.
     pub(super) fn enter_camera_view(&mut self) {
         if view_camera(&self.editor.scene).is_none() {
