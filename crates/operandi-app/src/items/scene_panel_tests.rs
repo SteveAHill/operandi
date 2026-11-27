@@ -73,11 +73,10 @@ fn par_t13_text_focus_and_live_tool_protect_scene() {
     a.rename_item = None;
     a.activate(Tool::Sphere);
     ctx.memory_mut(|m| m.request_focus(Id::new("scene-list-focus")));
-    let before = a.editor.scene.clone();
-    // Direct object deletion obeys the same live transaction guard.
+    // UIC-307: deleting the item settles the tool first; the delete runs.
+    let before = a.editor.scene.items.len();
     a.run(Command::DeleteItem);
-    assert_eq!(a.editor.scene, before);
-    assert!(a.editor.live.is_some());
+    assert_eq!(a.editor.scene.items.len(), before - 1, "{}", a.status);
 }
 #[test]
 fn par_t05_item_property_command_preserves_component_geometry_and_rotation_order() {

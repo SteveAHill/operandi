@@ -180,9 +180,12 @@ fn toggle_range_and_group_selects_keep_the_tool() {
 }
 
 #[test]
-fn other_tools_still_refuse_item_clicks() {
+fn other_tools_settle_for_item_clicks() {
+    // UIC-307: Bevel's work settles and the click selects the other item;
+    // Bevel starts again there if it can.
     let (mut e, _a, b) = fixture(Mode::Polygon);
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
-    assert!(e.dispatch(Command::SelectItem(Some(b))).is_err());
-    assert_eq!(tool(&e), Some(Tool::Bevel));
+    e.dispatch(Command::SelectItem(Some(b))).unwrap();
+    assert_eq!(e.scene.selection.item, Some(b));
+    assert!(e.live.as_ref().is_none_or(|l| l.tool == Tool::Bevel));
 }

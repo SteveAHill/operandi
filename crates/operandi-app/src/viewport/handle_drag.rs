@@ -101,7 +101,16 @@ impl Operandi {
         let (_, right, up, _) = self.camera.basis();
         let screen = vec2(direction.dot(right) as f32, -direction.dot(up) as f32);
         let pixels = (p - start).dot(screen) / screen.length_sq().max(0.001);
-        let amount = pixels as f64 * self.camera.distance / (r.height() as f64 * 0.9);
+        // #40: the arrow stays under the pointer: the distance along its
+        // line to where the pointer ray passes. The screen-scaled amount is
+        // the fallback for an end-on arrow.
+        let amount = self
+            .handle_origin
+            .get()
+            .filter(|_| direction.length() > 1e-9)
+            .and_then(|origin| self.camera.axis_drag(origin, direction, start, p, r))
+            .map(|t| t / direction.length())
+            .unwrap_or(pixels as f64 * self.camera.distance / (r.height() as f64 * 0.9));
         let mut params = base;
         let saved_delta = params.delta;
         if combined {
@@ -512,12 +521,23 @@ impl Operandi {
                 let screen = vec2(axis.dot(right) as f32, -axis.dot(up) as f32);
                 let pixels = d.dot(screen) / screen.length_sq().max(0.001);
                 let scale = self.camera.distance / (r.height() as f64 * 0.9);
-                let world = axis * (pixels as f64 * scale);
+                // #40: along the axis line through the handle, under the
+                // pointer; screen-scaled when the axis is end-on.
+                let along = self
+                    .camera
+                    .axis_drag(self.transform_handle_center(), axis, start, p, r)
+                    .unwrap_or(pixels as f64 * scale);
+                let world = axis.normalize_or_zero() * along;
                 params.delta += frame.basis.transpose() * world;
             }
             Tool::Move | Tool::Transform => {
+                // #40: on the view-facing plane through the handle, so the
+                // handle stays under the pointer at any depth.
                 let scale = self.camera.distance / (r.height() as f64 * 0.9);
-                let world = (right * d.x as f64 - up * d.y as f64) * scale;
+                let world = self
+                    .camera
+                    .view_plane_drag(self.transform_handle_center(), start, p, r)
+                    .unwrap_or_else(|| (right * d.x as f64 - up * d.y as f64) * scale);
                 params.delta += frame.basis.transpose() * world;
             }
             Tool::Rotate => {

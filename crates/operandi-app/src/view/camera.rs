@@ -206,6 +206,10 @@ pub struct LightView {
     /// The light shown now.
     pub item: u64,
 }
+/// #40: past this |cos| between a handle's line and the pointer ray the
+/// line is too end-on to track exactly.
+const AXIS_DRAG_END_ON: f64 = 0.995;
+
 impl Camera {
     /// Camera view or Light view: the view is an item's eye, its lens comes
     /// from the item and navigating moves the item.
@@ -552,6 +556,50 @@ impl Camera {
     pub fn handle_zoom(&self, p: DVec3) -> f64 {
         self.screen_depth(p)
             .map_or(1., |depth| world_handle_zoom(depth, self.lens))
+    }
+    /// #40: how far along the line `origin + t·dir` a drag from `from` to
+    /// `to` goes, measured where the pointer ray passes closest to the line,
+    /// so a handle on that line stays under the pointer at any depth and
+    /// angle. `None` when the line points (almost) straight into the view
+    /// or the pointer runs past the line's vanishing point, where no point
+    /// of it is under the pointer; callers fall back to a screen-scaled drag.
+    pub fn axis_drag(
+        &self,
+        origin: DVec3,
+        dir: DVec3,
+        from: Pos2,
+        to: Pos2,
+        r: Rect,
+    ) -> Option<f64> {
+        let dir = dir.try_normalize()?;
+        let param = |q: Pos2| {
+            let (o, d) = self.ray(q, r);
+            if dir.dot(d).abs() > AXIS_DRAG_END_ON {
+                return None;
+            }
+            let w = origin - o;
+            let b = dir.dot(d);
+            let denom = 1. - b * b;
+            let t = (b * d.dot(w) - dir.dot(w)) / denom;
+            // The line's point must be in front of the eye.
+            self.screen_depth(origin + dir * t).map(|_| t)
+        };
+        let amount = param(to)? - param(from)?;
+        amount.is_finite().then_some(amount)
+    }
+    /// #40: a drag from `from` to `to` on the plane through `origin` that
+    /// faces the view, in world units: what moves a point at `origin` so
+    /// it stays under the pointer. `None` behind the eye.
+    pub fn view_plane_drag(&self, origin: DVec3, from: Pos2, to: Pos2, r: Rect) -> Option<DVec3> {
+        let forward = self.basis().3;
+        let hit = |q: Pos2| {
+            let (o, d) = self.ray(q, r);
+            let along = d.dot(forward);
+            (along.abs() > 1e-9).then(|| o + d * ((origin - o).dot(forward) / along))
+        };
+        self.screen_depth(origin)?;
+        let v = hit(to)? - hit(from)?;
+        v.is_finite().then_some(v)
     }
     pub fn ray(&self, p: Pos2, r: Rect) -> (DVec3, DVec3) {
         let (eye, right, up, forward) = self.basis();

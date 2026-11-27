@@ -818,6 +818,8 @@ mod tool_switch;
 mod tool_switch_drop;
 #[path = "tool_uvs.rs"]
 mod tool_uvs;
+#[path = "tools_arent_modal.rs"]
+mod tools_arent_modal;
 #[path = "topology_cleanup.rs"]
 mod topology_cleanup;
 #[path = "topology_pen.rs"]
