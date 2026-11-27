@@ -489,6 +489,8 @@ mod meshop_tidy_selops;
 mod meshop_tool_pipe_batch6;
 #[path = "meshop_uv_batch4.rs"]
 mod meshop_uv_batch4;
+#[path = "meshop_uv_transform.rs"]
+mod meshop_uv_transform;
 #[path = "meshop_vertex_maps_batch4.rs"]
 mod meshop_vertex_maps_batch4;
 #[path = "mid_tool_undo.rs"]

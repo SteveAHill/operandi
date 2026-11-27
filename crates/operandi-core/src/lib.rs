@@ -548,6 +548,8 @@ mod meshop_uv_flip;
 mod meshop_uv_relax;
 #[path = "meshops/meshop_uv_to_mesh.rs"]
 mod meshop_uv_to_mesh;
+#[path = "meshops/meshop_uv_transform.rs"]
+pub mod meshop_uv_transform;
 #[path = "meshops/meshop_uv_unwrap_relax.rs"]
 mod meshop_uv_unwrap_relax;
 #[path = "meshops/meshop_vertex_map_common.rs"]
