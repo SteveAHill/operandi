@@ -372,6 +372,38 @@ fn m15_lasso_skips_polygons_hidden_behind_a_surface() {
     );
     assert_eq!(a.editor.scene.selection.faces, vec![0, 1]);
 }
+/// UIC-306: Shift+Up/Down grow and shrink the selection with Move live,
+/// and the tool stays on (Jason, 2026-11-27).
+#[test]
+fn shift_arrows_grow_and_shrink_with_move_live() {
+    let mut a = box_app();
+    let ctx = Context::default();
+    let size = vec2(1440., 900.);
+    for _ in 0..2 {
+        draw(&mut a, &ctx, size, vec![]);
+    }
+    a.editor.scene.selection.mode = Mode::Polygon;
+    a.editor.scene.selection.faces = vec![0];
+    a.activate(Tool::Move);
+    assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+    let shift = |k| Event::Key {
+        key: k,
+        physical_key: None,
+        pressed: true,
+        repeat: false,
+        modifiers: Modifiers::SHIFT,
+    };
+    draw(&mut a, &ctx, size, vec![shift(Key::ArrowUp)]);
+    assert_eq!(a.editor.scene.selection.faces.len(), 5, "{}", a.status);
+    assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+    draw(&mut a, &ctx, size, vec![shift(Key::ArrowDown)]);
+    assert_eq!(a.editor.scene.selection.faces, vec![0], "{}", a.status);
+    assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+    // Other selection keys still wait for Drop.
+    draw(&mut a, &ctx, size, vec![key(Key::OpenBracket)]);
+    assert_eq!(a.editor.scene.selection.faces, vec![0]);
+}
+
 #[test]
 fn m15_up_arrow_selects_more_and_shift_cmd_click_fills() {
     let mut a = box_app();
