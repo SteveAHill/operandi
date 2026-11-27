@@ -493,6 +493,21 @@ fn create_answers(r: &mut Commands) {
         })
         .unwrap_or_else(|e| panic!("{e}"));
     }
+    // #46: Mesh Paint lights while any of its variants is on (it is the
+    // button the Alt variant sits on); each variant lights by its own name.
+    r.answer("Mesh Paint", |a, _| {
+        CommandState::lit(matches!(
+            a.utility,
+            Some(create_utility::Utility::MeshPaint(_))
+        ))
+    })
+    .unwrap_or_else(|e| panic!("{e}"));
+    for name in ["Mesh Paint Instance", "Mesh Paint Instancer"] {
+        r.answer(name, |a, c| {
+            CommandState::lit(a.utility.is_some_and(|u| u.label() == c.entry.name))
+        })
+        .unwrap_or_else(|e| panic!("{e}"));
+    }
 }
 
 /// The slide tool of the selection mode (the Edit tab's Slide).
