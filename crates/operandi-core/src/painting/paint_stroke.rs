@@ -454,6 +454,10 @@ struct Texel {
 
 /// Screen bins for finding the texels under a dab.
 const CELL: f64 = 16.;
+/// How far (points) Smudge and Clone look for the texel under a screen
+/// point: half a cell, so texels up to about 11 points apart (a small
+/// image seen close up) still have one in reach. Provisional (PNT-Q74).
+const SAMPLE_REACH: f64 = CELL / 2.;
 
 /// A paint stroke in progress (PNT-45..60).
 pub struct PaintStroke {
@@ -488,6 +492,10 @@ pub struct PaintStroke {
     source: HashMap<u32, [f32; 4]>,
     /// Smudge: the last dab's centre (the drag direction, PNT-90).
     last_center: Option<DVec2>,
+    /// Smudge: where the colour was last pulled from, and how far apart
+    /// the texels sit on screen (measured at the first dab). See `smudge`.
+    smudge_from: Option<DVec2>,
+    texel_spacing: Option<f64>,
     /// The tip beyond its basic profile (paint_tips.rs, stage 4).
     pub extra: crate::paint_tips::TipExtra,
     /// How far along the stroke the dabs have come, in tip radii (Roller).
@@ -624,6 +632,8 @@ impl PaintStroke {
             clone_offset: None,
             source: HashMap::new(),
             last_center: None,
+            smudge_from: None,
+            texel_spacing: None,
             extra: crate::paint_tips::TipExtra::Basic,
             travel: 0.,
             inks: Default::default(),
@@ -667,6 +677,8 @@ impl PaintStroke {
             clone_offset: None,
             source: HashMap::new(),
             last_center: None,
+            smudge_from: None,
+            texel_spacing: None,
             extra: crate::paint_tips::TipExtra::Basic,
             travel: 0.,
             inks: Default::default(),
@@ -1026,13 +1038,31 @@ impl PaintStroke {
     /// PNT-90: each texel takes the colour that was a step back along the
     /// drag, mixed by the dab.
     fn smudge(&mut self, center: DVec2, hits: &[(u32, f32)]) {
-        let Some(last) = self.last_center else {
+        let Some(from) = self.smudge_from.or(self.last_center) else {
             return;
         };
-        let delta = center - last;
+        let delta = center - from;
         if delta.length_squared() < 1e-12 {
             return;
         }
+        // Dabs come every couple of points, but a small image seen close up
+        // has its texels further apart than that, and pulling colour from
+        // under the dab itself moves nothing (test drive 2026-11-26). So the
+        // pull waits until the drag has gone at least one texel; with dense
+        // texels that is every dab, as before.
+        let spacing = match self.texel_spacing {
+            Some(s) => s,
+            None => {
+                let s = self.measure_texel_spacing(hits);
+                self.texel_spacing = Some(s);
+                s
+            }
+        };
+        if delta.length() < spacing {
+            self.smudge_from = Some(from);
+            return;
+        }
+        self.smudge_from = Some(center);
         let opacity = self.settings.opacity as f32;
         let before = self.current.clone();
         for &(i, dab) in hits {
@@ -1045,6 +1075,36 @@ impl PaintStroke {
             let out: [f32; 4] = std::array::from_fn(|c| cur[c] + (src[c] - cur[c]) * k);
             self.write(t.pixel, out);
         }
+    }
+
+    /// How far apart neighbouring texels sit on screen near the dab's
+    /// texels `hits` (median of each one's nearest other texel, up to 32 of
+    /// them); never under one point.
+    fn measure_texel_spacing(&self, hits: &[(u32, f32)]) -> f64 {
+        let mut nearest: Vec<f64> = hits
+            .iter()
+            .take(32)
+            .filter_map(|&(i, _)| {
+                let p = self.texels[i as usize].screen;
+                let (cx, cy) = ((p.x / CELL).floor() as i32, (p.y / CELL).floor() as i32);
+                let mut best = f64::INFINITY;
+                for y in cy - 1..=cy + 1 {
+                    for x in cx - 1..=cx + 1 {
+                        for &j in self.cells.get(&(x, y)).map(Vec::as_slice).unwrap_or(&[]) {
+                            if j != i {
+                                best = best.min(self.texels[j as usize].screen.distance(p));
+                            }
+                        }
+                    }
+                }
+                best.is_finite().then_some(best)
+            })
+            .collect();
+        if nearest.is_empty() {
+            return 1.;
+        }
+        nearest.sort_by(f64::total_cmp);
+        nearest[nearest.len() / 2].max(1.)
     }
 
     /// PNT-91, 92: a small image-space Gaussian (radius 2 texels × Density)
@@ -1091,7 +1151,10 @@ impl PaintStroke {
     }
 
     /// The colour of `image` where the view shows screen point `q`: the
-    /// nearest reachable, visible texel within two points.
+    /// nearest reachable, visible texel within `SAMPLE_REACH` points.
+    /// Zoomed in on a small image the texels sit several points apart, so
+    /// a two-point reach found none and Smudge and Clone painted nothing
+    /// (test drive 2026-11-26).
     fn sample(&mut self, image: &PaintImage, q: DVec2) -> Option<[f32; 4]> {
         if self.uv.is_some() {
             return self.uv_pixel(q).map(|p| image.get(p as usize));
@@ -1106,7 +1169,7 @@ impl PaintStroke {
                 };
                 for &i in list {
                     let d = self.texels[i as usize].screen.distance_squared(q);
-                    if d <= 4. && best.is_none_or(|(b, _)| d < b) {
+                    if d <= SAMPLE_REACH * SAMPLE_REACH && best.is_none_or(|(b, _)| d < b) {
                         best = Some((d, i));
                     }
                 }

@@ -614,6 +614,9 @@ mod painting_brush;
 #[path = "painting_ui/painting_brush_tests.rs"]
 mod painting_brush_tests;
 #[cfg(all(test, feature = "painting"))]
+#[path = "painting_ui/painting_drive_tests.rs"]
+mod painting_drive_tests;
+#[cfg(all(test, feature = "painting"))]
 #[path = "painting_ui/painting_highlight_tests.rs"]
 mod painting_highlight_tests;
 #[cfg(feature = "painting")]
