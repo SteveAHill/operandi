@@ -22,6 +22,8 @@ The **Select** tool tab holds every command that changes the selection. Each but
 | **Symmetrical** |  | Selects the mirror partners of the selection (with **Symmetry** on). |
 | **Lazy Selection** |  | On: a click picks the nearest point or edge from further away. |
 
+**Shift+Up Arrow** and **Shift+Down Arrow** grow or shrink the selection while **Move**, **Rotate**, **Scale** or **Transform** is active; the tool stays on, and the next drag moves the new selection.
+
 The rest of the tab has pages of its own: [Loops and rings](loops.md), [Between and shortest path](between-and-paths.md), [Select by shape](select-by-shape.md) and [Selection sets](selection-sets.md).
 
 Two settings sit in the tab too: the lasso's shape (freeform, rectangle, circle or ellipse), and which polygon tag the **Materials** mode selects by.
