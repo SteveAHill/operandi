@@ -605,13 +605,13 @@ fn material_and_position_refuse_armed_reduction_without_changing_state() {
     a.execute("poly.setMaterial");
     assert!(a.set_material.is_none());
     assert!(a.editor == before);
-    a.execute("poly.setMaterial {Warm Clay}");
-    assert!(a.editor == before);
     a.execute("vert.set");
     assert!(a.set_position.is_none());
     assert!(a.editor == before);
-    a.execute("vert.set y 2m false false");
-    assert!(a.editor == before);
+    // UIC-307: with its value given the command runs; Reduction settles
+    // and arms again.
+    a.execute("poly.setMaterial {Warm Clay}");
+    assert!(a.editor.reduction.is_some(), "{}", a.status);
 }
 
 #[test]

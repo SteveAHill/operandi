@@ -489,16 +489,14 @@ fn a_refused_load_leaves_the_scene_and_history_alone() {
             },
         )
         .unwrap();
-    // A live tool must be dropped first.
+    // UIC-307: a live tool settles first and the preset loads.
     let mut target = mesh_editor();
     target
         .dispatch(Command::Activate(crate::Tool::Move))
         .unwrap();
-    let before = target.scene.clone();
     let undo = target.history.undo.len();
-    assert!(load(&mut target, &path, None).is_err());
-    assert_eq!(target.scene, before);
-    assert_eq!(target.history.undo.len(), undo);
+    assert!(load(&mut target, &path, None).is_ok());
+    assert!(target.history.undo.len() > undo);
     // A broken file is an error, not a panic.
     std::fs::write(dir.join("bad.oppreset"), b"{nope").unwrap();
     assert!(persistence::load_preset(&dir.join("bad.oppreset")).is_err());
