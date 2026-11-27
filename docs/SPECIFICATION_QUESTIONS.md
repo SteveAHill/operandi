@@ -10035,6 +10035,18 @@ changed as noted.
   where rounded strips meet: Default (the default), Neutral, Uniform, Pinch.
   Patch and Radial are built but hidden until finished.
   `tool.attr edge.bevel miteringStyle` (`cornerPattern` still works).
+- **EBC-Q-RND1 (open; forum's oval corners, 2026-11-27).** Round profiles
+  between unequal sides. Start: a 24-sided cylinder, its whole cap rim
+  selected, Edge Bevel Round, Inset 0.05, Loop Slide on (default). EBC-B3-03
+  (measured at 120° and 60°) puts the cap's side of the strip at the sum of
+  the two rim directions × Inset, which at the rim's 165° corners is only
+  0.013 in from the rim, while the side wall's point slides the full 0.05
+  down. No circle touches both sides there, so the profile is the circular
+  arc stretched to fit (an ellipse, 3.9 : 1) and reads as oval. Unclear: is
+  that the reference result on a many-sided cap, or does EBC-B3-03's sum
+  stop applying at shallow corners? Built as measured; Loop Slide off gives
+  a round profile. Where both side points slid the same distance along
+  their edges (hexagon corners), the profile is now a true circle.
 
 ## MeshBlend B1 (2026-11-24, branch claude/project-thread-20fok5, provisional)
 
