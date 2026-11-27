@@ -136,11 +136,11 @@ fn join_coincident(mut mesh: Mesh, size: f64) -> Mesh {
     // Only the first ring (the profile's own points) can be landed on, so
     // each point is checked against those few.
     let first = PROFILE_SIDES.min(n);
-    for i in first..n {
+    for (i, slot) in map.iter_mut().enumerate().skip(first) {
         if let Some(j) =
             (0..first).find(|&j| (mesh.vertices[i] - mesh.vertices[j]).length() <= tolerance)
         {
-            map[i] = j as u32;
+            *slot = j as u32;
         }
     }
     if map.iter().enumerate().all(|(i, &m)| m as usize == i) {
