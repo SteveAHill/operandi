@@ -323,6 +323,8 @@ mod item_tabs_tier3;
 mod item_transforms_measured;
 #[path = "join_symmetry.rs"]
 mod join_symmetry;
+#[path = "kits.rs"]
+mod kits;
 #[path = "last_mesh.rs"]
 mod last_mesh;
 #[path = "last_mesh_delete.rs"]
