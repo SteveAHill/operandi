@@ -225,8 +225,7 @@ impl TreeHooks<u64> for Hooks<'_> {
             return;
         };
         self.app.statistics.picked = Some(key);
-        let idle = self.app.editor.live.is_none();
-        let gate = crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE);
+        let gate = None;
         // UIC-144: the row's own menu. Named things first (spec §7).
         if row.is_named() {
             if ui.gated(gate, Button::new("Rename…")).clicked() {

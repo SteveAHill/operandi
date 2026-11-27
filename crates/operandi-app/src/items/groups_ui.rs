@@ -173,16 +173,12 @@ impl Operandi {
     pub(super) fn groups_section(&mut self, ui: &mut Ui, _area: Rect) {
         let ctx = ui.ctx().clone();
         let picked = self.picked_group(&ctx);
-        let idle = self.editor.live.is_none();
         let mut state = std::mem::take(&mut self.groups_tree);
         let mut new_group = false;
         tree_list::tool_row(ui, &mut state, true, |ui, side| {
             if side == tree_list::Side::Left {
                 new_group = ui
-                    .gated(
-                        crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE),
-                        Button::new("New Group"),
-                    )
+                    .gated(None, Button::new("New Group"))
                     .on_hover_text("A new group holding the selected items")
                     .clicked();
             }
@@ -204,7 +200,7 @@ impl Operandi {
             } else {
                 Selected::No
             };
-            row.renamable = idle;
+            row.renamable = true;
             row.style.empty = members.is_empty();
             row.tip = Some(format!(
                 "{} item{}",

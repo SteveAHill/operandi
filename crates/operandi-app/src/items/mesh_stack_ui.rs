@@ -635,7 +635,6 @@ type Convert = fn(f64) -> f64;
 
 /// Right-click menus of the list.
 struct Hooks {
-    idle: bool,
     picked: Option<MenuPick>,
 }
 #[derive(Clone, Copy)]
@@ -646,7 +645,7 @@ enum MenuPick {
 }
 impl TreeHooks<OpKey> for Hooks {
     fn has_row_menu(&self, _key: OpKey) -> bool {
-        self.idle
+        true
     }
     fn row_menu(&mut self, ui: &mut Ui, key: OpKey, _rename: &mut dyn FnMut()) {
         match key {
@@ -691,7 +690,6 @@ impl TreeHooks<OpKey> for Hooks {
 impl Operandi {
     /// The Mesh Stack panel body (registered in panel_registry.rs).
     pub(super) fn mesh_stack_section(&mut self, ui: &mut Ui, _area: Rect) {
-        let idle = self.editor.live.is_none();
         let Some(item) = self.editor.scene.active().filter(|i| i.is_mesh()).cloned() else {
             ui.add_space(6.);
             crate::form::rows::note(ui, "Select a mesh item to see its Mesh Stack.");
@@ -705,7 +703,7 @@ impl Operandi {
         tree_list::tool_row(ui, &mut state, false, |ui, side| match side {
             tree_list::Side::Left => {
                 ui.gated_ui(
-                    crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE),
+                    None,
                     |ui| {
                         let b = ui.button("Add Operator…").on_hover_text(
                             "Add a mesh operation above the selected row (on top when none is \
@@ -741,7 +739,7 @@ impl Operandi {
         for (i, op) in ops.iter().enumerate().rev() {
             let mut row = TreeRow::new(OpKey::Op(item.id, op.id), 0, labels[i].clone(), 2);
             row.icon = RowIcon::Icon(crate::icons::Icon::TreeMesh);
-            row.draggable = idle;
+            row.draggable = true;
             row.selected = if row_sel
                 == Some(OpRow {
                     item: item.id,
@@ -796,7 +794,7 @@ impl Operandi {
             if editing_base { " · being edited" } else { "" }
         ));
         rows.push(base);
-        let mut hooks = Hooks { idle, picked: None };
+        let mut hooks = Hooks { picked: None };
         let mut editors = std::mem::take(&mut self.text_editors);
         let events = tree_list::show(ui, &spec(), &mut state, &rows, &mut hooks, &mut editors);
         self.text_editors = editors;
