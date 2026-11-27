@@ -10156,3 +10156,7 @@ Built: what a press off the handle does under each Action Center (`ActionContext
 - ACR-Q19 Item mode is unchanged; its presses come with the Item-mode step.
 - ACR-Q20 In a UV view with a UV tool on, Element picks the UV point or edge under every click (UVT-133 was one click).
 
+
+## Solid Sketch handles (#45, 2026-11-27)
+
+- **SSH-Q1 (Jason, 2026-11-27, answered on #45).** Red, green and blue squares size the node along X, Y and Z; Twist has its own dark green handle, dragged left and right. Replaces spec 5.2's green = Twist. *Built.* Provisional: the Twist dot sits 18 points beyond the green square on screen (straight up when Y is seen end-on), and a drag turns half a degree per point, right one way and left the other.
