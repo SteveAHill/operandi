@@ -1050,7 +1050,9 @@ pub fn available(action: &str, mode: operandi_core::Mode, live: bool) -> bool {
         "Detriangulate" => !live,
         "Boolean" | "Solid Drill" | "Axis Drill" => !live,
         "Remesh" | "Automatic Retopology" => !live,
-        "New Mesh" => !live,
+        // UIC-307: N works with a tool on; the editor settles the tool and
+        // starts it again on the new mesh (tool_yield.rs).
+        "New Mesh" => true,
         // Polygon context only; an active tool is refused by the shared
         // operation with feedback rather than silently ignored here.
         "Remove" => mode == operandi_core::Mode::Polygon,

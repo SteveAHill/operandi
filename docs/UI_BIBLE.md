@@ -352,8 +352,23 @@ Version 1, 2026-11-07. Behaviour only. Open questions and exceptions are tracked
   next step, and the tool starts again on the new selection with a zero
   offset and its handle placed by the current Action Center, as when
   another item is clicked in the Items tree. Clicks in a 3D view still
-  never select while a tool is on (UIC-78); other tools (Bevel, Inset,
-  ...) still need Drop first. [OP] (Jason 2026-11-27.)
+  never select while a tool is on (UIC-78); other tools follow UIC-307.
+  [OP] (Jason 2026-11-27.)
+- **UIC-307** Tools aren't modal. While a tool is on, every panel, menu,
+  Properties field, toolbar button and shortcut command still works; a
+  tool never makes the rest of the window ignore input. If the tool hasn't
+  changed anything yet, the command runs and the tool stays on. If it has,
+  its edit settles first as its own undo step, the command runs as the
+  next step, and the tool stays on and starts again from zero on what is
+  selected now (as in UIC-306). A command that makes a new mesh item (N,
+  Add Item) moves the tool to the new mesh; one that makes a non-mesh item
+  (locator, camera, light) leaves the tool on the mesh it was on. Only the
+  3D view is reserved: clicks there still never select while a tool is on
+  (UIC-78) and drags still drive the tool (UIC-76). A command that can't
+  run with the tool on drops the tool first, and the status line says so.
+  Builders don't add a "drop the tool first" guard to a panel or command;
+  if one seems needed, log a spec question. [OP] (Jason 2026-11-27, from
+  issue #36.)
 
 ## 8. Dialogs (command option boxes)
 

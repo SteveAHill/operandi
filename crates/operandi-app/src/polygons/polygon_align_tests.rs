@@ -274,14 +274,13 @@ fn refusal_keeps_scene_history_redo_and_shows_no_acknowledgment() {
     );
     assert!(a.align_notice.is_none());
     assert!(a.status.contains("Select polygons"), "{}", a.status);
-    // An active tool is not dropped or confirmed by Align.
+    // UIC-307: an armed Reduction settles, Align runs, and Reduction arms
+    // again.
     a.editor.scene.selection.faces = vec![0, 1];
     a.run(Command::ArmReduction);
     assert!(a.editor.reduction.is_some(), "{}", a.status);
-    let scene = a.editor.scene.clone();
     a.execute("poly.align");
-    assert_eq!(a.editor.scene, scene);
-    assert!(a.editor.reduction.is_some());
+    assert!(a.editor.reduction.is_some(), "{}", a.status);
     assert!(a.align_notice.is_none());
 }
 
