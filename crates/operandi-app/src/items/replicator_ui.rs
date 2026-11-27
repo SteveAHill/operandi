@@ -53,138 +53,146 @@ impl Operandi {
             .map(|i| (i.id, i.name.clone()))
             .collect();
         crate::form::rows::section(ui, REPLICATOR_TAB, true, |ui| {
-            ui.gated_ui(
-                crate::unavailable::unless(
-                    self.editor.live.is_none(),
-                    crate::unavailable::TOOL_ACTIVE,
-                ),
-                |ui| {
-                    let source: Vec<(u64, &str)> =
-                        meshes.iter().map(|(id, n)| (*id, n.as_str())).collect();
-                    crate::option_row::choice(
+            ui.gated_ui(None, |ui| {
+                let source: Vec<(u64, &str)> =
+                    meshes.iter().map(|(id, n)| (*id, n.as_str())).collect();
+                crate::option_row::choice(
+                    ui,
+                    "replicator-point-source",
+                    "Point Source",
+                    &mut next.point_source,
+                    &source,
+                )
+                .response
+                .on_hover_text("The mesh whose points place the copies");
+                if left_out > 0 {
+                    // Never a silent cut (hidden-limits A4).
+                    crate::form::rows::note(
                         ui,
-                        "replicator-point-source",
-                        "Point Source",
-                        &mut next.point_source,
-                        &source,
-                    )
-                    .response
-                    .on_hover_text("The mesh whose points place the copies");
-                    if left_out > 0 {
-                        // Never a silent cut (hidden-limits A4).
-                        crate::form::rows::note(
-                            ui,
-                            &format!(
-                                "Shows the first {} copies; {} points of the Point Source get none.",
-                                operandi_core::polygon_subdivide::group_thousands(
-                                    operandi_core::replicator::MAX_COPIES as u64
-                                ),
-                                operandi_core::polygon_subdivide::group_thousands(left_out as u64)
+                        &format!(
+                            "Shows the first {} copies; {} points of the Point Source get none.",
+                            operandi_core::polygon_subdivide::group_thousands(
+                                operandi_core::replicator::MAX_COPIES as u64
                             ),
-                        );
-                    }
-                    let protos: Vec<(u64, &str)> =
-                        prototypes.iter().map(|(id, n)| (*id, n.as_str())).collect();
-                    crate::option_row::choice(
-                        ui,
-                        "replicator-prototype",
-                        "Prototype",
-                        &mut next.prototype,
-                        &protos,
-                    )
-                    .response
-                    .on_hover_text(
-                        "The item copied; with a group, each point picks one of its meshes at random",
+                            operandi_core::polygon_subdivide::group_thousands(left_out as u64)
+                        ),
                     );
-                    crate::option_row::check(ui, "Use Source Transforms", &mut next.use_source_transforms)
-                        .on_hover_text("Each copy also takes the prototype's own rotation and scale");
-                    crate::option_row::check(ui, "Hierarchy", &mut next.hierarchy)
-                        .on_hover_text("Copies include the prototype's children");
-                    let vector = |ui: &mut Ui, label: &str, v: &mut DVec3, suffix: &str, hint: &str| {
-                        for (axis, value) in [("X", &mut v.x), ("Y", &mut v.y), ("Z", &mut v.z)] {
-                            ui.horizontal(|ui| {
-                                crate::option_row::label(ui, &format!("{label} {axis}"));
-                                crate::option_row::fill(ui, |ui| {
-                                    ui.add(
-                                        crate::numeric_tab::DragValue::new(value)
-                                            .speed(0.1)
-                                            .suffix(suffix),
-                                    )
-                                    .on_hover_text(hint);
-                                });
-                            });
-                        }
-                    };
-                    vector(
-                        ui,
-                        "Random Position",
-                        &mut next.random_position,
-                        " m",
-                        "Each copy moves by up to this much either way",
-                    );
-                    vector(
-                        ui,
-                        "Random Rotation",
-                        &mut next.random_rotation,
-                        "°",
-                        "Each copy turns by up to this much either way",
-                    );
-                    vector(
-                        ui,
-                        "Random Scale",
-                        &mut next.random_scale,
-                        " %",
-                        "Each copy's size varies by up to this much either way",
-                    );
-                    crate::option_row::check(ui, "Uniform Scale", &mut next.uniform_scale)
-                        .on_hover_text("One random scale for all three axes");
-                    let number = |ui: &mut Ui, label: &str, v: &mut f64, range: std::ops::RangeInclusive<f64>, hint: &str| {
+                }
+                let protos: Vec<(u64, &str)> =
+                    prototypes.iter().map(|(id, n)| (*id, n.as_str())).collect();
+                crate::option_row::choice(
+                    ui,
+                    "replicator-prototype",
+                    "Prototype",
+                    &mut next.prototype,
+                    &protos,
+                )
+                .response
+                .on_hover_text(
+                    "The item copied; with a group, each point picks one of its meshes at random",
+                );
+                crate::option_row::check(
+                    ui,
+                    "Use Source Transforms",
+                    &mut next.use_source_transforms,
+                )
+                .on_hover_text("Each copy also takes the prototype's own rotation and scale");
+                crate::option_row::check(ui, "Hierarchy", &mut next.hierarchy)
+                    .on_hover_text("Copies include the prototype's children");
+                let vector = |ui: &mut Ui, label: &str, v: &mut DVec3, suffix: &str, hint: &str| {
+                    for (axis, value) in [("X", &mut v.x), ("Y", &mut v.y), ("Z", &mut v.z)] {
                         ui.horizontal(|ui| {
-                            crate::option_row::label(ui, label);
+                            crate::option_row::label(ui, &format!("{label} {axis}"));
                             crate::option_row::fill(ui, |ui| {
                                 ui.add(
-                                    crate::numeric_tab::DragValue::new(v)
-                                        .range(range)
-                                        .speed(0.5)
-                                        .suffix(" %"),
+                                    crate::numeric_tab::DragValue::new(value)
+                                        .speed(0.1)
+                                        .suffix(suffix),
                                 )
                                 .on_hover_text(hint);
                             });
                         });
-                    };
-                    number(ui, "Base Scale", &mut next.base_scale, 0.0..=10_000., "Every copy's size");
-                    crate::option_row::check(ui, "Snap Rotation", &mut next.snap_rotation)
-                        .on_hover_text("Random rotation snaps to whole 90° steps (provisional, RP-Q1)");
-                    number(
-                        ui,
-                        "Density",
-                        &mut next.density,
-                        0.0..=100.,
-                        "Share of points that get a copy in renders and exports",
-                    );
-                    number(
-                        ui,
-                        "Display Density",
-                        &mut next.display_density,
-                        0.0..=100.,
-                        "Share of the copies drawn in the viewport",
-                    );
+                    }
+                };
+                vector(
+                    ui,
+                    "Random Position",
+                    &mut next.random_position,
+                    " m",
+                    "Each copy moves by up to this much either way",
+                );
+                vector(
+                    ui,
+                    "Random Rotation",
+                    &mut next.random_rotation,
+                    "°",
+                    "Each copy turns by up to this much either way",
+                );
+                vector(
+                    ui,
+                    "Random Scale",
+                    &mut next.random_scale,
+                    " %",
+                    "Each copy's size varies by up to this much either way",
+                );
+                crate::option_row::check(ui, "Uniform Scale", &mut next.uniform_scale)
+                    .on_hover_text("One random scale for all three axes");
+                let number = |ui: &mut Ui,
+                              label: &str,
+                              v: &mut f64,
+                              range: std::ops::RangeInclusive<f64>,
+                              hint: &str| {
                     ui.horizontal(|ui| {
-                        crate::option_row::label(ui, "Seed");
+                        crate::option_row::label(ui, label);
                         crate::option_row::fill(ui, |ui| {
-                            ui.add(crate::numeric_tab::DragValue::new(&mut next.seed).speed(1.))
-                                .on_hover_text("Drives every random choice, so the copies repeat");
+                            ui.add(
+                                crate::numeric_tab::DragValue::new(v)
+                                    .range(range)
+                                    .speed(0.5)
+                                    .suffix(" %"),
+                            )
+                            .on_hover_text(hint);
                         });
                     });
-                    if ui
-                        .button("Freeze Instancer")
-                        .on_hover_text("Turn the copies into instance items in the group")
-                        .clicked()
-                    {
-                        self.execute("Freeze Instancer");
-                    }
-                },
-            );
+                };
+                number(
+                    ui,
+                    "Base Scale",
+                    &mut next.base_scale,
+                    0.0..=10_000.,
+                    "Every copy's size",
+                );
+                crate::option_row::check(ui, "Snap Rotation", &mut next.snap_rotation)
+                    .on_hover_text("Random rotation snaps to whole 90° steps (provisional, RP-Q1)");
+                number(
+                    ui,
+                    "Density",
+                    &mut next.density,
+                    0.0..=100.,
+                    "Share of points that get a copy in renders and exports",
+                );
+                number(
+                    ui,
+                    "Display Density",
+                    &mut next.display_density,
+                    0.0..=100.,
+                    "Share of the copies drawn in the viewport",
+                );
+                ui.horizontal(|ui| {
+                    crate::option_row::label(ui, "Seed");
+                    crate::option_row::fill(ui, |ui| {
+                        ui.add(crate::numeric_tab::DragValue::new(&mut next.seed).speed(1.))
+                            .on_hover_text("Drives every random choice, so the copies repeat");
+                    });
+                });
+                if ui
+                    .button("Freeze Instancer")
+                    .on_hover_text("Turn the copies into instance items in the group")
+                    .clicked()
+                {
+                    self.execute("Freeze Instancer");
+                }
+            });
         });
         if next != current && next.validate().is_ok() {
             self.run(Command::SetReplicator {

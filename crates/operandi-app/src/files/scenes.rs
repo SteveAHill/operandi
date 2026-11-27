@@ -1064,11 +1064,7 @@ fn hierarchy_delete_status_describes_only_the_committed_reparenting() {
     let ordinary_world = before.world_matrix(ordinary).unwrap();
     a.activate(Tool::Move);
     assert!(a.editor_tool_active(), "{}", a.status);
-    a.delete_items_checked(Some(ChildrenOnDelete::MoveToRoot));
-    assert_eq!(a.status, "Drop or Cancel the active tool first");
-    assert_eq!(a.editor.scene, before);
-
-    a.run(Command::Cancel);
+    // UIC-307: Move settles; the delete runs with the tool on.
     a.delete_items_checked(Some(ChildrenOnDelete::MoveToRoot));
     assert!(a.status.starts_with("Rotated kept its own transform"));
     assert!(!a.status.contains("Ordinary"));

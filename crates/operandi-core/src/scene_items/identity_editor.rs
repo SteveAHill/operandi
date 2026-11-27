@@ -110,6 +110,26 @@ impl Editor {
         cmd: Command,
         report: &mut Option<crate::history_completion::HistoryReport>,
     ) -> Result<()> {
+        // UIC-307: a top-level command an open tool would refuse settles
+        // the tool, runs, and starts the tool again (tool_yield.rs).
+        if self.dispatch_depth == 0
+            && let Some(restart) = self.restart_command()
+        {
+            let retry = cmd.clone();
+            return match self.dispatch_transaction_once(cmd, report) {
+                Err(e) if crate::tool_yield::idle_refusal(&e) => {
+                    self.yield_tool_for(restart, retry)
+                }
+                result => result,
+            };
+        }
+        self.dispatch_transaction_once(cmd, report)
+    }
+    fn dispatch_transaction_once(
+        &mut self,
+        cmd: Command,
+        report: &mut Option<crate::history_completion::HistoryReport>,
+    ) -> Result<()> {
         // Refuse invalid names before staging can allocate any identities.
         if let Command::NewNamedMesh(name) = &cmd
             && (name.trim().is_empty() || name.len() > 1024)

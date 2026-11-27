@@ -857,13 +857,7 @@ impl Operandi {
         // else just the clicked one; one undo step.
         let locked = item.is_locked();
         if ui
-            .gated(
-                crate::unavailable::unless(
-                    self.editor.live.is_none(),
-                    crate::unavailable::TOOL_ACTIVE,
-                ),
-                Button::new(if locked { "Unlock" } else { "Lock" }),
-            )
+            .gated(None, Button::new(if locked { "Unlock" } else { "Lock" }))
             .clicked()
         {
             let mut items = self.editor.scene.selected_items();
@@ -880,30 +874,12 @@ impl Operandi {
             });
             ui.close();
         }
-        if ui
-            .gated(
-                crate::unavailable::unless(
-                    self.editor.live.is_none(),
-                    crate::unavailable::TOOL_ACTIVE,
-                ),
-                Button::new("Delete Item"),
-            )
-            .clicked()
-        {
+        if ui.gated(None, Button::new("Delete Item")).clicked() {
             self.run(Command::SelectItem(Some(item.id)));
             self.request_delete();
             ui.close();
         }
-        if ui
-            .gated(
-                crate::unavailable::unless(
-                    self.editor.live.is_none(),
-                    crate::unavailable::TOOL_ACTIVE,
-                ),
-                Button::new("Rename…"),
-            )
-            .clicked()
-        {
+        if ui.gated(None, Button::new("Rename…")).clicked() {
             self.run(Command::SelectItem(Some(item.id)));
             self.name = item.name.clone();
             self.rename_item = Some(item.id);

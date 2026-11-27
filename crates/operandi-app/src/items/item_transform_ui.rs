@@ -32,7 +32,7 @@ impl Operandi {
         // Greyed with a reason (unavailable.rs): a live tool, or every
         // selected item locked; a mixed selection skips the locked ones.
         let gate = crate::unavailable::first([
-            crate::unavailable::unless(self.editor.live.is_none(), crate::unavailable::TOOL_ACTIVE),
+            None,
             crate::unavailable::unless(!all_locked, crate::unavailable::LOCKED),
         ]);
         let mut picked: Option<(&str, TransformReset)> = None;

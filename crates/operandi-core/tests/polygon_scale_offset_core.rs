@@ -552,7 +552,10 @@ fn live_tool_and_pen_owners_refuse_without_consuming_their_state() {
     let mut e = editor_with(square_mesh(), vec![0]);
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     assert!(e.live.is_some());
-    assert_refused(e, 0.25, "active tool");
+    // UIC-307: a live tool no longer refuses; it settles, the offset runs,
+    // and the tool starts again.
+    offset(&mut e, 0.25).unwrap();
+    assert_eq!(e.live.as_ref().map(|l| l.tool), Some(Tool::Bevel));
     // Pen drafts on an empty second mesh; the square stays selected data.
     let mut e = editor_with(square_mesh(), vec![0]);
     e.dispatch(Command::NewMesh).unwrap();

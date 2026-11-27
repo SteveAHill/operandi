@@ -717,6 +717,8 @@ pub mod multi_active;
 pub mod multi_tools;
 #[path = "transforms/multi_transform.rs"]
 pub mod multi_transform;
+#[path = "tools/tool_yield.rs"]
+mod tool_yield;
 pub use multi_active::ComponentSelection;
 #[path = "scene_items/scene.rs"]
 pub mod scene;
