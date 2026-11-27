@@ -20,6 +20,7 @@ impl Operandi {
         }
     }
     pub(super) fn all_handles(&self, r: Rect) -> Vec<(usize, Pos2, Pos2, String)> {
+        self.handle_origin.set(None);
         let Some(l) = &self.editor.live else {
             // #37: a drawn Cone, Ellipsoid, Torus, Capsule or Text.
             return self.session_handles(r);
@@ -69,6 +70,7 @@ impl Operandi {
             if radial.radius.max_element() > 0.
                 && let Some((center, _)) = self.camera.project(l.params.position, r)
             {
+                self.handle_origin.set(Some(l.params.position));
                 let s = s_at(l.params.position);
                 for axis in 0..3 {
                     let direction = [DVec3::X, DVec3::Y, DVec3::Z][axis];
@@ -285,6 +287,7 @@ impl Operandi {
             origin
         };
         let s = s_at(origin);
+        self.handle_origin.set(Some(origin));
         let mut out = Vec::new();
         for axis in 0..card.kind.axis_count() {
             if l.tool == Tool::Rotate {
@@ -532,10 +535,26 @@ impl Operandi {
             if self.editor.action_context.axis == AxisOrientation::Selection
                 && let Some(frame) = l.action_frame
             {
+                // The Shift arrow follows the selection's average normal,
+                // as without Selection axes; the Selection frame's Z when
+                // the normals cancel (A-SEL puts a flat selection's normal
+                // on Z; it was on Y before AC-RULES v6). The Inset arrow is
+                // the frame's X, the selection's long direction, laid
+                // square to it.
+                let normal = self
+                    .bevel_normal(operandi_core::NormalOf::Polygons)
+                    .unwrap_or(frame.basis.z_axis);
                 return if axis == 0 {
-                    frame.basis.y_axis
+                    normal
                 } else {
-                    frame.basis.z_axis
+                    frame
+                        .basis
+                        .x_axis
+                        .reject_from(normal)
+                        .try_normalize()
+                        .unwrap_or_else(|| {
+                            frame.basis.y_axis.reject_from(normal).normalize_or_zero()
+                        })
                 };
             }
             // Existing face-local Bevel roles; freeze directions from stage base.

@@ -106,124 +106,120 @@ impl Operandi {
             ui.weak("Select an item");
             return;
         };
-        let idle = self.editor.live.is_none();
         let locked = self
             .editor
             .scene
             .active()
             .is_some_and(operandi_core::Item::is_locked);
-        ui.gated_ui(
-            crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE),
-            |ui| {
-                ui.spacing_mut().item_spacing.y = 2.;
-                let visible: Vec<_> = values.iter().map(|c| c.display.visible).collect();
-                let options = DisplayVisible::ALL.map(|v| (v, v.label()));
-                ui.gated_ui(
-                    crate::unavailable::unless(!locked, crate::unavailable::LOCKED),
-                    |ui| {
-                        self.common_choice(
-                            ui,
-                            "item-display-visible",
-                            "Visible",
-                            &visible,
-                            &options,
-                            ItemCommonEdit::Visible,
-                        )
-                        .on_hover_text(
-                            "How the item is drawn in 3D views (never how it renders): Default \
+        ui.gated_ui(None, |ui| {
+            ui.spacing_mut().item_spacing.y = 2.;
+            let visible: Vec<_> = values.iter().map(|c| c.display.visible).collect();
+            let options = DisplayVisible::ALL.map(|v| (v, v.label()));
+            ui.gated_ui(
+                crate::unavailable::unless(!locked, crate::unavailable::LOCKED),
+                |ui| {
+                    self.common_choice(
+                        ui,
+                        "item-display-visible",
+                        "Visible",
+                        &visible,
+                        &options,
+                        ItemCommonEdit::Visible,
+                    )
+                    .on_hover_text(
+                        "How the item is drawn in 3D views (never how it renders): Default \
                      follows the view's Show toggles, Yes always, No never, No (Hide \
                      Children) hides everything under it too",
-                        );
-                    },
-                );
-                // Label: one text for all selected items; typed text applies
-                // on Enter or when the field loses focus.
-                let same_label = values
-                    .iter()
-                    .all(|c| c.display.label == first.display.label);
-                let key = egui::Id::new(("item-label-draft", self.common_targets()));
-                let mut text: String = ui.data_mut(|d| {
-                    d.get_temp(key).unwrap_or_else(|| {
-                        if same_label {
-                            first.display.label.clone()
-                        } else {
-                            String::new()
-                        }
-                    })
-                });
-                crate::form::rows::status(!same_label || !first.display.label.is_empty());
-                let response = crate::option_row::row(ui, "Label", |ui| {
-                    ui.add(
-                        TextEdit::singleline(&mut text)
-                            .desired_width(ui.available_width())
-                            .hint_text(if same_label {
-                                ""
-                            } else {
-                                crate::form::rows::MIXED
-                            }),
-                    )
+                    );
+                },
+            );
+            // Label: one text for all selected items; typed text applies
+            // on Enter or when the field loses focus.
+            let same_label = values
+                .iter()
+                .all(|c| c.display.label == first.display.label);
+            let key = egui::Id::new(("item-label-draft", self.common_targets()));
+            let mut text: String = ui.data_mut(|d| {
+                d.get_temp(key).unwrap_or_else(|| {
+                    if same_label {
+                        first.display.label.clone()
+                    } else {
+                        String::new()
+                    }
                 })
-                .inner;
-                self.text_editors.insert(response.id);
-                crate::numeric_tab::register(ui, &response, Some(&text));
-                if response.changed() {
-                    ui.data_mut(|d| d.insert_temp(key, text.clone()));
+            });
+            crate::form::rows::status(!same_label || !first.display.label.is_empty());
+            let response = crate::option_row::row(ui, "Label", |ui| {
+                ui.add(
+                    TextEdit::singleline(&mut text)
+                        .desired_width(ui.available_width())
+                        .hint_text(if same_label {
+                            ""
+                        } else {
+                            crate::form::rows::MIXED
+                        }),
+                )
+            })
+            .inner;
+            self.text_editors.insert(response.id);
+            crate::numeric_tab::register(ui, &response, Some(&text));
+            if response.changed() {
+                ui.data_mut(|d| d.insert_temp(key, text.clone()));
+            }
+            if response.lost_focus() {
+                ui.data_mut(|d| d.remove::<String>(key));
+                let unchanged = same_label && text == first.display.label;
+                if crate::numeric_tab::accepted(&response)
+                    && !unchanged
+                    && !(text.is_empty() && !same_label)
+                {
+                    self.run_common(ItemCommonEdit::Label(text));
                 }
-                if response.lost_focus() {
-                    ui.data_mut(|d| d.remove::<String>(key));
-                    let unchanged = same_label && text == first.display.label;
-                    if crate::numeric_tab::accepted(&response)
-                        && !unchanged
-                        && !(text.is_empty() && !same_label)
-                    {
-                        self.run_common(ItemCommonEdit::Label(text));
-                    }
+            }
+            // CP-D06: typing a Label reveals Show Label and Label Offset.
+            if values.iter().any(|c| !c.display.label.is_empty()) {
+                let mut show = first.display.show_label;
+                let mixed = values.iter().any(|c| c.display.show_label != show);
+                let default = ItemCommon::default().display;
+                crate::form::rows::status(show != default.show_label);
+                crate::form::rows::mixed(mixed);
+                if crate::option_row::check(ui, "Show Label", &mut show).changed() {
+                    self.run_common(ItemCommonEdit::ShowLabel(show));
                 }
-                // CP-D06: typing a Label reveals Show Label and Label Offset.
-                if values.iter().any(|c| !c.display.label.is_empty()) {
-                    let mut show = first.display.show_label;
-                    let mixed = values.iter().any(|c| c.display.show_label != show);
-                    let default = ItemCommon::default().display;
-                    crate::form::rows::status(show != default.show_label);
-                    crate::form::rows::mixed(mixed);
-                    if crate::option_row::check(ui, "Show Label", &mut show).changed() {
-                        self.run_common(ItemCommonEdit::ShowLabel(show));
+                for (axis, name) in [(0usize, "Label Offset X"), (1, "Label Offset Y")] {
+                    let same = values
+                        .iter()
+                        .all(|c| c.display.label_offset[axis] == first.display.label_offset[axis]);
+                    let mut v = first.display.label_offset[axis];
+                    crate::form::rows::status(v != default.label_offset[axis]);
+                    let r = crate::option_row::row(ui, name, |ui| {
+                        let drag = crate::numeric_tab::DragValue::new(&mut v)
+                            .range(-MAX_LABEL_OFFSET..=MAX_LABEL_OFFSET)
+                            .speed(1.0)
+                            .suffix(" px");
+                        crate::form::rows::mixed(!same);
+                        ui.add(drag)
+                    })
+                    .inner;
+                    let done = r.drag_stopped()
+                        || r.lost_focus()
+                        || (r.changed() && !r.dragged() && !r.has_focus());
+                    if r.changed() {
+                        ui.data_mut(|d| d.insert_temp(r.id, v));
                     }
-                    for (axis, name) in [(0usize, "Label Offset X"), (1, "Label Offset Y")] {
-                        let same = values.iter().all(|c| {
-                            c.display.label_offset[axis] == first.display.label_offset[axis]
-                        });
-                        let mut v = first.display.label_offset[axis];
-                        crate::form::rows::status(v != default.label_offset[axis]);
-                        let r = crate::option_row::row(ui, name, |ui| {
-                            let drag = crate::numeric_tab::DragValue::new(&mut v)
-                                .range(-MAX_LABEL_OFFSET..=MAX_LABEL_OFFSET)
-                                .speed(1.0)
-                                .suffix(" px");
-                            crate::form::rows::mixed(!same);
-                            ui.add(drag)
-                        })
-                        .inner;
-                        let done = r.drag_stopped()
-                            || r.lost_focus()
-                            || (r.changed() && !r.dragged() && !r.has_focus());
-                        if r.changed() {
-                            ui.data_mut(|d| d.insert_temp(r.id, v));
+                    if done {
+                        let v = ui.data_mut(|d| d.remove_temp::<f64>(r.id)).unwrap_or(v);
+                        if !same || (v - first.display.label_offset[axis]).abs() > 1e-12 {
+                            self.run_common(if axis == 0 {
+                                ItemCommonEdit::LabelOffsetX(v)
+                            } else {
+                                ItemCommonEdit::LabelOffsetY(v)
+                            });
                         }
-                        if done {
-                            let v = ui.data_mut(|d| d.remove_temp::<f64>(r.id)).unwrap_or(v);
-                            if !same || (v - first.display.label_offset[axis]).abs() > 1e-12 {
-                                self.run_common(if axis == 0 {
-                                    ItemCommonEdit::LabelOffsetX(v)
-                                } else {
-                                    ItemCommonEdit::LabelOffsetY(v)
-                                });
-                            }
-                        }
                     }
                 }
-            },
-        );
+            }
+        });
     }
 
     /// Assembly tab (CP-A01, CP-A02).
@@ -233,26 +229,21 @@ impl Operandi {
             ui.weak("Select an item");
             return;
         }
-        let idle = self.editor.live.is_none();
-        ui.gated_ui(
-            crate::unavailable::unless(idle, crate::unavailable::TOOL_ACTIVE),
-            |ui| {
-                ui.spacing_mut().item_spacing.y = 2.;
-                let options = Choice::ALL.map(|v| (v, v.label()));
-                let select: Vec<_> = values.iter().map(|c| c.assembly.select).collect();
-                self.common_choice(
-                    ui,
-                    "item-assembly-select",
-                    "Select",
-                    &select,
-                    &options,
-                    ItemCommonEdit::Select,
-                )
-                .on_hover_text(
-                    "No: can't be picked in 3D views; still selectable in the Items list",
-                );
-                let lock: Vec<_> = values.iter().map(|c| c.assembly.lock).collect();
-                self.common_choice(
+        ui.gated_ui(None, |ui| {
+            ui.spacing_mut().item_spacing.y = 2.;
+            let options = Choice::ALL.map(|v| (v, v.label()));
+            let select: Vec<_> = values.iter().map(|c| c.assembly.select).collect();
+            self.common_choice(
+                ui,
+                "item-assembly-select",
+                "Select",
+                &select,
+                &options,
+                ItemCommonEdit::Select,
+            )
+            .on_hover_text("No: can't be picked in 3D views; still selectable in the Items list");
+            let lock: Vec<_> = values.iter().map(|c| c.assembly.lock).collect();
+            self.common_choice(
                 ui,
                 "item-assembly-lock",
                 "Lock",
@@ -263,8 +254,7 @@ impl Operandi {
             .on_hover_text(
                 "Yes: the item can't be moved, rotated or scaled, and its Visible row is locked",
             );
-            },
-        );
+        });
     }
 
     /// CP-D06: every drawn item's Label next to its centre, offset by Label

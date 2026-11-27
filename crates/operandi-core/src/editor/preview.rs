@@ -1427,7 +1427,7 @@ impl Editor {
         );
         let action_axis = live
             .action_frame
-            .map(|f| to_local.transform_vector3(f.basis.y_axis))
+            .map(|f| to_local.transform_vector3(self.action_axis(f)))
             .unwrap_or(world_axes.y_axis);
         let pipe = crate::TwistBevelPipe {
             weight: field

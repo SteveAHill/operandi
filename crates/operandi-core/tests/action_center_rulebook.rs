@@ -1,5 +1,6 @@
 //! The action-centers rulebook (2026-11-21) for the modes the Local file
-//! doesn't cover: AC-T21 Selection Border's axes, AC-T22 Selection Center
+//! doesn't cover: Selection and Selection Border's axes (A-SEL, AC-RULES
+//! v6, in place of AC-T20/T21), AC-T22 Selection Center
 //! Auto Axis's World axes, AC-T40 Screen's axes.
 use glam::{DMat3, DVec3};
 use operandi_core::*;
@@ -64,15 +65,22 @@ fn ac_t22_auto_axis_keeps_world_axes_on_a_tilted_polygon() {
     assert_eq!(f.basis, DMat3::IDENTITY, "World axes, not tilted");
 }
 
+/// A-SEL (AC-RULES v6; it replaces AC-T20/T21's "normal on Y"): the
+/// polygon is 1 wide and √2 long up its slope, so X runs up the slope (its
+/// longest direction), Z is its normal (its thinnest) and Y is what is
+/// left, world X.
 #[test]
-fn ac_t20_t21_selection_and_border_take_the_selections_normal() {
+fn ac_t20_t21_selection_and_border_follow_the_selections_shape() {
     for center in [CenterMode::Selection, CenterMode::SelectionBorder] {
         let mut e = tilted(ActionContext {
             center,
             axis: AxisOrientation::Selection,
         });
         let f = frame(&mut e, Tool::Rotate);
-        close(f.basis.y_axis, normal(), &format!("{center:?} handle Y"));
+        let slope = DVec3::new(0., 1., 1.).normalize();
+        close(f.basis.x_axis, slope, &format!("{center:?} handle X"));
+        close(f.basis.y_axis, DVec3::X, &format!("{center:?} handle Y"));
+        close(f.basis.z_axis, normal(), &format!("{center:?} handle Z"));
     }
 }
 

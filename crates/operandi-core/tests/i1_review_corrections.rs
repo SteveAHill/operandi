@@ -53,10 +53,6 @@ fn assert_refuses_unchanged(mut e: Editor, command: Command) {
 #[test]
 fn r1_changed_displayed_face_preview_refuses_fresh_targets() {
     let mut e = cube();
-    assert!(
-        e.dispatch(Command::SelectPolygonSet("bottom".into()))
-            .is_err()
-    );
     e.scene.selection.faces = vec![0]; // Existing public legacy selection boundary.
     assert_refuses_unchanged(e, Command::Preview(params(ExtrudeMode::Shift, 0.5)));
 }

@@ -5,6 +5,13 @@ Notable changes, newest first. The day-to-day build log is
 
 ## Unreleased
 
+- Tools aren't modal (UIC-307, GitHub #36): with a tool on, Properties,
+  the Items list, the Mesh Stack and N work. The tool's change so far is
+  kept as its own step, the command runs, and the tool starts again.
+- Dragged handles stay under the pointer at any depth and angle (GitHub
+  #40): axis arrows and Free Move used one scale taken at the orbit
+  centre.
+
 - USD import brings animation: moving items, camera lens changes and
   light intensity and colour changes come in as keys, at the file's frame
   rate and range, so a USD export and re-import keeps the motion.

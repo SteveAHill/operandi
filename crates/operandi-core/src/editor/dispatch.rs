@@ -426,10 +426,20 @@ impl Editor {
                 | Command::SelectItems(_)
                 | Command::ToggleItemSelection(_)
                 | Command::SelectGroup(_)
-        ) && self.preset.is_none()
-            && self.selection_start.is_none()
+        ) && self.selection_keeps_tool()
             && let Some(live) = self.live.as_ref()
-            && live.tool.transforms_items()
+        {
+            let tool = live.tool;
+            return self.retarget_transform(tool, cmd);
+        }
+        // Grow and Shrink (Shift+Up/Down) re-target a live transform tool
+        // the same way in component modes (UIC-306, Jason 2026-11-27).
+        if matches!(
+            &cmd,
+            Command::Selection(crate::SelectionOperation::Grow | crate::SelectionOperation::Shrink)
+        ) && self.scene.selection.mode != Mode::Item
+            && self.selection_keeps_tool()
+            && let Some(live) = self.live.as_ref()
         {
             let tool = live.tool;
             return self.retarget_transform(tool, cmd);
@@ -852,9 +862,27 @@ impl Editor {
                     return Err("The center must be a finite point".into());
                 }
                 let frame = live.action_frame.ok_or("Missing action frame")?;
+                // Selection axes under Symmetry follow the side the centre
+                // was placed on (S-02), so centre, axes and the side that
+                // drives the edit agree; other axes stay as they are.
+                let basis = match &self.live {
+                    Some(live)
+                        if self.action_context.axis == crate::AxisOrientation::Selection
+                            && live.params.uv.is_none() =>
+                    {
+                        crate::pivot_service::PivotRequest {
+                            placed: Some(point),
+                            ..self.pivot_request(&live.base, live.tool)
+                        }
+                        .frame()
+                        .map_or(frame.basis, |f| f.basis)
+                    }
+                    _ => frame.basis,
+                };
+                let live = self.live.as_mut().ok_or("No active transform tool")?;
                 live.action_frame = Some(crate::ActionFrame {
                     center: point,
-                    ..frame
+                    basis,
                 });
                 live.placed_centre = Some(point);
             }
@@ -864,10 +892,19 @@ impl Editor {
                 // Resolved against the tool's base, so after a drag the
                 // handle (center + delta) still sits on the moved selection.
                 let own = self.pivot_frame(&live.base, live.tool)?;
+                // Selection axes go back with the centre (S-02, see
+                // `SetActionCenter`).
+                let basis = if self.action_context.axis == crate::AxisOrientation::Selection
+                    && live.params.uv.is_none()
+                {
+                    own.basis
+                } else {
+                    frame.basis
+                };
                 if let Some(live) = &mut self.live {
                     live.action_frame = Some(crate::ActionFrame {
                         center: own.center,
-                        ..frame
+                        basis,
                     });
                     live.placed_centre = None;
                 }

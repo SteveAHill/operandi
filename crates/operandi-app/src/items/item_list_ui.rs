@@ -379,10 +379,7 @@ impl super::Operandi {
     fn add_item_entry(&mut self, ui: &mut Ui, label: &str, kind: AddItemKind) {
         // Mesh stays available with a tool live, as New Mesh was (the
         // editor resolves a Smooth Shift stage first); the others wait.
-        let why = crate::unavailable::unless(
-            kind == AddItemKind::Mesh || self.editor.live.is_none(),
-            crate::unavailable::TOOL_ACTIVE,
-        );
+        let why = None;
         let response = ui.gated(why, Button::new(label));
         #[cfg(test)]
         {
@@ -471,10 +468,7 @@ impl super::Operandi {
             });
     }
     fn pattern_action_button(&mut self, ui: &mut Ui, action: PatternAction) {
-        let response = ui.gated(
-            crate::unavailable::unless(self.editor.live.is_none(), crate::unavailable::TOOL_ACTIVE),
-            Button::new(action.label()),
-        );
+        let response = ui.gated(None, Button::new(action.label()));
         #[cfg(test)]
         self.toolbox_rects
             .insert(format!("Pattern {}", action.label()), response.rect);

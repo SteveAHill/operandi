@@ -111,12 +111,16 @@ impl Editor {
                 symmetry,
                 ..self.pivot_request(&live.base, live.tool)
             };
+            // A centre the user placed stays put, but its Selection axes
+            // still follow the side it is on under the new plane (S-02).
             let _ = (previous, frame);
-            if live.placed_centre.is_none() {
-                let now = request(current).frame()?;
-                if let Some(live) = &mut self.live {
-                    live.action_frame = Some(now);
-                }
+            let now = crate::pivot_service::PivotRequest {
+                placed: live.placed_centre,
+                ..request(current)
+            }
+            .frame()?;
+            if let Some(live) = &mut self.live {
+                live.action_frame = Some(now);
             }
         }
         if let Some(parameters) = self
@@ -156,8 +160,8 @@ impl Editor {
             .filter(|&m| m != hit)
     }
     /// The live tool's frame from the pivot service (pivot_service.rs):
-    /// the rulebook's centre and axes, under Symmetry the + half's centre
-    /// (ACS-01) with the axes of the whole selection (ACS-02).
+    /// the rule sheet's centre and axes; under Symmetry the + half's
+    /// centre (S-01) and, for Selection axes, the + half's axes (S-02).
     pub(super) fn pivot_frame(&self, scene: &Scene, tool: Tool) -> Result<crate::ActionFrame> {
         self.pivot_request(scene, tool).frame()
     }
@@ -279,6 +283,22 @@ impl Editor {
     pub fn primitive_falloff_note(&self) -> Option<String> {
         crate::ShapeWeights::from_active(&self.active_falloff()?).err()
     }
+    /// The one direction a tool means by "the action axis" (Twist Bevel's
+    /// Rotation Axis = Action Axis), from the action frame: its Y, world Y
+    /// by default. With Selection or Element axes it is the frame's Z, the
+    /// column that carries the normal under A-SEL and A-ELEM (AC-RULES
+    /// v6); the normal was on Y before, so those tools keep turning about
+    /// it.
+    pub fn action_axis(&self, frame: crate::ActionFrame) -> DVec3 {
+        if matches!(
+            self.action_context.axis,
+            crate::AxisOrientation::Selection | crate::AxisOrientation::Element(_)
+        ) {
+            frame.basis.z_axis
+        } else {
+            frame.basis.y_axis
+        }
+    }
     /// The action axes Bend leans along (World when the action axis can't
     /// be had for this selection, e.g. Selection axes without polygons).
     /// BN-45 (BH-Q12, provisional): the status bar text while Bend's axis
@@ -365,13 +385,18 @@ impl Editor {
         item.transform = Default::default();
         item.parent = None;
         let frame = context.resolve(&basis_scene)?;
-        if !context.center.uses_selection_box() {
+        let item = scene.active().ok_or("Select a mesh")?;
+        // C-BORDER with no border edge is Selection's centre.
+        let as_selection = context.center.uses_selection_box()
+            || (context.center == crate::CenterMode::SelectionBorder
+                && crate::selection_axes::selection_border_points(&item.mesh, &scene.selection)
+                    .is_empty());
+        if !as_selection {
             return Ok(frame);
         }
         // The selection's box is taken in the item's own space and its
         // middle placed in the world, so a turned item's box turns with
         // it (AC-rotate-Selection; AC-Q20 provisional).
-        let item = scene.active().ok_or("Select a mesh")?;
         let local = crate::box_centre(
             crate::transform_vertices(scene)?
                 .iter()

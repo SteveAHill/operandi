@@ -319,6 +319,18 @@ impl Editor {
     /// route in `dispatch`). Kept out of `dispatch` so the staged copy
     /// doesn't grow every frame of that recursive function.
     #[inline(never)]
+    /// True when a selection change (Items-tree click, Grow, Shrink) keeps
+    /// the live tool and re-targets it: a transform tool is live with no
+    /// preset browser or selection drag open (UIC-306).
+    pub fn selection_keeps_tool(&self) -> bool {
+        self.preset.is_none()
+            && self.selection_start.is_none()
+            && self
+                .live
+                .as_ref()
+                .is_some_and(|l| l.tool.transforms_items())
+    }
+
     pub(super) fn retarget_transform(&mut self, tool: Tool, cmd: Command) -> Result<()> {
         let live = self.live.as_ref().ok_or("No live tool")?;
         let negative_scale = live.params.negative_scale;
@@ -326,7 +338,7 @@ impl Editor {
         let mut staged = Box::new(self.clone());
         staged.dispatch(Command::Drop)?;
         if staged.has_active_task() || staged.i2_active() {
-            return Err("Finish the current tool before changing the item selection".into());
+            return Err("Finish the current tool before changing the selection".into());
         }
         staged.dispatch(cmd)?;
         if staged.dispatch(Command::Activate(tool)).is_ok()

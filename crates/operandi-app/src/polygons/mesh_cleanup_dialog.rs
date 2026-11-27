@@ -563,7 +563,11 @@ mod callback_tests {
                     a.menu_action(&ctx, crate::app_menu::line_action("mesh.cleanup"));
                     assert!(a.mesh_cleanup.is_none());
                 } else {
+                    // UIC-307: the command line runs it; the owner settles and
+                    // arms again.
                     a.execute(CLEAN_COMMAND);
+                    assert!(a.editor.has_active_task(), "{owner}: {}", a.status);
+                    continue;
                 }
                 assert!(a.editor == before, "{owner} {route}: {}", a.status);
                 let reason = match owner {

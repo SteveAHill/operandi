@@ -25,6 +25,10 @@ mod a37_combined;
 #[cfg(operandi_specs)]
 #[path = "absolute_scaling_spec.rs"]
 mod absolute_scaling_spec;
+#[path = "ac_rules_step1.rs"]
+mod ac_rules_step1;
+#[path = "ac_rules_step2.rs"]
+mod ac_rules_step2;
 #[path = "ac_symmetry_rulebook.rs"]
 mod ac_symmetry_rulebook;
 #[path = "action_center_islands.rs"]
@@ -257,6 +261,8 @@ mod gradient;
 mod group_locators;
 #[path = "group_material_extras.rs"]
 mod group_material_extras;
+#[path = "grow_shrink_keeps_tool.rs"]
+mod grow_shrink_keeps_tool;
 #[path = "haul.rs"]
 mod haul;
 #[path = "heavy_mesh_bench.rs"]
@@ -812,6 +818,8 @@ mod tool_switch;
 mod tool_switch_drop;
 #[path = "tool_uvs.rs"]
 mod tool_uvs;
+#[path = "tools_arent_modal.rs"]
+mod tools_arent_modal;
 #[path = "topology_cleanup.rs"]
 mod topology_cleanup;
 #[path = "topology_pen.rs"]
