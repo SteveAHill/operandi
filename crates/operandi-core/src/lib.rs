@@ -157,6 +157,8 @@ pub use polygon_kind::{CurveKind, PolygonRepresentation};
 pub mod multires;
 #[path = "polygons/polygon.rs"]
 pub mod polygon;
+#[path = "render/post_effects.rs"]
+pub mod post_effects;
 #[path = "render/render_settings.rs"]
 pub mod render_settings;
 #[path = "materials/shading.rs"]
@@ -458,6 +460,8 @@ mod meshop_bezier_deformer;
 mod meshop_bridge;
 #[path = "meshops/meshop_chamfer_edit.rs"]
 mod meshop_chamfer_edit;
+#[path = "meshops/meshop_conditional_loop.rs"]
+pub mod meshop_conditional_loop;
 #[path = "meshops/meshop_create_uv_map.rs"]
 mod meshop_create_uv_map;
 #[path = "meshops/meshop_create_vertex_map.rs"]
@@ -476,6 +480,8 @@ mod meshop_curve_deform_common;
 mod meshop_curve_fill;
 #[path = "meshops/meshop_curve_rebuild.rs"]
 mod meshop_curve_rebuild;
+#[path = "meshops/meshop_curve_rebuild_spans.rs"]
+mod meshop_curve_rebuild_spans;
 #[path = "meshops/meshop_curve_slice.rs"]
 mod meshop_curve_slice;
 #[path = "meshops/meshop_curve_sweep.rs"]
@@ -496,6 +502,8 @@ mod meshop_flood_weight;
 mod meshop_geodesic_weight;
 #[path = "meshops/meshop_hard_edge.rs"]
 mod meshop_hard_edge;
+#[path = "meshops/meshop_lace.rs"]
+mod meshop_lace;
 #[path = "meshops/meshop_lattice.rs"]
 pub mod meshop_lattice;
 #[path = "meshops/meshop_loop_slice.rs"]
@@ -552,6 +560,8 @@ mod meshop_uv_flip;
 mod meshop_uv_relax;
 #[path = "meshops/meshop_uv_to_mesh.rs"]
 mod meshop_uv_to_mesh;
+#[path = "meshops/meshop_uv_transform.rs"]
+pub mod meshop_uv_transform;
 #[path = "meshops/meshop_uv_unwrap_relax.rs"]
 mod meshop_uv_unwrap_relax;
 #[path = "meshops/meshop_vertex_map_common.rs"]

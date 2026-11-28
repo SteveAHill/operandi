@@ -445,6 +445,8 @@ mod meshop_curve_convert;
 mod meshop_curve_fill;
 #[path = "meshop_curve_rebuild.rs"]
 mod meshop_curve_rebuild;
+#[path = "meshop_curve_rebuild_spans.rs"]
+mod meshop_curve_rebuild_spans;
 #[path = "meshop_curve_sweep.rs"]
 mod meshop_curve_sweep;
 #[path = "meshop_curve_winding.rs"]
@@ -471,6 +473,8 @@ mod meshop_element_selection;
 mod meshop_falloff_batch7;
 #[path = "meshop_hard_edge.rs"]
 mod meshop_hard_edge;
+#[path = "meshop_lace.rs"]
+mod meshop_lace;
 #[path = "meshop_loop_slice.rs"]
 mod meshop_loop_slice;
 #[path = "meshop_part_tag.rs"]
@@ -489,10 +493,14 @@ mod meshop_slicers_batch5;
 mod meshop_text;
 #[path = "meshop_thicken.rs"]
 mod meshop_thicken;
+#[path = "meshop_tidy_selops.rs"]
+mod meshop_tidy_selops;
 #[path = "meshop_tool_pipe_batch6.rs"]
 mod meshop_tool_pipe_batch6;
 #[path = "meshop_uv_batch4.rs"]
 mod meshop_uv_batch4;
+#[path = "meshop_uv_transform.rs"]
+mod meshop_uv_transform;
 #[path = "meshop_vertex_maps_batch4.rs"]
 mod meshop_vertex_maps_batch4;
 #[path = "mid_tool_undo.rs"]
@@ -640,6 +648,8 @@ mod polygons_m17;
 mod polyscale_offset_clean_spec;
 #[path = "pose_tool.rs"]
 mod pose_tool;
+#[path = "post_effects.rs"]
+mod post_effects;
 #[path = "primitive_falloff.rs"]
 mod primitive_falloff;
 #[path = "primitive_falloff_numeric.rs"]
