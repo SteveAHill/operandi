@@ -236,11 +236,28 @@ fn end_uv(
 /// but at unequal distances from the edge, so no such circle exists), it
 /// keeps the midpoint level and [`profile`] draws the roundest curve that
 /// fits, an elliptic arc.
-fn profile_corner(v: DVec3, other: DVec3, a: DVec3, b: DVec3) -> DVec3 {
+///
+/// `at_point` (Edge Bevel with Loop Slide on, EBC-Q-RND1 answered
+/// 2026-11-28): both side points slid from `v` itself, and the profile
+/// turns about `v`: the quarter circle stretched to the two distances
+/// (round when they're equal), unless the surface is flat across the edge.
+fn profile_corner(v: DVec3, other: DVec3, a: DVec3, b: DVec3, at_point: bool) -> DVec3 {
     let axis = (other - v).normalize_or_zero();
     let (ra, rb) = (a - v, b - v);
     let level = ((a + b) / 2. - v).dot(axis);
     let (sa, sb) = (ra.dot(axis), rb.dot(axis));
+    // Side points level along the edge (a straight end, or where three
+    // strips meet, EBC-B3-04) keep the measured corner level with them.
+    if at_point && (sa - sb).abs() > 1e-9 * (ra.length() + rb.length()) {
+        // The fold across the edge: the side points' directions seen along
+        // the edge (a flat surface folds 0° however far along they slid).
+        let across = |r: DVec3| (r - axis * r.dot(axis)).normalize_or_zero();
+        let (ua, ub) = (across(ra), across(rb));
+        let fold = std::f64::consts::PI - ua.dot(ub).clamp(-1., 1.).acos();
+        if fold > 1e-3 {
+            return v;
+        }
+    }
     // Distances from the edge line: how far the side points are from it.
     let (ha, hb) = ((ra - axis * sa).length(), (rb - axis * sb).length());
     let reach = ha.max(hb);
@@ -387,10 +404,10 @@ mod profile_tests {
         let v = DVec3::ZERO;
         let a = DVec3::new(0.0866, 0., 0.05).normalize() * 0.1;
         let b = DVec3::new(0., 0.1, 0.);
-        let c = profile_corner(v, DVec3::Z, a, b);
+        let c = profile_corner(v, DVec3::Z, a, b, false);
         assert!(c.length() < 1e-12, "{c}");
         // Level but unequal: no such point, the corner stays level.
-        let c = profile_corner(v, DVec3::Z, DVec3::X * 0.3, DVec3::Y * 0.1);
+        let c = profile_corner(v, DVec3::Z, DVec3::X * 0.3, DVec3::Y * 0.1, false);
         assert!(c.length() < 1e-12, "{c}");
     }
 }
@@ -1464,10 +1481,17 @@ fn general_with(
                 // a corner where the polygon bends less than 180° slides the
                 // width along both edges, as measured, so the strip narrows
                 // at the bend. Loop Slide off keeps the full width (above).
+                // EBC-Q-RND1 (answered 2026-11-28): the sum is |ua + ub| =
+                // 2·cos(φ/2) Insets along the bisector for the polygon's
+                // corner angle φ, floored at one Inset, so corners wider
+                // than 120° (a many-sided cap's rim) move exactly the Inset,
+                // as the wall side does, and their profiles are round.
                 let convex = (ua + ub).dot(na + nb) > 1e-12;
-                let offset = if (chamfer && !parallel) || (!chamfer && options.loop_slide && convex)
-                {
+                let offset = if chamfer && !parallel {
                     (ua + ub) * base
+                } else if !chamfer && options.loop_slide && convex {
+                    let sum = ua + ub;
+                    sum * (base * (1. / sum.length().max(1e-12)).max(1.))
                 } else {
                     let cos = na.dot(nb);
                     let d = if cos > -1. + 1e-9 {
@@ -1679,7 +1703,7 @@ fn general_with(
             } else {
                 let mut ids = Vec::new();
                 let (a, b) = (out.vertices[q1 as usize], out.vertices[q2 as usize]);
-                let corner = profile_corner(p(v), p(other), a, b);
+                let corner = profile_corner(p(v), p(other), a, b, !chamfer && options.loop_slide);
                 // No Mitering (the tester's report, 2026-11-24: straight was
                 // good but flat): a strip ending on a rounded outline keeps
                 // its round, but in the upright plane through its two end

@@ -197,8 +197,14 @@ fn profiles_that_were_already_round_stay_round() {
         for (name, m, edges, w, slide) in [
             ("cube top edge", &cube, vec![key(4, 5)], 0.1, true),
             ("cube vertical edge", &cube, vec![key(0, 4)], 0.1, true),
-            ("cube top rim", &cube, rim(4), 0.1, true),
-            ("cube L", &cube, vec![key(4, 5), key(5, 6)], 0.1, true),
+            ("cube top rim, Loop Slide off", &cube, rim(4), 0.1, false),
+            (
+                "cube L, Loop Slide off",
+                &cube,
+                vec![key(4, 5), key(5, 6)],
+                0.1,
+                false,
+            ),
             (
                 "wedge vertical edges (60°-ish)",
                 &wedge,
@@ -235,6 +241,75 @@ fn profile_corners_lean_only_a_little() {
             .unwrap();
         for q in &p {
             assert!(q.distance(old) <= 0.1 + 1e-9, "{q} from {old}");
+        }
+    }
+}
+
+#[test]
+fn many_sided_cap_rims_are_round_with_loop_slide() {
+    // EBC-Q-RND1 (answered 2026-11-28): with Loop Slide on, the cap's side
+    // moves Inset × max(1, 2·cos(φ/2)) along the corner's bisector, so a
+    // rim corner wider than 120° moves exactly the Inset, as the wall does,
+    // and the profile is a circle. Before, a 24-sided cap moved only
+    // 0.26 Inset and its profile was a 3.9 : 1 oval.
+    for n in [7u32, 8, 12, 24] {
+        let m = frustum(&regular(n as usize, 0.5), 1.);
+        for rows in [3, 4, 8] {
+            let e = worst(&m, &rim(n), 0.04, rows, true);
+            assert!(e < 1e-6, "{n}-sided rim, {rows} rows: {e}");
+        }
+    }
+}
+
+#[test]
+fn a_square_cap_rim_is_the_stretched_quarter_circle() {
+    // EBC-Q-RND1: at a 4-sided cap's 90° corner the cap side moves
+    // 2·cos(45°) = 1.414 Insets along the bisector and the wall side one
+    // Inset down. The profile is the quarter circle stretched to those two
+    // distances about the old corner, at equal angle steps.
+    let w = 0.1;
+    let rows = 6;
+    let cube = frustum(&regular(4, std::f64::consts::FRAC_1_SQRT_2), 1.);
+    let r = bevel(&cube, &rim(4), w, rows, true);
+    for p in profiles(&cube, &r, rows) {
+        // The old corner nearest this profile.
+        let v = (4..8)
+            .map(|i| cube.vertices[i])
+            .min_by(|a, b| a.distance(p[0]).total_cmp(&b.distance(p[0])))
+            .unwrap();
+        // Wall side first: straight down from the corner.
+        let p: Vec<DVec3> = if p[0].y < p[p.len() - 1].y {
+            p
+        } else {
+            p.into_iter().rev().collect()
+        };
+        let down = p[0] - v;
+        let cap = p[p.len() - 1] - v;
+        assert!(
+            (down.length() - w).abs() < 1e-9,
+            "wall side {}",
+            down.length()
+        );
+        assert!(
+            (cap.length() - w * std::f64::consts::SQRT_2).abs() < 1e-9,
+            "cap side {}",
+            cap.length()
+        );
+        // In the frame of the two sides, rows lie on the unit circle about
+        // (1, 1), at equal angles.
+        let (d, c) = (down / down.length_squared(), cap / cap.length_squared());
+        let angles: Vec<f64> = p
+            .iter()
+            .map(|&q| {
+                let (l1, l2) = ((q - v).dot(d), (q - v).dot(c));
+                let e = (l1 - 1.).powi(2) + (l2 - 1.).powi(2);
+                assert!((e - 1.).abs() < 1e-9, "{l1} {l2}");
+                (1. - l1).atan2(1. - l2)
+            })
+            .collect();
+        let step = std::f64::consts::FRAC_PI_2 / rows as f64;
+        for w in angles.windows(2) {
+            assert!(((w[1] - w[0]).abs() - step).abs() < 1e-9, "{angles:?}");
         }
     }
 }
