@@ -41,6 +41,7 @@ at the top of `src/`.
 | `duplication/` | Duplicate, Radial, Replicator and mesh instances. |
 | `edges/` | Edge tools, bridges and chamfers. |
 | `geometry/` | The mesh, its topology memo, packing and subdivision surfaces. |
+| `kits/` | Kits: the `kit.toml` manifest, the Kits folder, installing, helper-program importers (docs/KITS.md). |
 | `materials/` | Materials, shader tree, shader evaluation, MaterialX and OpenPBR. |
 | `meshops/` | The mesh stack (MeshOps) and the evaluation graph. |
 | `nodes/` | Node graphs, the node view and node materials. |
@@ -70,6 +71,7 @@ at the top of `src/`.
 | `graphics/` | GPU drawing: scene buffers, subdivision, materials, grid, matcaps. |
 | `input_devices/` | Keyboard, mouse, tablet and 3D mouse input. |
 | `items/` | Item list, item properties, groups, mesh stack and replicators. |
+| `kits/` | The `operandi.kit.*` commands and loading kits at start-up. |
 | `materials/` | Shading panel, materials and display shading. |
 | `menus/` | Menus: app, native, help, modeling and pie menus. |
 | `nodes/` | Node editor, graph editor and MaterialX UI. |

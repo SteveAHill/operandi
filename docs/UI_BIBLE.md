@@ -402,7 +402,10 @@ showing its key. Nothing else.
   the column's width; its label is left-aligned, and its key is shown
   right-aligned in dim text: **"Ret"** on OK, **"Esc"** on Cancel. [ref]
   Any extra buttons (rare: e.g. Apply, Reset) go below Cancel, same style
-  [OP].
+  [OP]. The column is 70 wide (UIC-94) unless a label and its key don't
+  fit: then the whole column grows to the widest button, so every button
+  stays the same width and no label runs past its edge (e.g. "Skip This
+  Build") [OP, the maintainer 2026-11-27].
 - **UIC-85** Keys: Enter = OK and Esc = Cancel, wherever focus is in the
   dialog. [ref] While a field is being typed in, the first Enter only
   commits that field; the next Enter is OK [OP][Q].
@@ -451,7 +454,7 @@ showing its key. Nothing else.
   | Gap label → field | 8 |
   | Field column width | at least 200 |
   | Divider gap (each side) | 6 |
-  | Button column width | 70 |
+  | Button column width | at least 70; wider to fit the longest label (UIC-84) |
   | Button height / gap between buttons | 20 / 4 |
   | Checkbox box | 14 square |
 

@@ -299,6 +299,8 @@ mod item_list_ui;
 mod items_tree;
 #[path = "input_devices/key_toggles.rs"]
 mod key_toggles;
+#[path = "kits/kit_commands.rs"]
+mod kit_commands;
 #[path = "selections/lasso.rs"]
 mod lasso;
 #[path = "window_layout/layout.rs"]
@@ -1077,6 +1079,9 @@ struct Operandi {
     retopo_stroke: Vec<DVec3>,
     /// Mesh Paint's click or stroke in progress (mesh_paint_ui.rs).
     mesh_paint: mesh_paint_ui::Gesture,
+    /// Mesh Paint's settings from its last use this session (#46): the
+    /// next start picks them up.
+    mesh_paint_memory: Option<operandi_core::mesh_paint::MeshPaintSettings>,
     /// Topology Pen's drag, weld and pre-highlight state.
     pen: topology_pen_ui::PenUi,
     /// Save Environment Preset…'s options dialog (environment_preset_ui.rs).
@@ -1582,6 +1587,7 @@ impl Operandi {
             app.set_mcp(&cc.egui_ctx, true);
         }
         let _ = std::fs::create_dir_all(app.environment.paths().data_root());
+        app.load_kits();
         app.first_run_tip();
         app.viewport_preferences = viewport_preferences::ViewportPreferences::load(
             &app.environment.paths().viewport_display(),
@@ -1906,6 +1912,7 @@ impl Operandi {
             select_dialog: None,
             retopo_stroke: Vec::new(),
             mesh_paint: Default::default(),
+            mesh_paint_memory: None,
             pen: Default::default(),
             env_preset_dialog: None,
             gi_hint_shown: false,
@@ -4516,6 +4523,9 @@ mod item_list_header_tests;
 #[cfg(test)]
 #[path = "input_devices/key_toggles_tests.rs"]
 mod key_toggles_tests;
+#[cfg(test)]
+#[path = "kits/kit_commands_tests.rs"]
+mod kit_commands_tests;
 #[cfg(test)]
 #[path = "selections/lasso_ui_tests.rs"]
 mod lasso_ui_tests;
