@@ -35,6 +35,15 @@ applies to every view.
   It works for orbit, pan, zoom, tool handles and the drags that change a
   value; selecting, drawing and brush strokes stay under the pointer.
 
+## Trackball Rotation
+
+**Trackball Rotation** on the **Remapping** page, off at first, makes
+orbiting turn the view freely about its own axes instead of around the
+world's up direction. The first time you orbit a 3D view, a small note at
+the bottom of the view asks **Try Trackball Rotation?**: **Turn On** turns
+it on, **No Thanks** keeps the usual orbit. The note goes by itself after
+17 seconds and never comes back.
+
 ## Common tasks
 
 - **Change a setting**: pick a page on the left and change the row. It

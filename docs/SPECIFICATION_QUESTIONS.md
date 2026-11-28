@@ -10139,6 +10139,18 @@ changed as noted.
   where rounded strips meet: Default (the default), Neutral, Uniform, Pinch.
   Patch and Radial are built but hidden until finished.
   `tool.attr edge.bevel miteringStyle` (`cornerPattern` still works).
+- **EBC-Q-RND1 (answered 2026-11-28; forum's oval corners).** Round
+  profiles between unequal sides, as on a 24-sided cap rim with Loop Slide
+  on, where EBC-B3-03's sum put the cap side only 0.26 Inset in while the
+  wall side moved the full Inset (a 3.9 : 1 oval). Answer: with Loop Slide
+  on, the cap-side point moves Inset × max(1, 2·cos(φ/2)) along the
+  corner's bisector, φ the cap polygon's corner angle (EBC-B3-03's sum at
+  120° and sharper, exactly the Inset above it); the wall side always moves
+  the full Inset. The profile is the quarter circle stretched to those two
+  distances about the old corner point (tangent to both sides), rows at
+  equal angle steps, so it only looks elliptical at sharp corners (3-5
+  sided caps). Checked on 7, 8, 12 and 24-sided rims, fan caps and
+  two-edge picks. Built; tests in edge_bevel_roundness.rs.
 
 ## MeshBlend B1 (2026-11-24, branch claude/project-thread-20fok5, provisional)
 

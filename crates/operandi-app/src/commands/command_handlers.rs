@@ -1670,8 +1670,10 @@ fn phrases(r: &mut Commands) {
             View::Right
         };
     });
+    // SC-054 "Perspective (press again: camera)": once for Perspective,
+    // again for the scene's camera (Camera view, CL-17), and again back.
     on(r, &["perspective view"], |a, _| {
-        a.camera.view = View::Perspective;
+        a.perspective_or_camera_view()
     });
     on(r, &["shaded view"], |a, _| {
         a.display.set_style(view_display::Style::Shaded, false)

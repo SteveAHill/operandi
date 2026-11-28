@@ -1298,6 +1298,13 @@ struct Operandi {
     gpu: String,
     viewport_gpu: Option<gpu::ViewportGpu>,
     last_drawable: [u32; 2],
+    /// When the one-time Trackball Rotation offer appeared (egui time), while
+    /// it shows (trackball_offer.rs).
+    trackball_offer: Option<f64>,
+    /// UIC-189: floating windows are on top this frame (an Operandi window
+    /// has the keyboard), and when one last had it (floating_level.rs).
+    floating_on_top: bool,
+    floating_focused_at: Option<f64>,
     viewport_rect: Rect,
     /// The views (views.rs): their layout, each view's camera and rect, the
     /// active one (whose camera is `camera`), and the one being drawn.
@@ -2034,6 +2041,9 @@ impl Operandi {
             gpu: "GPU unavailable".into(),
             viewport_gpu: None,
             last_drawable: [0, 0],
+            trackball_offer: None,
+            floating_on_top: false,
+            floating_focused_at: None,
             viewport_rect: Rect::NOTHING,
             views: operandi_layout::Layout::single_viewport(),
             cameras: BTreeMap::new(),
@@ -4071,6 +4081,7 @@ impl eframe::App for Operandi {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.frame_stats.begin();
         self.frame_ctx = Some(ctx.clone());
+        self.update_floating_level(ctx);
         if let Some(text) = self.copy_next.take() {
             ctx.copy_text(text);
         }
@@ -4187,6 +4198,8 @@ pub(crate) fn same_document(a: &Scene, b: &Scene) -> bool {
 mod drag_readout;
 #[path = "window_layout/floating.rs"]
 mod floating;
+#[path = "window_layout/floating_level.rs"]
+mod floating_level;
 #[path = "window_layout/form_editor.rs"]
 mod form_editor;
 #[cfg(test)]
@@ -4237,6 +4250,8 @@ mod primitive_panel;
 mod render_ui;
 #[path = "anim/timeline.rs"]
 mod timeline;
+#[path = "view/trackball_offer.rs"]
+mod trackball_offer;
 #[path = "items/vertex_normal_ui.rs"]
 mod vertex_normal_ui;
 #[path = "view/view_display.rs"]
@@ -4530,6 +4545,9 @@ mod inset_shift_tests;
 #[path = "items/item_list_header_tests.rs"]
 mod item_list_header_tests;
 #[cfg(test)]
+#[path = "viewport/item_rollover_tests.rs"]
+mod item_rollover_tests;
+#[cfg(test)]
 #[path = "input_devices/key_toggles_tests.rs"]
 mod key_toggles_tests;
 #[cfg(test)]
@@ -4583,6 +4601,9 @@ mod perf_drags_tests;
 #[cfg(test)]
 #[path = "view/perf_view_tests.rs"]
 mod perf_view_tests;
+#[cfg(test)]
+#[path = "render/perspective_camera_key_tests.rs"]
+mod perspective_camera_key_tests;
 #[cfg(test)]
 #[path = "render/picture_capture_tests.rs"]
 mod picture_capture_tests;
