@@ -305,6 +305,8 @@ mod item_list_ui;
 mod items_tree;
 #[path = "input_devices/key_toggles.rs"]
 mod key_toggles;
+#[path = "kits/kit_commands.rs"]
+mod kit_commands;
 #[path = "selections/lasso.rs"]
 mod lasso;
 #[path = "window_layout/layout.rs"]
@@ -427,6 +429,8 @@ mod path_tool_view;
 mod pen_interactive_ui;
 #[path = "view/picking.rs"]
 mod picking;
+#[path = "menus/pie_forms.rs"]
+mod pie_forms;
 #[path = "menus/pie_menu.rs"]
 mod pie_menu;
 #[path = "uv/planar_texture_ui.rs"]
@@ -449,6 +453,8 @@ mod polygon_part_dialog;
 mod polygon_unify_dialog;
 #[path = "rigging/pose_tool_ui.rs"]
 mod pose_tool_ui;
+#[path = "render/post_effects_ui.rs"]
+mod post_effects_ui;
 #[path = "settings/preferences.rs"]
 mod preferences;
 #[cfg(test)]
@@ -1076,6 +1082,9 @@ struct Operandi {
     retopo_stroke: Vec<DVec3>,
     /// Mesh Paint's click or stroke in progress (mesh_paint_ui.rs).
     mesh_paint: mesh_paint_ui::Gesture,
+    /// Mesh Paint's settings from its last use this session (#46): the
+    /// next start picks them up.
+    mesh_paint_memory: Option<operandi_core::mesh_paint::MeshPaintSettings>,
     /// Topology Pen's drag, weld and pre-highlight state.
     pen: topology_pen_ui::PenUi,
     /// Save Environment Preset…'s options dialog (environment_preset_ui.rs).
@@ -1375,6 +1384,8 @@ struct Operandi {
     /// The open pie menu (pie_menu.rs), and one asked for by name.
     pie: Option<pie_menu::Open>,
     pie_request: Option<String>,
+    /// Export Pie / Import Pie in progress (pie_forms.rs).
+    pie_edit: pie_forms::State,
     segment_detent_pixels: f64,
     native_numbers: Vec<native::NumberKey>,
     /// Numeric Enter as Tab: a keypad Enter press turned into Tab whose
@@ -1579,6 +1590,7 @@ impl Operandi {
             app.set_mcp(&cc.egui_ctx, true);
         }
         let _ = std::fs::create_dir_all(app.environment.paths().data_root());
+        app.load_kits();
         app.first_run_tip();
         app.viewport_preferences = viewport_preferences::ViewportPreferences::load(
             &app.environment.paths().viewport_display(),
@@ -1902,6 +1914,7 @@ impl Operandi {
             select_dialog: None,
             retopo_stroke: Vec::new(),
             mesh_paint: Default::default(),
+            mesh_paint_memory: None,
             pen: Default::default(),
             env_preset_dialog: None,
             gi_hint_shown: false,
@@ -2069,6 +2082,7 @@ impl Operandi {
             modeling_menu_requested: false,
             pie: None,
             pie_request: None,
+            pie_edit: Default::default(),
             segment_detent_pixels: 12.,
             native_numbers: Vec::new(),
             keypad_enter_held: false,
@@ -4169,8 +4183,16 @@ mod floating;
 #[path = "window_layout/form_editor.rs"]
 mod form_editor;
 #[cfg(test)]
+#[path = "window_layout/form_editor_pie_tests.rs"]
+mod form_editor_pie_tests;
+#[cfg(test)]
 #[path = "window_layout/form_editor_tests.rs"]
 mod form_editor_tests;
+#[path = "window_layout/form_icons.rs"]
+mod form_icons;
+#[cfg(test)]
+#[path = "window_layout/form_icons_tests.rs"]
+mod form_icons_tests;
 #[path = "nodes/graph_editor.rs"]
 mod graph_editor;
 #[path = "create_tools/guides_ui.rs"]
@@ -4504,6 +4526,9 @@ mod item_list_header_tests;
 #[path = "input_devices/key_toggles_tests.rs"]
 mod key_toggles_tests;
 #[cfg(test)]
+#[path = "kits/kit_commands_tests.rs"]
+mod kit_commands_tests;
+#[cfg(test)]
 #[path = "selections/lasso_ui_tests.rs"]
 mod lasso_ui_tests;
 #[cfg(test)]
@@ -4557,6 +4582,9 @@ mod picture_capture_tests;
 #[cfg(test)]
 #[path = "view/placement_snap_tests.rs"]
 mod placement_snap_tests;
+#[cfg(test)]
+#[path = "render/post_effects_ui_tests.rs"]
+mod post_effects_ui_tests;
 #[cfg(test)]
 #[path = "presets/preset_drop_tests.rs"]
 mod preset_drop_tests;
@@ -4730,6 +4758,9 @@ mod performance_tests;
 #[path = "tools/perf_snapshot_tests.rs"]
 mod perf_snapshot_tests;
 
+#[cfg(test)]
+#[path = "menus/pie_engine_tests.rs"]
+mod pie_engine_tests;
 #[cfg(test)]
 #[path = "menus/pie_menu_tests.rs"]
 mod pie_menu_tests;

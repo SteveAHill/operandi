@@ -298,11 +298,52 @@ pub fn set_usd_importer(importer: UsdImporter) {
     let _ = USD_IMPORTER.set(importer);
 }
 
-/// True when `path` has an extension `import` reads.
+/// File types added from outside interchange: those of kits that are on
+/// (KIT-1). `kit_import` registers these hooks when it fills its table,
+/// so interchange never uses kits (kits use interchange;
+/// docs/AREA_DEPENDENCIES.md).
+#[derive(Clone, Copy)]
+pub struct AddedImporters {
+    /// Each added lower-case extension, with the Import dialog's label.
+    pub extensions: fn() -> Vec<(String, String)>,
+    /// Read `path` when an added type has its lower-case extension `ext`.
+    pub import: fn(&str, &Path) -> Option<Result<Imported>>,
+}
+static ADDED_IMPORTERS: std::sync::OnceLock<AddedImporters> = std::sync::OnceLock::new();
+/// Register the added-type hooks (once; later calls are ignored).
+pub fn set_added_importers(added: AddedImporters) {
+    let _ = ADDED_IMPORTERS.set(added);
+}
+
+/// The added types now (see [`AddedImporters`]).
+fn added_extensions() -> Vec<(String, String)> {
+    ADDED_IMPORTERS
+        .get()
+        .map(|added| (added.extensions)())
+        .unwrap_or_default()
+}
+
+/// True when `path` has an extension `import` reads: a built-in one or
+/// one a kit that's on adds (`kit_import`, KIT-1).
 pub fn is_importable(path: &Path) -> bool {
     path.extension()
         .and_then(|e| e.to_str())
-        .is_some_and(|e| IMPORT_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))
+        .map(str::to_ascii_lowercase)
+        .is_some_and(|e| {
+            IMPORT_EXTENSIONS.contains(&e.as_str())
+                || added_extensions().iter().any(|(added, _)| *added == e)
+        })
+}
+
+/// Every extension `import` reads now: the built-in ones, then those of
+/// kits that are on, each with the Import dialog's label for it.
+pub fn import_extensions() -> Vec<(String, String)> {
+    let mut list: Vec<(String, String)> = IMPORT_EXTENSIONS
+        .iter()
+        .map(|e| (e.to_string(), e.to_ascii_uppercase()))
+        .collect();
+    list.extend(added_extensions());
+    list
 }
 
 /// A scene read from an interchange file, with what did not come across.
@@ -331,6 +372,15 @@ pub fn import_with(path: &Path, usd: &UsdImportOptions) -> Result<Imported> {
         .and_then(|e| e.to_str())
         .map(str::to_ascii_lowercase)
         .unwrap_or_default();
+    // A file type a kit adds goes to the kit's helper program. Kits can't
+    // take over a built-in type (kit_manifest), so this never shadows one.
+    if !IMPORT_EXTENSIONS.contains(&ext.as_str())
+        && let Some(imported) = ADDED_IMPORTERS
+            .get()
+            .and_then(|added| (added.import)(&ext, path))
+    {
+        return imported;
+    }
     let bytes = operandi_files::read_whole(path, MAX_IMPORT_BYTES)?;
     let stem = path
         .file_stem()

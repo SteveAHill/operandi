@@ -423,24 +423,31 @@ fn text(f: &mut ToolForm<P>) {
     .field(make_uvs("txt-uvs"));
 }
 
-fn tube(f: &mut ToolForm<P>, t: &TubeParameters) {
+fn tube(f: &mut ToolForm<P>, t: &TubeParameters, current: Option<usize>) {
     // DPM-01/08/11: Mode first, as on the curve tools.
     f.push(crate::draw_tools::app_mode_row(
         |m| m.tube,
         |m, mode| m.tube = mode,
     ));
-    f.heading(format!("Control points ({})", t.points.len()));
-    for i in 0..t.points.len() {
+    // #44 (Steve Hill): as on the curve tools, the current point's
+    // position only (the one last clicked in the view, else the last).
+    let count = t.points.len();
+    f.note(format!("Number of Points {count}"));
+    if let Some(c) = current.filter(|&c| c < count).or(count.checked_sub(1)) {
+        f.note(format!(
+            "Current Point {} · click a point in the view to edit another",
+            c + 1
+        ));
         f.fields_from(plain_vector(
-            &format!("tub_point{i}_"),
-            &format!("Point {}", i + 1),
+            "tub_current",
+            "Position",
             move |p: &P| match p {
-                ShapeParameters::Tube(t) => t.points.get(i).copied().unwrap_or_default(),
+                ShapeParameters::Tube(t) => t.points.get(c).copied().unwrap_or_default(),
                 _ => DVec3::ZERO,
             },
             move |p, a, v| {
                 if let ShapeParameters::Tube(t) = p
-                    && let Some(point) = t.points.get_mut(i)
+                    && let Some(point) = t.points.get_mut(c)
                 {
                     point[a] = v;
                 }
@@ -539,7 +546,7 @@ impl ToolFields for ShapeFields {
             ShapeParameters::Torus(_) => torus(&mut f),
             ShapeParameters::Capsule(_) => capsule(&mut f),
             ShapeParameters::Arc(_) => arc(&mut f),
-            ShapeParameters::Tube(t) => tube(&mut f, t),
+            ShapeParameters::Tube(t) => tube(&mut f, t, app.point_modes.tube_current),
             ShapeParameters::Text(_) => text(&mut f),
             ShapeParameters::Teapot(_) => teapot(&mut f),
         }
@@ -632,13 +639,9 @@ impl ToolFields for ShapeFields {
         else {
             return;
         };
-        // A removed point's fields go with it.
-        let gone = |key: &String| {
-            key.strip_prefix("tub_point")
-                .and_then(|rest| rest.split_once('_'))
-                .and_then(|(i, _)| i.parse::<usize>().ok())
-                .is_some_and(|i| i >= t.points.len())
-        };
+        // Adding or removing a point can change which point the Position
+        // rows show (#44): they read it again.
+        let gone = |key: &String| key.starts_with("tub_current");
         app.fields.retain(|k, _| !gone(k));
         app.confirmed_fields.retain(|k, _| !gone(k));
         app.field_errors.retain(|k, _| !gone(k));
@@ -733,6 +736,57 @@ mod tests {
         });
         a.run(Command::Drop);
         assert_eq!(counts(&a), (8, 6));
+    }
+
+    #[test]
+    fn tube_panel_shows_the_current_point_only() {
+        // #44 (Steve Hill): like the curve tools, Tool Properties shows the
+        // current point's position, not a row per point; with none picked,
+        // the last one.
+        use crate::tool_form::Item;
+        let mut a = app("Tube");
+        a.form_change::<ShapeFields>(|p| {
+            if let ShapeParameters::Tube(t) = p {
+                t.points = vec![DVec3::ZERO, DVec3::Y, DVec3::new(1., 2., 0.)];
+            }
+        });
+        let labels = |a: &Operandi| -> Vec<String> {
+            let p = ShapeFields::params(a).unwrap();
+            ShapeFields::form(a, &p)
+                .items
+                .iter()
+                .filter_map(|i| match i {
+                    Item::Field(f) => Some(f.row.label.clone()),
+                    _ => None,
+                })
+                .collect()
+        };
+        let shown = labels(&a);
+        assert!(!shown.iter().any(|l| l.starts_with("Point ")), "{shown:?}");
+        assert!(shown.contains(&"Position X".to_owned()), "{shown:?}");
+        let position = |a: &Operandi| {
+            let p = ShapeFields::params(a).unwrap();
+            let form = ShapeFields::form(a, &p);
+            form.items
+                .iter()
+                .find_map(|i| match i {
+                    Item::Field(f) if f.row.label == "Position X" => Some(f.row.key.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        // None picked: the last point. Picking point 2 shows it, and the
+        // fields edit it.
+        assert_eq!(position(&a), "tub_current0");
+        a.point_modes.tube_current = Some(1);
+        a.sync_form::<ShapeFields>(true);
+        assert_eq!(a.fields["tub_current1"], workspace::number_text(1., " m"));
+        enter(&mut a, "tub_current0", "0.5 m");
+        let ShapeParameters::Tube(t) = &a.editor.shape.as_ref().unwrap().requested else {
+            panic!("tube")
+        };
+        assert_eq!(t.points[1], DVec3::new(0.5, 1., 0.), "{}", a.status);
+        assert_eq!(t.points[2], DVec3::new(1., 2., 0.));
     }
 
     #[test]

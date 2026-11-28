@@ -40,7 +40,7 @@ impl Operandi {
         {
             return Vec::new();
         }
-        if self.handle_preferences.selected == crate::handle_preferences::HandleDetail::Invisible {
+        if !self.handle_preferences.selected_shown() {
             return Vec::new();
         }
         // On-screen handle lengths follow Handle Scale: Standard, and with

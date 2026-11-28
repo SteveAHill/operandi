@@ -2868,6 +2868,75 @@ Provisional:
   Longer labels widen their button outward. The pointer over a button
   picks it even where a diagonal's corner reaches into a side's wedge.
   The greyed-entry reason shows under the whole pie.
+- **PM-Q14 Pies as forms (pie engine, 2026-11-27).** A pie is a form
+  with style `pie` (UIC-308); its first eight controls are the slots,
+  clockwise from the top, and an empty slot is a `space` control. Shipped
+  pies keep icon mode Text (labels only, as before); a New Pie starts with
+  eight empty slots and Both. The Layouts pie stays generated (its slots
+  are the layouts), opened through the same engine, and can't be exported
+  or used as a sub-pie.
+- **PM-Q15 Sub-pie gesture.** Picking a sub-pie slot (releasing the key
+  over it, or clicking it) opens the sub-pie in place at the same centre
+  instead of closing (UIC-310). The key is up by then, so the sub-pie
+  waits for a click. Esc, or a click in the centre's dead zone, goes back
+  one level; in the outermost pie both still close it, as before.
+- **PM-Q16 Loops.** Setting a sub-pie that leads back to the pie is
+  refused (`operandi.form.slot`), and the Form Editor only offers pies
+  that don't. A loop that arrives another way (a hand-edited file, an
+  import over existing pies) greys the slot naming a pie that is already
+  open, with the reason.
+- **PM-Q17 Any line's state.** A slot whose line isn't one of the pies'
+  own view, shading, toggle, falloff or action-centre lines or an Input
+  Map action is greyed from its command's answer and, when the answer is
+  "on", shows a filled dot. A line no command has is red and does
+  nothing (UIC-221); an `@macro` line counts as known, as on toolbox
+  buttons (UIC-222), until macros exist.
+- **PM-Q18 The name in the centre (UIC-313).** One line, at most 130 px,
+  ending in "…" when longer, on a small plate that replaces the dot; the
+  arrow toward the highlighted slot sits just outside the plate.
+- **PM-Q19 Input Map rows.** Shipped pies keep their old row names (Pie:
+  View Direction ...); the saved map stores the line `operandi.pie.open
+  <id>`, and a map or layout key saved with the old names moves to the
+  new lines. A user pie's row comes after the factory actions, named
+  "Pie: <its name>". Assign Key opens the Input Map on that row, waiting
+  for its keys; nothing is saved until Save Input Map.
+- **PM-Q20 Pie files (UIC-312).** Export Pie writes JSON (`.oppie`):
+  version, the pie's id and its form with every sub-pie form it reaches.
+  Without a file panel it saves to the data folder's Saved Pies folder,
+  as Save Form does (LAY-Q67). Import Pie with an id that is taken asks
+  Rename / Replace / Cancel; Rename gives `<id>.2` (then .3 ...) and
+  points slots at the renamed sub-pies; Replace saves over the user's
+  copy (Revert still brings a shipped pie back).
+- **PM-Q21 Dragging slots.** In the Form Editor's ring, dragging a slot
+  onto another swaps the two (`operandi.form.swap`), so every other slot
+  keeps its place, rather than moving the rest along.
+- **PM-Q22 Sub-pie slots.** A sub-pie slot shows its own label or else
+  the sub-pie's name, with a small triangle at its outer end pointing
+  away from the centre (a tiny flat glyph, not an icon).
+- **PM-Q23 Pick (Form Editor, 2026-11-27).** Pick sits beside History
+  under a Command field (pie slots and every button control). The next
+  click on a button drawn in the window (toolbox, toolbar, workbench, the
+  in-window menus) fills the control: its line, the icon the clicked
+  button wears (its own, else its tool's), and its label only when the
+  control has none. The control is found by its line among all forms, so
+  a line on several buttons takes the first form's look. Lines the Form
+  Editor itself runs (operandi.form.*, operandi.pie.*, workbench edits)
+  still run while picking, and a key's line is never picked. The native
+  macOS menu bar's entries can't be picked (they aren't clicks in the
+  window). The pointer is the system pointing hand while picking (Jason,
+  2026-11-27), for Pick to Add too.
+- **PM-Q24 Icons (UIC-314).** Browse Icons lists the icon studio's icons
+  (rendered set), stored by the name forms already use; a custom file
+  (PNG, JPEG or SVG, drawn at up to 64 px) replaces a built-in icon on
+  that control and the other way round. Choosing a file copies it into
+  the data folder's Layouts/Icons (the same picture again reuses the copy;
+  another picture with the same name becomes name-2). Clear removes both.
+- **PM-Q25 Icons in files.** Export Pie embeds each custom file (base64,
+  by name) and Import Pie writes them into the importer's Layouts/Icons.
+  Save Form, which has no Import Form yet, copies them into a
+  "<form> icons" folder beside the saved file and names those copies.
+  A missing file draws a dashed box with "?" in the pie and the editor,
+  and the editor says "Missing file".
 
 ## Texture Locators, stage 1 (texture-locators, 2026-11-07), provisional
 
@@ -4187,6 +4256,14 @@ picks the spec leaves open, all provisional:
   the back. Built: a Move setting **Move Back Faces** (off by default) that
   also grabs points facing away inside the tip. Open: does the reference
   Move grab back faces, and should the default be on? Needs a hands-on check.
+- **SCQ-12 Push, Smooth and Move forms** (2026-11-27). *Answered by spec
+  BEHAVIOR-SCULPT-PUSH-SMOOTH-MOVE (SPM-01..30), built as written:* Push =
+  Inflate's rows with Normal Mode (Average) and no Paint Mode; Smooth =
+  Sculpt Mode, Offset Amount, greyed Soft Filter; Move = Sculpt Mode, Move
+  Mode, Move Back Faces, Offset Amount, Smooth Amount, greyed Rigid UVs.
+  The four list Sculpt Mode's three choices and Curve Constraint as None,
+  Background 3D, Background 2D. Lock Borders / Lock Corners sit side by
+  side on one row (SPM-01), a UIC-115 departure Jason approved 2026-11-28.
 - **PH-Q37 Handles on Cone, Ellipsoid, Torus, Capsule, Text** (#37; Q-CN-06,
   NPR-Q01 leave them open). Built (provisional): once drawn, move arrows at
   the centre and a radius square at each end of each axis; Ellipsoid and
@@ -8865,8 +8942,8 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   Curve / Bezier, Mode Continuous / Separate, Delete Geometry removes the
   polygons the edges belong to; Bezier Tangent Weight kept, not shown.
 - **MOQ-46 Curve Rebuild op, provisional.** Evenly spaced by length along
-  the drawn shape; result a Curve (lines stay lines). Rebuild Spans not
-  built.
+  the drawn shape; result a Curve (lines stay lines). Rebuild Spans
+  built 2026-11-27 (MOQ-69).
 - **MOQ-47 Radial Sweep op id, provisional.** `radial.sweep.item`, one op
   (reference: Sweep Effector + Helix). Unused Sweep Effector channels not
   kept. Mesh space.
@@ -8903,7 +8980,7 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
 - **MOQ-61 Set Seam blank map, provisional.** "UV Seam" (UVS-P02).
 - **MOQ-62 Set Vertex Normals channels, provisional.** Tolerance, Method,
   Angle, Power, Color Map Name kept, not built; Vertex Normal Options
-  defaults. UV Transform (`uvtransform`, help table only) not built.
+  defaults. UV Transform (`uvtransform`) built 2026-11-27 (MOQ-69).
 - **MOQ-63 Path slice ops' cutter, provisional.** Curve Slice, Pen Slice
   and Primitive Slice (Operandi ids `curve.slice.item`, `pen.slice.item`,
   `prim.slice.item`; the reference saves generator + `effector.cutter.item`
@@ -8911,8 +8988,8 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   built cuts by position (Core, Tunnel, Stencil, Slice); Axis by position
   X, Y, Z, Custom, Action Axis; depth0/depth1/preview kept, not shown.
   Select Sliced Edges adds the new edges to the named edge set. Slice
-  Effector alone (needs a generator) and Lace Geometry (no channels in
-  TYPE-IDS) not built.
+  Effector alone (needs a generator) not built; Lace Geometry built
+  2026-11-27 (MOQ-69).
 - **MOQ-64 Curve/Pen Slice path, provisional.** Curve Index / Polyline
   Index count the mesh's own curve elements in order (no curve items
   yet); the curve isn't cut and stays; Action Axis = world Y; no curves =
@@ -8980,7 +9057,27 @@ extrude, smooth-shift-thicken, split, quadruple and flip case).
   triangle's frame), saved with the step (Jason 2026-11-26); Rebind is a
   Properties button that measures it again. A changed point count below
   or missing target polygons pass the mesh through and ask for Rebind.
-  Unclear: whether Rebind needs its own command for scripts.
+  Scripts rebind with `deformer.rebind deformer:op:<item>:<op>`
+  (Operandi's own name, 2026-11-27).
+- **MOQ-69 Tidy batch ops, provisional.** Spec: Operandi-specs
+  meshops-tidy-2026-11-27 (TB-xx). Built with the spec's suggested answers
+  (Jason to confirm): TB-Q1 an edge's falloff weight at its midpoint;
+  TB-Q2 one falloff per Select by Falloff (Operandi keeps a copy of the
+  active falloff, as the Falloff step, in mesh space, no falloff item);
+  TB-Q3 Distance spans = floor(L/D + 1e-6); TB-Q4 a closed curve's
+  closing span splits like any other; TB-Q5 UV Transform matches split
+  triangles by barycentric weights; TB-Q6 Lace Start/End trim properly,
+  Start ≥ End adds nothing. Also Operandi's readings: Conditional Loop's
+  "first point" is the lower point number, seeds of another kind convert
+  to edges, a walk from inside stops at a border point, edges on the
+  arriving edge's polygons are tried last; Rebuild Spans picks a span
+  when a chosen edge joins two of its stored points, an axis cast looks
+  the Flip way then the other, Broken Tangents on leaves a pushed knot's
+  handles, Span Reduction / Falloff By Distance saved with no effect,
+  choices stored by position, Alignment Mesh key `alignmentMesh`; UV
+  Transform with Use Source Transform off ignores the item's own
+  placement; Lace's Guide Mesh key `guide`, Custom Profile not built
+  (note, circle), closed whole guides make an uncapped closed tube.
 - **UVN-O-grow-quads-seam with corner UVs only, provisional.** Spec:
   new-point-uvs-2026-11-02 (UVN-T-06). Start: the seam grid, read as corner
   UVs only (how Operandi and imported meshes keep UVs); Grow Quads on edges
@@ -10156,6 +10253,10 @@ Built: what a press off the handle does under each Action Center (`ActionContext
 - ACR-Q19 Item mode is unchanged; its presses come with the Item-mode step.
 - ACR-Q20 In a UV view with a UV tool on, Element picks the UV point or edge under every click (UVT-133 was one click).
 
+## Solid Sketch handles (#45, 2026-11-27)
+
+- **SSH-Q1 (Jason, 2026-11-27, answered on #45).** Red, green and blue squares size the node along X, Y and Z; Twist has its own dark green handle, dragged left and right. Replaces spec 5.2's green = Twist. *Built.* Provisional: the Twist dot sits 18 points beyond the green square on screen (straight up when Y is seen end-on), and a drag turns half a degree per point, right one way and left the other.
+
 ## Action Center rule sheet v6, step 3: one pivot service (2026-11-27, branch ac-rewrite-3, provisional)
 
 Built: the pivot service resolves a drag's base once into groups (`pivot_service::Resolved`: handle, and per mesh its groups with identity, frame, twin frame and targets carrying role and side); the transform tools' preview, handle and handle drag read only that. Local's axes are their own axis rule (`AxisOrientation::Local`), so the two mixing rules exist. Where the sheet left room:
@@ -10168,6 +10269,5 @@ Built: the pivot service resolves a drag's base once into groups (`pivot_service
 - ACR-Q26 A falloff that reaches past the selection (Soft Selection, Coplanar, Element) adds its points to the groups, as before; in Vertex mode they can join Local clusters, and the handle now follows the same clusters the edit uses.
 - ACR-Q27 The Default Action Center preferences list no Local centre or Local axis yet (menu table, step 5); the bridge takes `axis: "local"`.
 - ACR-Q28 **Local handle on touching faces (Jason's hands-on check, 2026-11-27).** A wedge, its two sloped faces selected left then right, Local, Rotate. The faces share the ridge, so C-LOCAL makes them one cluster: the handle sits at the cluster's box middle with axes fitted to all its points (the longer left face dominates), and pick order plays no part. Jason expected the handle on the last-selected face with that face's own frame. The sheet says cluster centre and cluster frame; which to build is his call. Also open under the sheet's own wording: A-LOCAL's Z should be the cluster's normal vote itself, where the code takes the fitted direction nearest it (the review's A-LOCAL row). Steps 2 and 3 behave the same here. Tests: `ac_local_touching_faces.rs` (his expectation is the ignored one).
-
 - ACR-Q29 **Local's axes: the sheet's Z-normal against a typed Rotate case (2026-11-28, branch ac-rewrite-3b).** Jason's report: a cube's two opposite X walls, Local, Rotate, Symmetry off: the ring about the shared level direction leaned the walls opposite ways. Cause: AC-Q5 (the normal on the item axis nearest it) gave the wall facing −X the opposite Z. Built: A-LOCAL as AC-RULES v6 has it, Z on the normal at any tilt, X along the surface pointed to +X, Y = Z × X; AC-Q5 and ACS-12 ("Local Y is the island normal") are superseded. The recorded cases disagree with each other: ACS-H-local-x-pair-scale (Scale 2, 1.5, 1 typed, Symmetry X) was recorded with Z along the normal and now passes; ACS-HL-rotate-local-typedRY30 (Rotate Y 30 typed, Symmetry off) was recorded turning each island about its normal, which is Rotate Z under the sheet, and is now a known gap. Which is right for Rotate? Start: eight islands selected, Local, Rotate Y 30 typed. (Keeping Y on the normal at any tilt would also fix Jason's report and pass the Rotate case, but fail the Scale case and the sheet.)
 - ACR-Q30 **A-LOCAL details the sheet leaves open, provisional.** (a) Both in-surface directions as near X (a wall facing straight along X): the one nearer the item's Z, pointed to +Z, so the wall gets its level direction, as A-ELEM takes world Z there; still equal, the one of more spread (ACL-Q3). (b) Z on a cluster that isn't flat is the principal direction nearest the normal vote, not the vote itself: ACS-HL-scale-local-dragX and -rotate-local-dragRing were recorded that way on the bent strip (to 1e-3). (c) A vote that mostly cancels still falls back to the cluster's shape (FG-Q02). (d) "Nearest X" is the item's X (ACL-Q4), the sheet says world X; the two agree on an item that isn't turned.
