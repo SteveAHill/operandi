@@ -15,7 +15,7 @@ Open the **Sculpt** toolbox tab (between Deform and Edit).
 2. Click Push: it lights in the accent colour; Tool Properties shows
    **Sculpt: Push** (one block: brush rows, a divider, Interpolation
    Step / Continuous Stroke / Curve Constraint, greyed Set Color / Color /
-   Alpha, then Lock Borders and Lock Corners) and **Smooth Brush**. Offset
+   Alpha, then Lock Borders and Lock Corners side by side) and **Smooth Brush**. Offset
    Distance is greyed while Offset Mode is Adaptive; switch to Absolute
    and Offset Amount greys instead. [SC-101, SC-102, SI §2]
 3. Click Inflate: no Normal Mode row; Smooth Mode lists Shift Key, Low

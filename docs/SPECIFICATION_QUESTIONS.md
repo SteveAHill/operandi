@@ -4262,9 +4262,8 @@ picks the spec leaves open, all provisional:
   Sculpt Mode, Offset Amount, greyed Soft Filter; Move = Sculpt Mode, Move
   Mode, Move Back Faces, Offset Amount, Smooth Amount, greyed Rigid UVs.
   The four list Sculpt Mode's three choices and Curve Constraint as None,
-  Background 3D, Background 2D. Open: SPM-01 puts Lock Borders / Lock
-  Corners side by side on one row; kept stacked per UIC-115 until Jason
-  decides.
+  Background 3D, Background 2D. Lock Borders / Lock Corners sit side by
+  side on one row (SPM-01), a UIC-115 departure Jason approved 2026-11-28.
 - **PH-Q37 Handles on Cone, Ellipsoid, Torus, Capsule, Text** (#37; Q-CN-06,
   NPR-Q01 leave them open). Built (provisional): once drawn, move arrows at
   the centre and a radius square at each end of each axis; Ellipsoid and

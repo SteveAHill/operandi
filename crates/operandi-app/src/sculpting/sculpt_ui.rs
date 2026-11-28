@@ -773,29 +773,34 @@ fn row_field(
 }
 
 /// Lock Borders and Lock Corners (SC-72..74, SI-24): the Sculpt tab's
-/// switches, so ticking one here ticks it there. Stacked one per row
-/// (UIC-115) rather than side by side on one row.
+/// switches, so ticking one here ticks it there. Side by side on one row,
+/// Borders left (SPM-01): a departure from UIC-115's stacked checkboxes,
+/// approved by Jason 2026-11-28.
 fn locks_item() -> tf::Item<BrushSettings> {
     tf::Item::Custom(std::rc::Rc::new(|app: &mut Operandi, ui: &mut Ui| {
-        for (corners, label, tip) in [
-            (false, "Lock Borders", "Points on open edges never move"),
-            (
-                true,
-                "Lock Corners",
-                "Border points used by one polygon never move",
-            ),
-        ] {
-            let s = &app.sculpt.settings;
-            let mut on = if corners {
-                s.lock_corners
-            } else {
-                s.lock_borders
-            };
-            let response = crate::option_row::check(ui, label, &mut on);
-            if response.changed() {
-                app.set_sculpt_lock(corners, on);
+        let mut changes = Vec::new();
+        crate::option_row::row(ui, "", |ui| {
+            for (corners, label, tip) in [
+                (false, "Lock Borders", "Points on open edges never move"),
+                (
+                    true,
+                    "Lock Corners",
+                    "Border points used by one polygon never move",
+                ),
+            ] {
+                let s = &app.sculpt.settings;
+                let mut on = if corners {
+                    s.lock_corners
+                } else {
+                    s.lock_borders
+                };
+                if ui.checkbox(&mut on, label).on_hover_text(tip).changed() {
+                    changes.push((corners, on));
+                }
             }
-            response.on_hover_text(tip);
+        });
+        for (corners, on) in changes {
+            app.set_sculpt_lock(corners, on);
         }
     }))
 }
