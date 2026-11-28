@@ -55,22 +55,6 @@ pub(crate) fn action_line(index: u32) -> Option<String> {
 /// as Edit > Preferences… and the input map's Preferences action.
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 pub(crate) const PREFERENCES_LINE: &str = "Preferences";
-
-/// The app menu's Preferences… key equivalent (#67), from the input map's
-/// Preferences binding: "," (shown as ⌘, and handled by the menu) while it
-/// is Cmd+, as by default; none once it's remapped or cleared, so the menu
-/// never shadows the new chord or takes Cmd+, from another action.
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
-pub(crate) fn preferences_key_equivalent(binding: Option<&str>) -> &'static str {
-    let cmd_comma = binding.is_some_and(|b| {
-        crate::input::matches_chord(
-            b,
-            eframe::egui::Key::Comma,
-            eframe::egui::Modifiers::MAC_CMD,
-        )
-    });
-    if cmd_comma { "," } else { "" }
-}
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Item {
     pub action: Action,
@@ -311,13 +295,18 @@ mod tests {
         assert!(a.show_preferences);
         let default = crate::input::default_bindings();
         assert_eq!(
-            preferences_key_equivalent(default.get(PREFERENCES_LINE).map(String::as_str)),
+            crate::input::preferences_key_equivalent(
+                default.get(PREFERENCES_LINE).map(String::as_str)
+            ),
             ","
         );
-        assert_eq!(preferences_key_equivalent(Some("Cmd+P")), "");
-        assert_eq!(preferences_key_equivalent(Some("Shift+Cmd+,")), "");
-        assert_eq!(preferences_key_equivalent(Some("")), "");
-        assert_eq!(preferences_key_equivalent(None), "");
+        assert_eq!(crate::input::preferences_key_equivalent(Some("Cmd+P")), "");
+        assert_eq!(
+            crate::input::preferences_key_equivalent(Some("Shift+Cmd+,")),
+            ""
+        );
+        assert_eq!(crate::input::preferences_key_equivalent(Some("")), "");
+        assert_eq!(crate::input::preferences_key_equivalent(None), "");
     }
     #[test]
     fn native_model_keeps_full_menu_inventory_and_focus_aware_shortcuts() {
