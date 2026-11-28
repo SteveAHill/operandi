@@ -63,10 +63,10 @@ impl Editor {
         let staged = (
             self.scene.clone(),
             self.live.clone(),
-            self.cone.clone(),
-            self.ellipsoid.clone(),
-            self.shape.clone(),
-            self.solid_sketch.clone(),
+            self.session.cone.clone(),
+            self.session.ellipsoid.clone(),
+            self.session.shape.clone(),
+            self.session.solid_sketch.clone(),
         );
         self.symmetry = symmetry;
         if let Err(error) = self.follow_symmetry(previous) {
@@ -74,10 +74,10 @@ impl Editor {
             (
                 self.scene,
                 self.live,
-                self.cone,
-                self.ellipsoid,
-                self.shape,
-                self.solid_sketch,
+                self.session.cone,
+                self.session.ellipsoid,
+                self.session.shape,
+                self.session.solid_sketch,
             ) = staged;
             return Err(error);
         }
@@ -132,17 +132,22 @@ impl Editor {
         {
             self.preview(parameters, false)?;
         }
-        if let Some(session) = self.cone.as_ref().filter(|s| s.preview.is_some()) {
+        if let Some(session) = self.session.cone.as_ref().filter(|s| s.preview.is_some()) {
             self.configure_cone(session.requested.clone())?;
         }
-        if let Some(session) = self.ellipsoid.as_ref().filter(|s| s.preview.is_some()) {
+        if let Some(session) = self
+            .session
+            .ellipsoid
+            .as_ref()
+            .filter(|s| s.preview.is_some())
+        {
             self.configure_ellipsoid(session.requested.clone())?;
         }
-        if let Some(session) = self.shape.as_ref().filter(|s| s.preview.is_some()) {
+        if let Some(session) = self.session.shape.as_ref().filter(|s| s.preview.is_some()) {
             self.configure_shape(session.requested.clone())?;
         }
         let mirror = crate::solid_sketch_symmetry::SketchMirror::of(current);
-        if let Some(session) = &mut self.solid_sketch {
+        if let Some(session) = &mut self.session.solid_sketch {
             session.follow_symmetry(mirror);
         }
         Ok(())
@@ -250,6 +255,7 @@ impl Editor {
             preview.is_some() || error.is_some()
         };
         if let Some(p) = self
+            .session
             .cone
             .as_ref()
             .filter(|s| shown(&s.preview, &s.error))
@@ -258,6 +264,7 @@ impl Editor {
             let _ = self.configure_cone(p);
         }
         if let Some(p) = self
+            .session
             .ellipsoid
             .as_ref()
             .filter(|s| shown(&s.preview, &s.error))
@@ -266,6 +273,7 @@ impl Editor {
             let _ = self.configure_ellipsoid(p);
         }
         if let Some(p) = self
+            .session
             .shape
             .as_ref()
             .filter(|s| shown(&s.preview, &s.error))

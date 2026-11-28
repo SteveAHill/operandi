@@ -43,7 +43,7 @@ impl Editor {
     /// Symmetry notice (Solid Sketch, SS-SYM-04/08). `None` when there is
     /// nothing to say.
     pub fn symmetry_notice(&self) -> Option<String> {
-        if let Some(session) = &self.solid_sketch {
+        if let Some(session) = &self.session.solid_sketch {
             return session.symmetry_notice();
         }
         self.symmetry.axis?;

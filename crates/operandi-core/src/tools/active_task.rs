@@ -26,21 +26,21 @@ impl Editor {
     pub fn active_task(&self) -> Option<ActiveTask> {
         if let Some(live) = &self.live {
             Some(ActiveTask::Live(live.tool))
-        } else if self.cone.is_some() {
+        } else if self.session.cone.is_some() {
             Some(ActiveTask::Cone)
-        } else if self.ellipsoid.is_some() {
+        } else if self.session.ellipsoid.is_some() {
             Some(ActiveTask::Ellipsoid)
-        } else if let Some(s) = &self.shape {
+        } else if let Some(s) = &self.session.shape {
             Some(ActiveTask::Shape(s.kind()))
-        } else if self.spike.is_some() {
+        } else if self.session.spike.is_some() {
             Some(ActiveTask::Spike)
-        } else if self.bridge.is_some() {
+        } else if self.session.bridge.is_some() {
             Some(ActiveTask::Bridge)
-        } else if self.reduction.is_some() {
+        } else if self.session.reduction.is_some() {
             Some(ActiveTask::Reduction)
-        } else if self.pen_draft.is_some() {
+        } else if self.session.pen_draft.is_some() {
             Some(ActiveTask::Pen)
-        } else if self.solid_sketch.is_some() {
+        } else if self.session.solid_sketch.is_some() {
             Some(ActiveTask::SolidSketch)
         } else {
             None
@@ -57,14 +57,14 @@ impl Editor {
     pub fn open_task_slots(&self) -> usize {
         [
             self.live.is_some(),
-            self.cone.is_some(),
-            self.ellipsoid.is_some(),
-            self.shape.is_some(),
-            self.spike.is_some(),
-            self.bridge.is_some(),
-            self.reduction.is_some(),
-            self.pen_draft.is_some(),
-            self.solid_sketch.is_some(),
+            self.session.cone.is_some(),
+            self.session.ellipsoid.is_some(),
+            self.session.shape.is_some(),
+            self.session.spike.is_some(),
+            self.session.bridge.is_some(),
+            self.session.reduction.is_some(),
+            self.session.pen_draft.is_some(),
+            self.session.solid_sketch.is_some(),
         ]
         .into_iter()
         .filter(|&open| open)

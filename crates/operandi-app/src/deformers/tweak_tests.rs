@@ -989,6 +989,7 @@ fn symmetry_toggled_with_cone_open_redraws_the_preview() {
     a.execute("Cone");
     let mut p = a
         .editor
+        .session
         .cone
         .as_ref()
         .expect("cone armed")
@@ -998,6 +999,7 @@ fn symmetry_toggled_with_cone_open_redraws_the_preview() {
     a.run(Command::ConfigureCone(p));
     let points = |a: &Operandi| {
         a.editor
+            .session
             .cone
             .as_ref()
             .unwrap()

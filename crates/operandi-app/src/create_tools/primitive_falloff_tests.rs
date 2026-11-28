@@ -110,7 +110,11 @@ fn armed_torus() -> Operandi {
         operandi_core::ShapeParameters::Torus(t),
     ));
     assert!(
-        a.editor.shape.as_ref().is_some_and(|s| s.preview.is_some()),
+        a.editor
+            .session
+            .shape
+            .as_ref()
+            .is_some_and(|s| s.preview.is_some()),
         "{}",
         a.status
     );
@@ -118,6 +122,7 @@ fn armed_torus() -> Operandi {
 }
 fn torus_preview(a: &Operandi) -> Vec<DVec3> {
     a.editor
+        .session
         .shape
         .as_ref()
         .unwrap()
@@ -139,7 +144,7 @@ fn a_falloff_handle_drag_reshapes_the_open_torus_and_keeps_the_tool() {
         ..Default::default()
     };
     a.run(Command::SpatialFalloff(Some(field.into())));
-    assert!(a.editor.shape.is_some(), "{}", a.status);
+    assert!(a.editor.session.shape.is_some(), "{}", a.status);
     let shaped = torus_preview(&a);
     assert_ne!(shaped, plain, "the falloff shapes the preview");
     let (at, _) = a.falloff_handles(r)[0];
@@ -150,7 +155,7 @@ fn a_falloff_handle_drag_reshapes_the_open_torus_and_keeps_the_tool() {
         "the falloff's Start is pickable"
     );
     a.drag_falloff(0, field.into(), q, q + vec2(0., -80.), r);
-    assert!(a.editor.shape.is_some(), "still the Torus tool");
+    assert!(a.editor.session.shape.is_some(), "still the Torus tool");
     assert_ne!(torus_preview(&a), shaped, "the preview follows the drag");
 }
 

@@ -60,11 +60,11 @@ impl Operandi {
                     .live
                     .as_ref()
                     .is_none_or(|l| !l.applied && l.tool == Tool::Extrude)
-                && self.editor.cone.is_none()
-                && self.editor.bridge.is_none()
-                && self.editor.spike.is_none()
-                && self.editor.ellipsoid.is_none()
-                && self.editor.shape.is_none())
+                && self.editor.session.cone.is_none()
+                && self.editor.session.bridge.is_none()
+                && self.editor.session.spike.is_none()
+                && self.editor.session.ellipsoid.is_none()
+                && self.editor.session.shape.is_none())
     }
 
     /// How the active tool can be left now, by the same rules as

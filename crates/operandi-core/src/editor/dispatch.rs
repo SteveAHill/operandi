@@ -479,7 +479,7 @@ impl Editor {
         if let Command::SolidSketchStrip = &cmd {
             return self.strip_solid_sketch();
         }
-        if self.solid_sketch.is_some()
+        if self.session.solid_sketch.is_some()
             || matches!(
                 &cmd,
                 Command::SolidSketchStart { .. } | Command::SolidSketch { .. }
@@ -487,7 +487,7 @@ impl Editor {
         {
             return self.solid_sketch_command(cmd, report);
         }
-        if self.pen_draft.is_some()
+        if self.session.pen_draft.is_some()
             || matches!(
                 &cmd,
                 Command::PenStart
@@ -497,8 +497,8 @@ impl Editor {
                     | Command::PenRefine(_)
             )
         {
-            let point_undo = self.pen_draft.is_some() && matches!(&cmd, Command::Undo);
-            let cancel = self.pen_draft.is_some() && matches!(&cmd, Command::Cancel);
+            let point_undo = self.session.pen_draft.is_some() && matches!(&cmd, Command::Undo);
+            let cancel = self.session.pen_draft.is_some() && matches!(&cmd, Command::Cancel);
             let result = self.interactive_pen_command(cmd);
             if result.is_ok()
                 && let Some(report) = report
@@ -585,7 +585,7 @@ impl Editor {
         if matches!(cmd, Command::ResetToolAttributes) {
             return self.reset_tool_attributes();
         }
-        if self.bridge.is_some() && matches!(&cmd, Command::Pen(_)) {
+        if self.session.bridge.is_some() && matches!(&cmd, Command::Pen(_)) {
             return Err("Drop or Cancel Bridge before Pen".into());
         }
         if let Command::Pen(input) = &cmd {
@@ -597,7 +597,7 @@ impl Editor {
         }
         // RED-001: the Reduction session owns input until Drop or Cancel.
         // Picking another tool is handled by `tool_switch` above.
-        if self.reduction.is_some()
+        if self.session.reduction.is_some()
             && !matches!(
                 &cmd,
                 Command::InitializeReduction
@@ -613,7 +613,7 @@ impl Editor {
                 "Drop or Cancel Polygon Reduction before changing selection or context".into(),
             );
         }
-        if self.bridge.is_some()
+        if self.session.bridge.is_some()
             && !matches!(
                 &cmd,
                 Command::ConfigureBridge(_)
@@ -627,7 +627,7 @@ impl Editor {
         {
             return Err("Drop or Cancel Bridge before changing selection or context".into());
         }
-        if self.spike.is_some()
+        if self.session.spike.is_some()
             && !matches!(
                 &cmd,
                 Command::ConfigureSpike(_)
@@ -641,7 +641,7 @@ impl Editor {
         {
             return Err("Drop or Cancel Spike before changing selection or context".into());
         }
-        if self.ellipsoid.is_some()
+        if self.session.ellipsoid.is_some()
             && !matches!(
                 &cmd,
                 Command::ConfigureEllipsoid(_)
@@ -668,7 +668,7 @@ impl Editor {
         let shaped_by_falloff = |kind: crate::ShapeKind| {
             matches!(kind, crate::ShapeKind::Torus | crate::ShapeKind::Capsule)
         };
-        if let Some(active) = self.shape.as_ref().map(|s| s.kind())
+        if let Some(active) = self.session.shape.as_ref().map(|s| s.kind())
             && !(shaped_by_falloff(active)
                 && matches!(
                     &cmd,
@@ -798,12 +798,12 @@ impl Editor {
             Command::ArmEllipsoid => self.arm_ellipsoid()?,
             Command::ConfigureEllipsoid(p) => self.configure_ellipsoid(p)?,
             Command::ResetEllipsoid => {
-                if self.live.is_some() || self.cone.is_some() {
+                if self.live.is_some() || self.session.cone.is_some() {
                     return Err("Drop or Cancel the other tool before Ellipsoid Reset".into());
                 }
                 let mut staged = self.clone();
                 staged.presets.forget::<crate::EllipsoidPreset>();
-                if staged.ellipsoid.is_none() {
+                if staged.session.ellipsoid.is_none() {
                     staged.arm_ellipsoid()?;
                 }
                 staged.configure_ellipsoid(Default::default())?;
@@ -814,10 +814,13 @@ impl Editor {
                 self.insert_shape_unit(shape, destination)?
             }
             Command::ArmShape(kind) => {
-                if self.shape.is_some() {
+                if self.session.shape.is_some() {
                     return self.dispatch(Command::Drop);
                 }
-                if self.live.is_some() || self.cone.is_some() || self.ellipsoid.is_some() {
+                if self.live.is_some()
+                    || self.session.cone.is_some()
+                    || self.session.ellipsoid.is_some()
+                {
                     let mut staged = self.clone();
                     staged.dispatch(Command::Drop)?;
                     staged.dispatch(Command::ArmShape(kind))?;

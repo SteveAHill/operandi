@@ -124,7 +124,7 @@ impl Editor {
     pub fn history_eligibility(&self, action: HistoryAction) -> HistoryEligibility<'_> {
         // Solid Sketch keeps its own edit steps (solid_sketch_editor.rs);
         // with none left Undo closes the tool.
-        if let Some(session) = &self.solid_sketch {
+        if let Some(session) = &self.session.solid_sketch {
             let available = match action {
                 HistoryAction::Undo => true,
                 HistoryAction::Redo => session.can_redo(),
@@ -139,7 +139,7 @@ impl Editor {
                 label: available.then_some("Solid Sketch"),
             };
         }
-        if let Some(draft) = &self.pen_draft {
+        if let Some(draft) = &self.session.pen_draft {
             return HistoryEligibility {
                 owner: HistoryOwner::Pen,
                 availability: match action {
@@ -153,7 +153,7 @@ impl Editor {
                     .then_some("Pen Point"),
             };
         }
-        if self.reduction.is_some() {
+        if self.session.reduction.is_some() {
             return HistoryEligibility {
                 owner: HistoryOwner::Reduction,
                 availability: HistoryAvailability::Refused(HistoryRefusal::Reduction(action)),
@@ -345,19 +345,19 @@ impl Editor {
     /// (Ellipsoid, Cone, Torus/Capsule/Arc/Tube).
     pub(crate) fn primitive_session(&self) -> Option<PrimitiveSession> {
         let pending = |shown: bool, name: &'static str| shown.then_some(name);
-        if let Some(s) = &self.ellipsoid {
+        if let Some(s) = &self.session.ellipsoid {
             return Some(PrimitiveSession {
                 owner: HistoryOwner::Ellipsoid,
                 pending_preview: pending(s.preview.is_some(), "Ellipsoid"),
             });
         }
-        if let Some(s) = &self.shape {
+        if let Some(s) = &self.session.shape {
             return Some(PrimitiveSession {
                 owner: HistoryOwner::Shape,
                 pending_preview: pending(s.preview.is_some(), s.kind().label()),
             });
         }
-        if self.cone.is_some() {
+        if self.session.cone.is_some() {
             // Cone's value changes are undo steps of their own (MU-MID-01),
             // so its preview is never unrecorded.
             return Some(PrimitiveSession {

@@ -335,7 +335,7 @@ impl Operandi {
                     // Pen walls: right-drag left/right sets Offset.
                     if button == PointerButton::Secondary
                         && input::navigation(modifiers).is_none()
-                        && let Some(draft) = &self.editor.pen_draft
+                        && let Some(draft) = &self.editor.session.pen_draft
                         && draft.options().wall != WallMode::Off
                     {
                         let at = draft
@@ -576,7 +576,7 @@ impl Operandi {
                         && input::navigation(modifiers).is_none()
                         && !modifiers.ctrl
                         && !modifiers.mac_cmd
-                        && (self.editor.pen_draft.is_some() || self.tube_active())
+                        && (self.editor.session.pen_draft.is_some() || self.tube_active())
                     {
                         self.point_delete_press(pos, r, modifiers.shift);
                         self.navigation = Some(input::Navigation {
@@ -589,7 +589,7 @@ impl Operandi {
                         continue;
                     }
                     if self.editor.live.is_some()
-                        || self.editor.pen_draft.is_some()
+                        || self.editor.session.pen_draft.is_some()
                         || input::navigation(modifiers).is_some()
                     {
                         self.status="This tool/navigation context owns non-primary hauling; selection lasso is unavailable".into();
@@ -629,7 +629,7 @@ impl Operandi {
                         continue;
                     }
                     self.release_field_for_view_press(ui.ctx());
-                    if self.editor.solid_sketch.is_some()
+                    if self.editor.session.solid_sketch.is_some()
                         && !self.text_editor_focused(ui.ctx())
                         && let Some(kind) =
                             self.solid_sketch_press(pos, r, PointerButton::Primary, modifiers)
@@ -919,7 +919,7 @@ impl Operandi {
                     }
                     // Draw tools Pen: Shift-click ends this polygon and starts
                     // the next; it adds no point.
-                    if self.editor.pen_draft.is_some()
+                    if self.editor.session.pen_draft.is_some()
                         && modifiers.shift_only()
                         && !self.editor_owned_input
                         && !self.text_editor_focused(ui.ctx())
@@ -937,6 +937,7 @@ impl Operandi {
                         && !modifiers.mac_cmd
                         && self
                             .editor
+                            .session
                             .pen_draft
                             .as_ref()
                             .is_some_and(|d| d.options().strip())
@@ -945,7 +946,8 @@ impl Operandi {
                             .navigation
                             .navigation(PointerButton::Primary, modifiers)
                             .is_none();
-                    if self.editor.pen_draft.is_some() && (modifiers.is_none() || strip_end) {
+                    if self.editor.session.pen_draft.is_some() && (modifiers.is_none() || strip_end)
+                    {
                         if self.editor_owned_input || self.text_editor_focused(ui.ctx()) {
                             self.status =
                                 "Finish editing the field before capturing a Pen point".into();
@@ -1060,7 +1062,7 @@ impl Operandi {
                         && modifiers.is_none()
                     {
                         input::GestureKind::ItemHandle(grab)
-                    } else if self.editor.pen_draft.is_some() {
+                    } else if self.editor.session.pen_draft.is_some() {
                         self.status = "Pen capture uses an unmodified primary click".into();
                         input::GestureKind::Blocked
                     } else if let Some(height) = self.begin_session_height(pos, r) {
@@ -1071,10 +1073,10 @@ impl Operandi {
                     {
                         // #37: the drawn shape's move arrows and radius squares.
                         handle
-                    } else if self.editor.reduction.is_some()
-                        || self.editor.bridge.is_some()
-                        || self.editor.spike.is_some()
-                        || self.editor.shape.is_some()
+                    } else if self.editor.session.reduction.is_some()
+                        || self.editor.session.bridge.is_some()
+                        || self.editor.session.spike.is_some()
+                        || self.editor.session.shape.is_some()
                     {
                         // A drag anywhere drives these numeric sessions too
                         // (Jason, 2026-11-04; DRAG-Q01; was RED-002, BRI-Q05,
@@ -1084,9 +1086,9 @@ impl Operandi {
                         } else {
                             input::GestureKind::Blocked
                         }
-                    } else if self.editor.ellipsoid.is_some() {
+                    } else if self.editor.session.ellipsoid.is_some() {
                         self.begin_solid_draw(false, pos, r)
-                    } else if self.editor.cone.is_some() {
+                    } else if self.editor.session.cone.is_some() {
                         self.begin_solid_draw(true, pos, r)
                     } else if let Some(l) = self.editor.live.clone() {
                         if l.tool.is_primitive() {
@@ -1626,6 +1628,7 @@ impl Operandi {
                             && g.start.distance(g.last) < 3.
                             && self
                                 .editor
+                                .session
                                 .reduction
                                 .as_ref()
                                 .is_some_and(|r| !r.initialized())

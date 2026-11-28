@@ -65,21 +65,21 @@ fn missing_or_wrong_i2_mirror_does_not_block_restorative_undo() {
 fn raw_overlaps_keep_existing_category_refusal_precedence() {
     let mut e = editor();
     let target = e.scene.selection.item.unwrap();
-    e.cone = Some(NumericCone {
+    e.session.cone = Some(NumericCone {
         target,
         requested: Default::default(),
         preview: None,
         error: None,
         applied_step: None,
     });
-    e.ellipsoid = Some(NumericEllipsoid {
+    e.session.ellipsoid = Some(NumericEllipsoid {
         target,
         requested: Default::default(),
         preview: None,
         error: None,
         applied_step: None,
     });
-    e.spike = Some(NumericSpike::armed(target, 0.5));
+    e.session.spike = Some(NumericSpike::armed(target, 0.5));
     for action in [HistoryAction::Undo, HistoryAction::Redo] {
         let before = e.clone();
         let next = e.identities.next_id().unwrap();
@@ -92,7 +92,7 @@ fn raw_overlaps_keep_existing_category_refusal_precedence() {
         assert!(e == before);
         assert_eq!(e.identities.next_id().unwrap(), next);
     }
-    e.ellipsoid = None;
+    e.session.ellipsoid = None;
     assert_eq!(
         e.history_eligibility(HistoryAction::Undo).owner,
         HistoryOwner::Cone
@@ -127,7 +127,7 @@ fn parked_context_coexists_with_numeric_tasks_and_cancel_restores_resume() {
     let mut e = moved();
     e.dispatch(Command::ArmCone).unwrap();
     assert!(!e.i2_active());
-    assert!(e.cone.is_some());
+    assert!(e.session.cone.is_some());
 }
 #[test]
 fn selection_gesture_is_separate_and_completion_branches_parked_context() {
@@ -207,7 +207,7 @@ fn successful_empty_history_keeps_cleanup_and_publication_effects() {
         .unwrap();
         assert_eq!(e.scene, scene);
         assert!(e.history.undo.is_empty() && e.history.redo.is_empty());
-        assert!(e.live.is_none() && e.spike.is_none());
+        assert!(e.live.is_none() && e.session.spike.is_none());
         assert!(e.identities.publication > publication && e.identities.request > request);
         assert_eq!(e.identities.next_id().unwrap(), next);
     }

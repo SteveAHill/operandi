@@ -210,9 +210,9 @@ fn check(e: &Editor, name: &str) {
         v["stage_bank_next"].as_u64().unwrap()
     );
     assert!(
-        e.cone.is_none()
-            && e.spike.is_none()
-            && e.ellipsoid.is_none()
+        e.session.cone.is_none()
+            && e.session.spike.is_none()
+            && e.session.ellipsoid.is_none()
             && e.selection_start.is_none()
     );
     let selected = e

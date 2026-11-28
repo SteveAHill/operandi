@@ -143,7 +143,7 @@ const CREATE_SNAP_PX: f32 = 8.;
 impl Operandi {
     /// Starts Solid Sketch; asks first when the mesh holds a sketch.
     pub(super) fn start_solid_sketch(&mut self, preset: bool) {
-        if self.editor.solid_sketch.is_some() {
+        if self.editor.session.solid_sketch.is_some() {
             // The tool's own button drops it (one rule for every tool).
             self.run(Command::Drop);
             return;
@@ -225,6 +225,7 @@ impl Operandi {
     /// World centres of the live sketch's nodes.
     fn sketch_centres(&self) -> Vec<DVec3> {
         self.editor
+            .session
             .solid_sketch
             .as_ref()
             .map(|s| s.world_centres())
@@ -236,7 +237,7 @@ impl Operandi {
     /// and the sketch's other nodes. The sketch's own mesh is left out, so
     /// a node never snaps onto the skin being rebuilt around it.
     fn sketch_snap(&mut self, at: DVec3, moving: Option<usize>, r: Rect) -> Option<DVec3> {
-        let session = self.editor.solid_sketch.as_ref()?;
+        let session = self.editor.session.solid_sketch.as_ref()?;
         let target = session.target();
         let centres = self.sketch_centres();
         // Node centres aren't mesh points: nothing moving is a mesh target
@@ -295,7 +296,7 @@ impl Operandi {
     /// The link (by its child) under `pos`, and the world point on it
     /// nearest the pointer's ray.
     fn sketch_link_at(&self, pos: Pos2, r: Rect) -> Option<(usize, DVec3)> {
-        let session = self.editor.solid_sketch.as_ref()?;
+        let session = self.editor.session.solid_sketch.as_ref()?;
         let centres = session.world_centres();
         let (o, d) = self.camera.ray(pos, r);
         let mut best: Option<(usize, DVec3, f32)> = None;
@@ -317,7 +318,7 @@ impl Operandi {
     /// The current node's frame in world space: centre, axes (unit) and
     /// half-sizes.
     pub(super) fn sketch_current_frame(&self) -> Option<(usize, DVec3, [DVec3; 3], DVec3)> {
-        let session = self.editor.solid_sketch.as_ref()?;
+        let session = self.editor.session.solid_sketch.as_ref()?;
         let index = session.current()?;
         let frame = session.sketch().frames(session.options().auto_align)[index];
         let world = session.world();
@@ -394,6 +395,7 @@ impl Operandi {
         }
         let rotate = self
             .editor
+            .session
             .solid_sketch
             .as_ref()
             .is_some_and(|s| s.options().rotate_handles);
@@ -440,7 +442,7 @@ impl Operandi {
         button: PointerButton,
         modifiers: Modifiers,
     ) -> Option<input::GestureKind> {
-        let session = self.editor.solid_sketch.as_ref()?;
+        let session = self.editor.session.solid_sketch.as_ref()?;
         if input::navigation(modifiers).is_some() || modifiers.mac_cmd {
             return None;
         }
@@ -538,7 +540,7 @@ impl Operandi {
                 ) {
                     return Some(input::GestureKind::Blocked);
                 }
-                let index = self.editor.solid_sketch.as_ref()?.current()?;
+                let index = self.editor.session.solid_sketch.as_ref()?.current()?;
                 Some(input::GestureKind::SolidSketch(Box::new(SketchDrag {
                     grab: SketchGrab::Create { index, center: at },
                     started: true,
@@ -551,7 +553,7 @@ impl Operandi {
     /// Ctrl press: insert on the link under the pointer, or on the link
     /// out of the node under it (spec 5.1).
     fn sketch_insert_press(&mut self, pos: Pos2, r: Rect) -> Option<SketchGrab> {
-        let session = self.editor.solid_sketch.as_ref()?;
+        let session = self.editor.session.solid_sketch.as_ref()?;
         let plane = self.actual_plane();
         let edit = if let Some(node) = self.sketch_node_at(pos, r) {
             let centre = self.sketch_centres()[node];
@@ -596,7 +598,7 @@ impl Operandi {
         if !self.sketch_edit(edit, false) {
             return None;
         }
-        let index = self.editor.solid_sketch.as_ref()?.current()?;
+        let index = self.editor.session.solid_sketch.as_ref()?.current()?;
         Some(SketchGrab::Create { index, center })
     }
 
@@ -619,7 +621,7 @@ impl Operandi {
                 dir: axes[2],
             },
             HandleHit::Twist => {
-                let session = self.editor.solid_sketch.as_ref()?;
+                let session = self.editor.session.solid_sketch.as_ref()?;
                 SketchGrab::Twist {
                     start: session.sketch().nodes[index].twist,
                     from_x: pos.x,
@@ -651,7 +653,7 @@ impl Operandi {
             return;
         }
         let continuing = drag.started;
-        let Some(session) = self.editor.solid_sketch.as_ref() else {
+        let Some(session) = self.editor.session.solid_sketch.as_ref() else {
             return;
         };
         let current_node = session.current().map(|i| session.sketch().nodes[i].clone());
@@ -787,7 +789,7 @@ impl Operandi {
     }
 
     fn sketch_status(&self) -> String {
-        let Some(session) = self.editor.solid_sketch.as_ref() else {
+        let Some(session) = self.editor.session.solid_sketch.as_ref() else {
             return "Ready".into();
         };
         let n = session.sketch().len();
@@ -809,7 +811,7 @@ impl Operandi {
         r: Rect,
         hover: Option<Pos2>,
     ) -> Option<String> {
-        let session = self.editor.solid_sketch.as_ref()?;
+        let session = self.editor.session.solid_sketch.as_ref()?;
         let centres = session.world_centres();
         let project = |p: DVec3| self.camera.project(p, r).map(|(q, _)| q);
         let link = Stroke::new(1.5_f32, palette::selection().gamma_multiply(0.8));
@@ -897,7 +899,7 @@ impl Operandi {
         attr: &str,
         value: &str,
     ) -> Option<std::result::Result<Option<String>, String>> {
-        let session = self.editor.solid_sketch.as_ref()?;
+        let session = self.editor.session.solid_sketch.as_ref()?;
         let mut o = session.options().clone();
         let number = |v: &str| numeric::parse_quantity(v, numeric::Quantity::Scalar);
         let query = value == "?";
@@ -1067,7 +1069,7 @@ pub(super) struct SketchP {
 impl ToolFields for SolidSketchFields {
     type P = SketchP;
     fn params(app: &Operandi) -> Option<SketchP> {
-        let s = app.editor.solid_sketch.as_ref()?;
+        let s = app.editor.session.solid_sketch.as_ref()?;
         let node = s.current().map(|i| s.sketch().nodes[i].clone());
         Some(SketchP {
             options: s.options().clone(),

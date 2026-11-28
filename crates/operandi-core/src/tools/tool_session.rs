@@ -38,4 +38,17 @@ pub struct ToolSession {
     /// rules act only on top-level commands (click_start.rs).
     #[doc(hidden)]
     pub dispatch_depth: u32,
+    // The other task slots; at most one task is open (active_task.rs).
+    pub bridge: Option<crate::NumericBridge>,
+    pub spike: Option<crate::NumericSpike>,
+    /// MP-T11 Polygon Reduction session; `None` when the tool is off.
+    pub reduction: Option<crate::NumericReduction>,
+    pub ellipsoid: Option<crate::NumericEllipsoid>,
+    /// Torus, Capsule, Arc or Tube numeric session (NPR), and each one's
+    /// last settings.
+    pub shape: Option<crate::NumericShape>,
+    pub cone: Option<crate::NumericCone>,
+    pub pen_draft: Option<crate::PenDraft>,
+    /// The open Solid Sketch session (solid_sketch_editor.rs).
+    pub solid_sketch: Option<crate::SketchSession>,
 }

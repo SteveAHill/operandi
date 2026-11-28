@@ -48,13 +48,13 @@ impl Editor {
     /// Inspect only; no synchronization, snapshots, validation or reservations.
     pub(crate) fn session_ownership(&self) -> SessionOwnership<'_> {
         SessionOwnership {
-            bridge: self.bridge.is_some(),
+            bridge: self.session.bridge.is_some(),
             live: self.live.as_ref(),
-            cone: self.cone.as_ref(),
-            ellipsoid: self.ellipsoid.as_ref(),
-            shape: self.shape.as_ref(),
-            spike: self.spike.as_ref(),
-            reduction: self.reduction.as_ref(),
+            cone: self.session.cone.as_ref(),
+            ellipsoid: self.session.ellipsoid.as_ref(),
+            shape: self.session.shape.as_ref(),
+            spike: self.session.spike.as_ref(),
+            reduction: self.session.reduction.as_ref(),
             extrusion: &self.i2,
             selection: self.selection_start.as_deref(),
         }
@@ -232,9 +232,9 @@ mod tests {
         );
         e.dispatch(Command::EndSelection { cancel: true }).unwrap();
         let target = e.scene.selection.item.unwrap();
-        e.cone = Some(NumericCone::armed(target, Default::default()));
-        e.ellipsoid = Some(NumericEllipsoid::armed(target, Default::default()));
-        e.spike = Some(NumericSpike::armed(target, 0.5));
+        e.session.cone = Some(NumericCone::armed(target, Default::default()));
+        e.session.ellipsoid = Some(NumericEllipsoid::armed(target, Default::default()));
+        e.session.spike = Some(NumericSpike::armed(target, 0.5));
         let before = e.clone();
         let view = e.session_ownership();
         assert!(view.cone.is_some() && view.ellipsoid.is_some() && view.spike.is_some());

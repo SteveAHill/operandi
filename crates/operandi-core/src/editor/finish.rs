@@ -25,32 +25,32 @@ impl Editor {
             return Err(format!("Correct this stage before Apply: {e}"));
         }
 
-        if self.reduction.is_some() {
+        if self.session.reduction.is_some() {
             self.apply_reduction()?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.bridge.is_some() {
+        if self.session.bridge.is_some() {
             self.apply_bridge()?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.spike.is_some() {
+        if self.session.spike.is_some() {
             self.apply_spike()?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.ellipsoid.is_some() {
+        if self.session.ellipsoid.is_some() {
             self.commit_ellipsoid(false)?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.shape.is_some() {
+        if self.session.shape.is_some() {
             self.commit_shape(false)?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.cone.is_some() {
+        if self.session.cone.is_some() {
             self.apply_cone()?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
@@ -191,30 +191,30 @@ impl Editor {
     }
 
     pub(super) fn handle_drop(&mut self) -> Result<AfterCommand> {
-        if self.reduction.is_some() {
+        if self.session.reduction.is_some() {
             self.drop_reduction()?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.bridge.take().is_some() {
+        if self.session.bridge.take().is_some() {
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.spike.take().is_some() {
+        if self.session.spike.take().is_some() {
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.ellipsoid.is_some() {
+        if self.session.ellipsoid.is_some() {
             self.commit_ellipsoid(true)?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.shape.is_some() {
+        if self.session.shape.is_some() {
             self.commit_shape(true)?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.cone.is_some() {
+        if self.session.cone.is_some() {
             self.drop_cone()?;
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
@@ -330,16 +330,16 @@ impl Editor {
         if let Some(report) = report {
             report.effect = crate::HistoryEffect::Cancel;
         }
-        if self.reduction.is_some() {
+        if self.session.reduction.is_some() {
             self.cancel_reduction()?;
         }
         self.cancel_live_bridge()?;
         self.cancel_live_spike()?;
-        self.bridge = None;
-        self.spike = None;
-        self.ellipsoid = None;
-        self.shape = None;
-        self.cone = None;
+        self.session.bridge = None;
+        self.session.spike = None;
+        self.session.ellipsoid = None;
+        self.session.shape = None;
+        self.session.cone = None;
         let session_base = self.tweak_session_base();
         if let Some(l) = self.live.take() {
             self.session.last_transform_step = None;

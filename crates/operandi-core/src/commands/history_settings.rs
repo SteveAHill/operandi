@@ -72,14 +72,14 @@ impl Editor {
             && (!self.has_active_task() || (armed_transform && self.active_task_is_live()))
     }
     fn active_task_is_live(&self) -> bool {
-        self.cone.is_none()
-            && self.ellipsoid.is_none()
-            && self.shape.is_none()
-            && self.spike.is_none()
-            && self.bridge.is_none()
-            && self.reduction.is_none()
-            && self.pen_draft.is_none()
-            && self.solid_sketch.is_none()
+        self.session.cone.is_none()
+            && self.session.ellipsoid.is_none()
+            && self.session.shape.is_none()
+            && self.session.spike.is_none()
+            && self.session.bridge.is_none()
+            && self.session.reduction.is_none()
+            && self.session.pen_draft.is_none()
+            && self.session.solid_sketch.is_none()
     }
 }
 

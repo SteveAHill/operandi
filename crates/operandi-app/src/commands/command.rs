@@ -266,15 +266,15 @@ impl Operandi {
     }
     /// Row of the command table for the open tool or numeric session.
     pub(super) fn command_active(&self) -> Option<usize> {
-        let session = if self.editor.reduction.is_some() {
+        let session = if self.editor.session.reduction.is_some() {
             Some("poly.reduct")
-        } else if self.editor.bridge.is_some() {
+        } else if self.editor.session.bridge.is_some() {
             Some("edge.bridge")
-        } else if self.editor.spike.is_some() {
+        } else if self.editor.session.spike.is_some() {
             Some("poly.spikey")
-        } else if self.editor.ellipsoid.is_some() {
+        } else if self.editor.session.ellipsoid.is_some() {
             Some("prim.ellipsoid")
-        } else if let Some(s) = &self.editor.shape {
+        } else if let Some(s) = &self.editor.session.shape {
             Some(match s.kind() {
                 ShapeKind::Torus => "prim.toroid",
                 ShapeKind::Capsule => "prim.capsule",
@@ -283,7 +283,7 @@ impl Operandi {
                 ShapeKind::Text => "prim.text",
                 ShapeKind::Teapot => "Teapot",
             })
-        } else if self.editor.cone.is_some() {
+        } else if self.editor.session.cone.is_some() {
             Some("prim.cone")
         } else {
             None
@@ -1038,7 +1038,7 @@ impl Operandi {
         // `SS Default` preset (Level 1), spec 2 and test 13.
         if preset.eq_ignore_ascii_case("solid.sketch") || preset.eq_ignore_ascii_case("SS Default")
         {
-            let on = self.editor.solid_sketch.is_some();
+            let on = self.editor.session.solid_sketch.is_some();
             match mode.to_ascii_lowercase().as_str() {
                 "on" | "1" if !on => {
                     self.start_solid_sketch(preset.eq_ignore_ascii_case("SS Default"))
@@ -1055,14 +1055,14 @@ impl Operandi {
             match mode.to_ascii_lowercase().as_str() {
                 "on" | "1" => self.start_interactive_pen(),
                 "?" => {
-                    self.status = if self.editor.pen_draft.is_some() {
+                    self.status = if self.editor.session.pen_draft.is_some() {
                         "1"
                     } else {
                         "0"
                     }
                     .into()
                 }
-                "off" | "0" if self.editor.pen_draft.is_some() => self.run(Command::Drop),
+                "off" | "0" if self.editor.session.pen_draft.is_some() => self.run(Command::Drop),
                 "off" | "0" => self.status = "Pen is not active".into(),
                 _ => fail(self, "Use tool.set prim.pen on, off or ?"),
             }
@@ -1304,7 +1304,7 @@ impl Operandi {
                 Err(e) => self.status = e,
             }
         } else if owner == "poly.spikey" && attr == "factor" {
-            let Some(spike) = self.editor.spike.as_ref() else {
+            let Some(spike) = self.editor.session.spike.as_ref() else {
                 fail(self, "Activate Spike first");
                 return;
             };

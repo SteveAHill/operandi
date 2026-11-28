@@ -364,7 +364,7 @@ fn routing_changed_noop_refusal_cone_metadata_and_other_owner() {
             assert!(e == before);
         }
         drop(before); // Release the explicit assertion snapshot before inventory.
-        let actual_owner = if e.cone.is_some() {
+        let actual_owner = if e.session.cone.is_some() {
             Some("ConeArmed")
         } else {
             e.live.as_ref().map(|l| {

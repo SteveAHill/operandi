@@ -49,7 +49,7 @@ fn drag(
     draw(a, ctx, size, vec![button(to, false, b, m)]);
 }
 fn session(a: &Operandi) -> &operandi_core::SketchSession {
-    a.editor.solid_sketch.as_ref().unwrap()
+    a.editor.session.solid_sketch.as_ref().unwrap()
 }
 fn faces(a: &Operandi) -> usize {
     a.editor.scene.active().unwrap().mesh.faces.len()
@@ -66,7 +66,7 @@ fn tool_set_bare_is_level_2_and_the_button_preset_level_1() {
     a.execute("tool.set solid.sketch ?");
     assert_eq!(a.status, "1");
     a.execute("tool.set solid.sketch off");
-    assert!(a.editor.solid_sketch.is_none());
+    assert!(a.editor.session.solid_sketch.is_none());
     a.execute("tool.set \"SS Default\" on");
     assert_eq!(
         session(&a).options().subdiv,
@@ -84,7 +84,7 @@ fn tool_set_bare_is_level_2_and_the_button_preset_level_1() {
 fn no_mesh_layer_refuses() {
     let mut a = Operandi::empty();
     a.execute("tool.set solid.sketch on");
-    assert!(a.editor.solid_sketch.is_none());
+    assert!(a.editor.session.solid_sketch.is_none());
     assert_eq!(
         a.status,
         "Solid Sketch needs a mesh layer. Add or select a mesh first."
@@ -339,7 +339,7 @@ fn reactivating_asks_and_strip_removes_the_data() {
     a.run(Command::Drop);
     a.execute("Solid Sketch");
     assert!(a.solid_sketch_ask.is_some());
-    assert!(a.editor.solid_sketch.is_none());
+    assert!(a.editor.session.solid_sketch.is_none());
     // Return answers Yes.
     draw(&mut a, &ctx, size, vec![]);
     draw(&mut a, &ctx, size, vec![super::tests::key(Key::Enter)]);
@@ -359,7 +359,7 @@ fn reactivating_asks_and_strip_removes_the_data() {
     );
     a.execute("Solid Sketch");
     assert!(a.solid_sketch_ask.is_none());
-    assert!(a.editor.solid_sketch.is_some());
+    assert!(a.editor.session.solid_sketch.is_some());
 }
 
 /// A background mesh with a point at (1, 0, 1), and an empty active mesh
@@ -422,7 +422,7 @@ fn nodes_snap_on_create_and_move_and_reactivating_is_safe() {
     // comes after a frame without it (a press on a window above a view
     // stays in that window, bug report #5).
     draw(&mut a, &ctx, size, vec![]);
-    assert!(a.editor.solid_sketch.is_some(), "{}", a.status);
+    assert!(a.editor.session.solid_sketch.is_some(), "{}", a.status);
     let at = screen(&a, DVec3::new(2., 0., 1.)) + vec2(6., -5.);
     click(&mut a, &ctx, size, at, Modifiers::NONE);
     let centres = session(&a).world_centres();

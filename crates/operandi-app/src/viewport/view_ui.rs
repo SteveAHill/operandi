@@ -1981,13 +1981,13 @@ impl Operandi {
                         count,
                         selection.mode,
                         self.editor.live.as_ref().map(|l| l.tool.label()).unwrap_or(
-                            if self.editor.reduction.is_some() {
+                            if self.editor.session.reduction.is_some() {
                                 "Polygon Reduction · numeric"
-                            } else if self.editor.bridge.is_some() {
+                            } else if self.editor.session.bridge.is_some() {
                                 "Bridge · numeric"
-                            } else if self.editor.spike.is_some() {
+                            } else if self.editor.session.spike.is_some() {
                                 "Spike · numeric"
-                            } else if let Some(s) = &self.editor.shape {
+                            } else if let Some(s) = &self.editor.session.shape {
                                 match s.kind() {
                                     ShapeKind::Torus => "Torus · numeric",
                                     ShapeKind::Capsule => "Capsule · numeric",
@@ -1996,9 +1996,9 @@ impl Operandi {
                                     ShapeKind::Text => "Text · numeric",
                                     ShapeKind::Teapot => "Teapot · numeric",
                                 }
-                            } else if self.editor.ellipsoid.is_some() {
+                            } else if self.editor.session.ellipsoid.is_some() {
                                 "Ellipsoid · numeric"
-                            } else if self.editor.cone.is_some() {
+                            } else if self.editor.session.cone.is_some() {
                                 "Cone · numeric"
                             } else {
                                 "Selection"
@@ -2387,7 +2387,7 @@ impl Operandi {
                     }
                 }
             }
-            if let Some(draft) = &self.editor.pen_draft {
+            if let Some(draft) = &self.editor.session.pen_draft {
                 let projected: Vec<_> = draft.points().iter().filter_map(|&p| project(p)).collect();
                 if projected.len() == draft.points().len() {
                     let output = draft.options().output;

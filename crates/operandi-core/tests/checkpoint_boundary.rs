@@ -124,7 +124,7 @@ fn cone_apply_and_drop_capture_complete_steps() {
     let steps = e.history.undo.len();
     e.dispatch(Command::Drop).unwrap();
     assert_eq!(e.history.undo.len(), steps);
-    assert!(e.cone.is_none());
+    assert!(e.session.cone.is_none());
     restore(
         &mut e,
         HistoryRequest::Undo,
@@ -135,7 +135,7 @@ fn cone_apply_and_drop_capture_complete_steps() {
     restore(&mut e, HistoryRequest::Redo, "Cone", &applied, &applied_ids);
     // Drop with a preview shown keeps it as one "Cone" step.
     // Undo/Redo of an Apply never reopens Cone.
-    assert!(e.cone.is_none());
+    assert!(e.session.cone.is_none());
     e.dispatch(Command::ArmCone).unwrap();
     e.dispatch(Command::ConfigureCone(ConeParameters {
         position: glam::DVec3::new(3., 0., 0.),

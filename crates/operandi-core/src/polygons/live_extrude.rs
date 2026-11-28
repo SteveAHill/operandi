@@ -736,12 +736,12 @@ impl Editor {
                 Command::Cancel
                     if self.live.as_ref().is_none_or(|l| {
                         l.tool == Tool::Extrude && !l.applied && l.preview_error.is_none()
-                    }) && self.cone.is_none()
-                        && self.ellipsoid.is_none()
-                        && self.shape.is_none()
-                        && self.spike.is_none()
-                        && self.bridge.is_none()
-                        && self.reduction.is_none() =>
+                    }) && self.session.cone.is_none()
+                        && self.session.ellipsoid.is_none()
+                        && self.session.shape.is_none()
+                        && self.session.spike.is_none()
+                        && self.session.bridge.is_none()
+                        && self.session.reduction.is_none() =>
                 {
                     self.live = None;
                     self.i2_branch();

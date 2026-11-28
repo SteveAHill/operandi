@@ -292,6 +292,7 @@ impl Operandi {
             && !self.editor.live.as_ref().is_some_and(|l| l.applied)
             && self
                 .editor
+                .session
                 .pen_draft
                 .as_ref()
                 .is_none_or(|d| d.points().is_empty())

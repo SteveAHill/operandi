@@ -292,12 +292,17 @@ fn oracle_cone() -> ConeParameters {
     }
 }
 fn sides(e: &Editor) -> u32 {
-    e.cone.as_ref().expect("Cone stays active").requested.sides
+    e.session
+        .cone
+        .as_ref()
+        .expect("Cone stays active")
+        .requested
+        .sides
 }
 fn set_sides(e: &mut Editor, sides: u32) {
     let p = ConeParameters {
         sides,
-        ..e.cone.as_ref().unwrap().requested.clone()
+        ..e.session.cone.as_ref().unwrap().requested.clone()
     };
     e.dispatch(Command::ConfigureCone(p)).unwrap();
 }
@@ -327,7 +332,7 @@ fn cone_value_change_is_a_tweak_and_apply_a_step() {
     undo(&mut e);
     assert_eq!(e.scene, one);
     assert_eq!(sides(&e), 12);
-    assert!(e.cone.as_ref().unwrap().preview.is_none());
+    assert!(e.session.cone.as_ref().unwrap().preview.is_none());
     // Then the first Apply; like Ellipsoid, Undo of an Apply takes back
     // geometry only, so Sides stays 12.
     undo(&mut e);
@@ -335,7 +340,7 @@ fn cone_value_change_is_a_tweak_and_apply_a_step() {
     assert_eq!(sides(&e), 12);
     // Earlier tweaks went into that Apply, so Cone closes next.
     assert_eq!(undo(&mut e).effect, closed("Cone"));
-    assert!(e.cone.is_none());
+    assert!(e.session.cone.is_none());
 
     for _ in 0..3 {
         redo(&mut e);
@@ -359,7 +364,7 @@ fn leaving_cone_after_undo_keeps_the_first_cone_and_clears_redo() {
         assert_eq!(e.scene, one);
         assert!(can(&e, HistoryAction::Redo));
         e.dispatch(leave).unwrap();
-        assert!(e.cone.is_none());
+        assert!(e.session.cone.is_none());
         assert_eq!(e.scene, one);
         assert!(can(&e, HistoryAction::Undo));
         assert!(!can(&e, HistoryAction::Redo));
@@ -380,13 +385,13 @@ fn cone_drag_is_one_tweak_and_a_typed_field_another() {
         })
     });
     held(&mut e, frames);
-    let dragged = e.cone.as_ref().unwrap().requested.clone();
+    let dragged = e.session.cone.as_ref().unwrap().requested.clone();
     set_sides(&mut e, 16);
     undo(&mut e);
-    assert_eq!(e.cone.as_ref().unwrap().requested, dragged);
+    assert_eq!(e.session.cone.as_ref().unwrap().requested, dragged);
     undo(&mut e);
     assert_eq!(
-        e.cone.as_ref().unwrap().requested,
+        e.session.cone.as_ref().unwrap().requested,
         oracle_cone().normalized()
     );
     assert_eq!(undo(&mut e).effect, closed("Cone"));
@@ -396,7 +401,7 @@ fn cone_drag_is_one_tweak_and_a_typed_field_another() {
 fn numeric_shape_undo_steps_through_tweaks_and_applies() {
     let mut e = editor();
     e.dispatch(Command::ArmShape(ShapeKind::Torus)).unwrap();
-    let values = e.shape.as_ref().unwrap().requested.clone();
+    let values = e.session.shape.as_ref().unwrap().requested.clone();
     e.dispatch(Command::Apply).unwrap();
     let one = e.scene.clone();
     e.dispatch(Command::Apply).unwrap();
@@ -405,7 +410,10 @@ fn numeric_shape_undo_steps_through_tweaks_and_applies() {
     // Undo removes the second torus; the tool stays with its values.
     undo(&mut e);
     assert_eq!(e.scene, one);
-    assert_eq!(e.shape.as_ref().expect("Torus stays").requested, values);
+    assert_eq!(
+        e.session.shape.as_ref().expect("Torus stays").requested,
+        values
+    );
     redo(&mut e);
     assert_eq!(e.scene, two);
 
@@ -418,13 +426,13 @@ fn numeric_shape_undo_steps_through_tweaks_and_applies() {
         .unwrap();
     assert_eq!(undo(&mut e).effect, tweak_undone("Torus"));
     assert_eq!(e.scene, two);
-    assert_eq!(e.shape.as_ref().unwrap().requested, values);
+    assert_eq!(e.session.shape.as_ref().unwrap().requested, values);
 
     // Cancel after Undo only closes the tool.
     undo(&mut e);
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, one);
-    assert!(e.shape.is_none());
+    assert!(e.session.shape.is_none());
 }
 
 #[test]
@@ -432,9 +440,9 @@ fn numeric_shape_closes_on_undo_then_its_mesh_goes() {
     let mut e = editor();
     e.dispatch(Command::ArmShape(ShapeKind::Capsule)).unwrap();
     // Arming shows nothing (Jason, 2026-11-05), so the first Undo closes it.
-    assert!(e.shape.is_some());
+    assert!(e.session.shape.is_some());
     assert_eq!(undo(&mut e).effect, closed("Capsule"));
-    assert!(e.shape.is_none());
+    assert!(e.session.shape.is_none());
     undo(&mut e); // New Mesh
     assert!(e.scene.active().is_none());
 }
@@ -444,19 +452,19 @@ fn ellipsoid_undo_takes_back_a_value_then_closes() {
     let mut e = editor();
     e.dispatch(Command::Rename("renamed".into())).unwrap();
     e.dispatch(Command::ArmEllipsoid).unwrap();
-    let armed = e.ellipsoid.as_ref().unwrap().requested.clone();
+    let armed = e.session.ellipsoid.as_ref().unwrap().requested.clone();
     let values = EllipsoidParameters {
         radius: DVec3::splat(0.5),
         ..armed.clone()
     };
     e.dispatch(Command::ConfigureEllipsoid(values)).unwrap();
     assert_eq!(undo(&mut e).effect, tweak_undone("Ellipsoid"));
-    assert_eq!(e.ellipsoid.as_ref().unwrap().requested, armed);
+    assert_eq!(e.session.ellipsoid.as_ref().unwrap().requested, armed);
     e.dispatch(Command::Apply).unwrap();
     assert!(faces(&e) > 0);
     undo(&mut e);
     assert_eq!(faces(&e), 0);
-    assert!(e.ellipsoid.is_some());
+    assert!(e.session.ellipsoid.is_some());
     assert_eq!(undo(&mut e).effect, closed("Ellipsoid"));
     assert_eq!(e.scene.active().unwrap().name, "renamed");
 }
@@ -472,7 +480,7 @@ fn activating_a_tool_keeps_redo() {
     assert!(can(&e, HistoryAction::Redo));
     redo(&mut e);
     assert_eq!(e.scene.active().unwrap().name, "renamed");
-    assert!(e.cone.is_some());
+    assert!(e.session.cone.is_some());
 }
 
 #[test]
@@ -583,7 +591,7 @@ fn spike_value_change_undoes_and_keeps_spike() {
     let spiked = e.scene.clone();
     assert_eq!(undo(&mut e).effect, tweak_undone("Spike"));
     assert_eq!(e.scene, before);
-    assert!(e.spike.is_some());
+    assert!(e.session.spike.is_some());
     redo(&mut e);
     assert_eq!(e.scene, spiked);
 }

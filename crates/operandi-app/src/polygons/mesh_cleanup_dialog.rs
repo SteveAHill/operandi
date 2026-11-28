@@ -590,7 +590,7 @@ mod callback_tests {
         a.run(Command::NewMesh);
         a.run(Command::Undo);
         a.editor.dispatch(Command::PenStart).unwrap();
-        assert!(a.editor.pen_draft.is_some());
+        assert!(a.editor.session.pen_draft.is_some());
         assert!(!a.editor.history.redo.is_empty());
         let before = a.editor.clone();
         let next = a.editor.identities.next_id().unwrap();

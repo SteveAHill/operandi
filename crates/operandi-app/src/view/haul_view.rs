@@ -235,12 +235,12 @@ impl Operandi {
         if self.editor.live.is_some() {
             return None;
         }
-        let session = if self.editor.cone.is_some() {
+        let session = if self.editor.session.cone.is_some() {
             Session::Cone
-        } else if self.editor.ellipsoid.is_some() {
+        } else if self.editor.session.ellipsoid.is_some() {
             Session::Ellipsoid
         } else {
-            match self.editor.shape.as_ref()?.kind() {
+            match self.editor.session.shape.as_ref()?.kind() {
                 ShapeKind::Torus => Session::Torus,
                 ShapeKind::Capsule => Session::Capsule,
                 ShapeKind::Arc => Session::Arc,

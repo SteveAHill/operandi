@@ -42,15 +42,15 @@ impl Operandi {
                 from_center,
             })
         };
-        if let Some(s) = &self.editor.cone {
+        if let Some(s) = &self.editor.session.cone {
             s.preview.as_ref()?;
             return shape(s.requested.position, Some(s.requested.size), false);
         }
-        if let Some(s) = &self.editor.ellipsoid {
+        if let Some(s) = &self.editor.session.ellipsoid {
             s.preview.as_ref()?;
             return shape(s.requested.position, Some(s.requested.radius), true);
         }
-        let s = self.editor.shape.as_ref()?;
+        let s = self.editor.session.shape.as_ref()?;
         s.preview.as_ref()?;
         match &s.requested {
             ShapeParameters::Torus(t) => shape(t.position, Some(t.radius()), true),
@@ -186,21 +186,21 @@ impl Operandi {
     /// Reconfigures the open session at `position`, with radius `axis` set
     /// to the value when given.
     fn set_session_shape(&mut self, position: DVec3, radius: Option<(usize, f64)>) {
-        if let Some(s) = &self.editor.cone {
+        if let Some(s) = &self.editor.session.cone {
             let mut p = s.requested.clone();
             p.position = position;
             if let Some((axis, value)) = radius {
                 p.size[axis] = value;
             }
             self.run(Command::ConfigureCone(p));
-        } else if let Some(s) = &self.editor.ellipsoid {
+        } else if let Some(s) = &self.editor.session.ellipsoid {
             let mut p = s.requested.clone();
             p.position = position;
             if let Some((axis, value)) = radius {
                 p.radius[axis] = value;
             }
             self.run(Command::ConfigureEllipsoid(p));
-        } else if let Some(s) = &self.editor.shape {
+        } else if let Some(s) = &self.editor.session.shape {
             let mut p = s.requested.clone();
             match &mut p {
                 ShapeParameters::Torus(t) => {

@@ -114,10 +114,10 @@ const MENU_SELECTION_LINES: &[&str] = &[
 fn selection_why(a: &Operandi) -> Option<&'static str> {
     crate::unavailable::unless(
         a.editor.live.is_none()
-            && a.editor.ellipsoid.is_none()
-            && a.editor.shape.is_none()
-            && a.editor.spike.is_none()
-            && a.editor.bridge.is_none(),
+            && a.editor.session.ellipsoid.is_none()
+            && a.editor.session.shape.is_none()
+            && a.editor.session.spike.is_none()
+            && a.editor.session.bridge.is_none(),
         crate::unavailable::TOOL_ACTIVE,
     )
 }
@@ -351,7 +351,7 @@ fn answers(r: &mut Commands) {
     let lit: [(&str, StateHandler); 5] = [
         ("Weld", |a, _| CommandState::lit(a.vertex_weld)),
         ("Bridge", |a, _| {
-            CommandState::lit(a.editor.bridge.is_some())
+            CommandState::lit(a.editor.session.bridge.is_some())
         }),
         ("Add Loop", |a, _| {
             CommandState::lit(a.edge_click == Some(edge_panel::EdgeClick::AddLoop))
@@ -375,11 +375,13 @@ fn answers(r: &mut Commands) {
     // (layouts stage 3 batch 5; the old rows read the state themselves).
     let lit: [(&str, StateHandler); 9] = [
         ("Polygon Pen", |a, _| {
-            CommandState::lit(a.editor.pen_draft.is_some())
+            CommandState::lit(a.editor.session.pen_draft.is_some())
         }),
-        ("Spike", |a, _| CommandState::lit(a.editor.spike.is_some())),
+        ("Spike", |a, _| {
+            CommandState::lit(a.editor.session.spike.is_some())
+        }),
         ("Polygon Reduction", |a, _| {
-            CommandState::lit(a.editor.reduction.is_some())
+            CommandState::lit(a.editor.session.reduction.is_some())
         }),
         ("Set Position", |a, _| {
             CommandState::lit(a.set_position.is_some())
@@ -458,16 +460,24 @@ fn answers(r: &mut Commands) {
 /// themselves).
 fn create_answers(r: &mut Commands) {
     fn shape(a: &Operandi, kind: ShapeKind) -> CommandState {
-        CommandState::lit(a.editor.shape.as_ref().is_some_and(|s| s.kind() == kind))
+        CommandState::lit(
+            a.editor
+                .session
+                .shape
+                .as_ref()
+                .is_some_and(|s| s.kind() == kind),
+        )
     }
     fn draw(a: &Operandi, kind: draw_tools::DrawKind) -> CommandState {
         CommandState::lit(a.draw.as_ref().is_some_and(|d| d.kind == kind))
     }
     let lit: [(&str, StateHandler); 16] = [
         ("Ellipsoid", |a, _| {
-            CommandState::lit(a.editor.ellipsoid.is_some())
+            CommandState::lit(a.editor.session.ellipsoid.is_some())
         }),
-        ("Cone", |a, _| CommandState::lit(a.editor.cone.is_some())),
+        ("Cone", |a, _| {
+            CommandState::lit(a.editor.session.cone.is_some())
+        }),
         ("Torus", |a, _| shape(a, ShapeKind::Torus)),
         ("Capsule", |a, _| shape(a, ShapeKind::Capsule)),
         ("Arc", |a, _| shape(a, ShapeKind::Arc)),
@@ -475,7 +485,7 @@ fn create_answers(r: &mut Commands) {
         ("Text", |a, _| shape(a, ShapeKind::Text)),
         ("Teapot", |a, _| shape(a, ShapeKind::Teapot)),
         ("Solid Sketch", |a, _| {
-            CommandState::lit(a.editor.solid_sketch.is_some())
+            CommandState::lit(a.editor.session.solid_sketch.is_some())
         }),
         ("Curve", |a, _| draw(a, draw_tools::DrawKind::Curve)),
         ("Bezier Curve", |a, _| draw(a, draw_tools::DrawKind::Bezier)),

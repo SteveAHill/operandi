@@ -207,10 +207,10 @@ fn numeric_categories_keep_distinct_history_owners() {
     }
     // Undo closes Ellipsoid; Redo opens it again.
     e.dispatch(Command::Undo).unwrap();
-    assert!(e.ellipsoid.is_none());
+    assert!(e.session.ellipsoid.is_none());
     assert_eq!(e.scene.active().unwrap().name, "renamed");
     e.dispatch(Command::Redo).unwrap();
-    assert!(e.ellipsoid.is_some());
+    assert!(e.session.ellipsoid.is_some());
     e.dispatch(Command::Cancel).unwrap();
     e.dispatch(Command::ArmSpike).unwrap();
     // Undo closes Spike (its activation); Redo opens it again.
@@ -222,9 +222,9 @@ fn numeric_categories_keep_distinct_history_owners() {
         Some("Spike"),
     );
     e.dispatch(Command::Undo).unwrap();
-    assert!(e.spike.is_none());
+    assert!(e.session.spike.is_none());
     e.dispatch(Command::Redo).unwrap();
-    assert!(e.spike.is_some());
+    assert!(e.session.spike.is_some());
     e.dispatch(Command::Cancel).unwrap();
     e.dispatch(Command::ArmSpike).unwrap();
     query(
@@ -235,7 +235,7 @@ fn numeric_categories_keep_distinct_history_owners() {
         None,
     );
     e.dispatch(Command::Redo).unwrap();
-    assert!(e.spike.is_none());
+    assert!(e.session.spike.is_none());
     e.dispatch(Command::ArmCone).unwrap();
     // Undo closes Cone (its activation step); Redo opens it again.
     query(
@@ -246,9 +246,9 @@ fn numeric_categories_keep_distinct_history_owners() {
         Some("Cone"),
     );
     e.dispatch(Command::Undo).unwrap();
-    assert!(e.cone.is_none());
+    assert!(e.session.cone.is_none());
     e.dispatch(Command::Redo).unwrap();
-    assert!(e.cone.is_some());
+    assert!(e.session.cone.is_some());
     e.dispatch(Command::ConfigureCone(ConeParameters {
         sides: 8,
         segments: 3,

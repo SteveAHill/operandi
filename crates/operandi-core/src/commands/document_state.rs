@@ -60,14 +60,14 @@ impl Editor {
         swap(&mut a.multi_fresh, &mut b.multi_fresh);
         swap(&mut a.multi_extrude, &mut b.multi_extrude);
         swap(&mut a.extrude_moved_caps, &mut b.extrude_moved_caps);
-        swap(&mut a.pen_draft, &mut b.pen_draft);
-        swap(&mut a.solid_sketch, &mut b.solid_sketch);
-        swap(&mut a.bridge, &mut b.bridge);
-        swap(&mut a.spike, &mut b.spike);
-        swap(&mut a.reduction, &mut b.reduction);
-        swap(&mut a.ellipsoid, &mut b.ellipsoid);
-        swap(&mut a.shape, &mut b.shape);
-        swap(&mut a.cone, &mut b.cone);
+        swap(&mut a.session.pen_draft, &mut b.session.pen_draft);
+        swap(&mut a.session.solid_sketch, &mut b.session.solid_sketch);
+        swap(&mut a.session.bridge, &mut b.session.bridge);
+        swap(&mut a.session.spike, &mut b.session.spike);
+        swap(&mut a.session.reduction, &mut b.session.reduction);
+        swap(&mut a.session.ellipsoid, &mut b.session.ellipsoid);
+        swap(&mut a.session.shape, &mut b.session.shape);
+        swap(&mut a.session.cone, &mut b.session.cone);
         // Ids and caches of this scene's items and elements.
         swap(
             &mut a.session.gesture_partners,
@@ -107,14 +107,6 @@ fn every_field_is_sorted(e: Editor) {
         multi_fresh: _,
         multi_extrude: _,
         extrude_moved_caps: _,
-        pen_draft: _,
-        solid_sketch: _,
-        bridge: _,
-        spike: _,
-        reduction: _,
-        ellipsoid: _,
-        shape: _,
-        cone: _,
         symmetry_unpaired: _,
         falloff_element: _,
         falloff_stamps: _,
@@ -213,6 +205,14 @@ fn every_session_field_is_sorted(t: crate::ToolSession) {
         tweaks: _,
         tool_reopen: _,
         gesture_partners: _,
+        bridge: _,
+        spike: _,
+        reduction: _,
+        ellipsoid: _,
+        shape: _,
+        cone: _,
+        pen_draft: _,
+        solid_sketch: _,
         // Shared: a cache matched by content, and bookkeeping of the
         // command and drag running now.
         last_transform_step: _,

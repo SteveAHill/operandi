@@ -110,7 +110,7 @@ impl Editor {
             }
             return Ok(());
         }
-        self.spike = None;
+        self.session.spike = None;
         let transform = self
             .live_transform_tool()
             .or_else(|| self.live_primitive_tool());

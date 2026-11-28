@@ -242,10 +242,10 @@ fn numeric_sessions_drag_anywhere() {
     let mut rig = Rig::new(Mode::Polygon);
     rig.a.run(Command::ArmSpike);
     rig.frame(vec![]);
-    let before = rig.a.editor.spike.as_ref().unwrap().requested;
+    let before = rig.a.editor.session.spike.as_ref().unwrap().requested;
     rig.drag(rig.corner(), vec2(0., -50.));
     assert!(
-        rig.a.editor.spike.as_ref().unwrap().requested > before,
+        rig.a.editor.session.spike.as_ref().unwrap().requested > before,
         "{}",
         rig.a.status
     );
@@ -257,7 +257,7 @@ fn numeric_sessions_drag_anywhere() {
     rig.a.run(Command::ArmReduction);
     rig.frame(vec![]);
     rig.drag(rig.corner(), vec2(-60., 0.));
-    let session = rig.a.editor.reduction.as_ref().unwrap();
+    let session = rig.a.editor.session.reduction.as_ref().unwrap();
     let count = session
         .source
         .as_ref()
@@ -272,7 +272,7 @@ fn numeric_sessions_drag_anywhere() {
     rig.frame(vec![]);
     let center = rig.a.viewport_rect.center();
     rig.drag(center, vec2(120., 0.));
-    let ShapeParameters::Torus(t) = &rig.a.editor.shape.as_ref().unwrap().requested else {
+    let ShapeParameters::Torus(t) = &rig.a.editor.session.shape.as_ref().unwrap().requested else {
         panic!("torus")
     };
     assert!(t.ring_radius > 0.5, "{}", rig.a.status);
@@ -287,7 +287,7 @@ fn tube_clicks_add_control_points() {
     rig.a.run(Command::ArmShape(operandi_core::ShapeKind::Tube));
     rig.frame(vec![]);
     let center = rig.a.viewport_rect.center();
-    let points = |rig: &Rig| match &rig.a.editor.shape.as_ref().unwrap().requested {
+    let points = |rig: &Rig| match &rig.a.editor.session.shape.as_ref().unwrap().requested {
         ShapeParameters::Tube(t) => t.points.clone(),
         _ => panic!("tube"),
     };
@@ -298,13 +298,22 @@ fn tube_clicks_add_control_points() {
     };
     click(&mut rig, center);
     assert_eq!(points(&rig).len(), 1, "{}", rig.a.status);
-    assert!(rig.a.editor.shape.as_ref().unwrap().error.is_none());
+    assert!(rig.a.editor.session.shape.as_ref().unwrap().error.is_none());
     click(&mut rig, center + vec2(0., -100.));
     click(&mut rig, center + vec2(100., -150.));
     let p = points(&rig);
     assert_eq!(p.len(), 3, "{}", rig.a.status);
     assert!(p[0].distance(p[1]) > 0.1 && p[1].distance(p[2]) > 0.1);
-    assert!(rig.a.editor.shape.as_ref().unwrap().preview.is_some());
+    assert!(
+        rig.a
+            .editor
+            .session
+            .shape
+            .as_ref()
+            .unwrap()
+            .preview
+            .is_some()
+    );
 
     // A drag adds a point where it starts and moves it to where it ends.
     rig.drag(center + vec2(200., 0.), vec2(0., 100.));
@@ -324,7 +333,7 @@ fn tube_clicks_add_points_and_a_press_on_one_moves_it() {
     rig.a.run(Command::ArmShape(operandi_core::ShapeKind::Tube));
     rig.frame(vec![]);
     let c = rig.a.viewport_rect.center();
-    let points = |rig: &Rig| match &rig.a.editor.shape.as_ref().unwrap().requested {
+    let points = |rig: &Rig| match &rig.a.editor.session.shape.as_ref().unwrap().requested {
         ShapeParameters::Tube(t) => t.points.clone(),
         _ => panic!("tube"),
     };

@@ -96,7 +96,7 @@ impl super::Operandi {
         if !modifiers.is_none()
             || self.editor.scene.selection.mode != Mode::Item
             || self.editor.has_active_task()
-            || self.editor.pen_draft.is_some()
+            || self.editor.session.pen_draft.is_some()
             || self.draw.is_some()
             || self.utility.is_some()
             || self.edge_click.is_some()

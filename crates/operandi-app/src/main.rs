@@ -2395,7 +2395,7 @@ impl Operandi {
         // A dropped Pen polygon faces the viewer whichever way it was
         // clicked (a Flip Polygon option would invert that).
         if matches!(c, Command::Drop)
-            && let Some(draft) = &self.editor.pen_draft
+            && let Some(draft) = &self.editor.session.pen_draft
             && draft.points().len() >= 3
             && draft.options().output == PenType::Polygon
         {
@@ -2739,14 +2739,16 @@ impl Operandi {
             });
         } else if self.dirty()
             || self.editor.live.is_some()
-            || self.editor.pen_draft.is_some()
+            || self.editor.session.pen_draft.is_some()
             || self
                 .editor
+                .session
                 .ellipsoid
                 .as_ref()
                 .is_some_and(|s| s.preview.is_some())
             || self
                 .editor
+                .session
                 .shape
                 .as_ref()
                 .is_some_and(|s| s.preview.is_some())
@@ -2767,6 +2769,7 @@ impl Operandi {
         // names a map of the old document, so it keeps its New default.
         let current = self
             .editor
+            .session
             .cone
             .as_ref()
             .filter(|s| s.error.is_none())
@@ -3822,10 +3825,10 @@ impl Operandi {
             match numeric::parse_quantity(value, numeric::Quantity::Scalar) {
                 Ok(value) => {
                     self.run(Command::ConfigureSpike(value));
-                    if self.editor.spike.is_some() {
+                    if self.editor.session.spike.is_some() {
                         self.sync_numeric_value(
                             "spi_strength",
-                            self.editor.spike.as_ref().unwrap().requested,
+                            self.editor.session.spike.as_ref().unwrap().requested,
                             "",
                         );
                     }
@@ -4278,10 +4281,15 @@ mod views;
 fn needs_saving(editor: &Editor, saved: &Scene, same: fn(&Scene, &Scene) -> bool) -> bool {
     !same(&editor.scene, saved)
         || editor
+            .session
             .ellipsoid
             .as_ref()
             .is_some_and(|s| s.preview.is_some())
-        || editor.shape.as_ref().is_some_and(|s| s.preview.is_some())
+        || editor
+            .session
+            .shape
+            .as_ref()
+            .is_some_and(|s| s.preview.is_some())
 }
 
 /// The launch arguments as text, for the command-line modes below. A

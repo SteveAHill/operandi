@@ -189,7 +189,7 @@ fn rf03_established_numeric_switches_finish_once_and_cancel_new_owner_only() {
             e.dispatch(Command::Redo).unwrap();
             assert_eq!(e.scene, accepted);
             assert_eq!(e.identities.current, accepted_ids);
-            assert!(e.live.is_none() && e.spike.is_none() && e.ellipsoid.is_none());
+            assert!(e.live.is_none() && e.session.spike.is_none() && e.session.ellipsoid.is_none());
         }
     }
 }
@@ -215,7 +215,7 @@ fn rf03_cone_drops_the_stage_and_new_mesh_idle_contract_is_preserved() {
     let mut e = moved();
     e.dispatch(Command::ArmCone).unwrap();
     assert!(!e.i2_active());
-    assert!(e.cone.is_some());
+    assert!(e.session.cone.is_some());
     let mut e = moved();
     let before = e.clone();
     assert!(e.dispatch(Command::NewMesh).is_err());

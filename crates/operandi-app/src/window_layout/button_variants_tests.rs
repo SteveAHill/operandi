@@ -548,7 +548,10 @@ fn mb_q8_primitive_keys_are_read_at_press_and_labels_swap_while_typing() {
         vec![pointer(p, false, Modifiers::NONE)],
     );
     assert_eq!(a.editor.scene.items.len(), items + 1, "{}", a.status);
-    assert!(a.editor.cone.is_none(), "Shift at press: no Cone session");
+    assert!(
+        a.editor.session.cone.is_none(),
+        "Shift at press: no Cone session"
+    );
 
     ctx.memory_mut(|m| m.request_focus(Id::new("command-entry")));
     frame(&mut a, &ctx, Modifiers::NONE, vec![]);

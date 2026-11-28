@@ -81,7 +81,6 @@ pub struct Editor {
     pub multi_fresh: std::collections::BTreeSet<u64>,
     /// Select > Polygon Tag Type: what tag selection modes select by.
     pub polygon_tag_kind: crate::PolygonTagKind,
-    pub pen_draft: Option<crate::PenDraft>,
     /// What the open tool's start inferred from another selection mode
     /// (selection_inference.rs), if anything.
     pub inference: Option<crate::selection_inference::Inference>,
@@ -96,8 +95,6 @@ pub struct Editor {
     pub symmetry_resume: Option<crate::Symmetry>,
     /// Interactive Pen options, kept between Pen sessions.
     pub pen_options: crate::PenOptions,
-    /// The open Solid Sketch session (solid_sketch_editor.rs).
-    pub solid_sketch: Option<crate::SketchSession>,
     /// Solid Sketch options, kept between sessions (spec Q18).
     pub solid_sketch_options: crate::solid_sketch::SketchOptions,
     pub i2: crate::LiveExtrudeHistory,
@@ -155,16 +152,7 @@ pub struct Editor {
     >,
     pub surface_state: std::collections::BTreeMap<String, String>,
 
-    pub bridge: Option<crate::NumericBridge>,
-    pub spike: Option<crate::NumericSpike>,
     pub spike_strength: f64,
-    /// MP-T11 Polygon Reduction session; `None` when the tool is off.
-    pub reduction: Option<crate::NumericReduction>,
-    pub ellipsoid: Option<crate::NumericEllipsoid>,
-    /// Torus, Capsule, Arc or Tube numeric session (NPR), and each one's
-    /// last settings.
-    pub shape: Option<crate::NumericShape>,
-    pub cone: Option<crate::NumericCone>,
     pub scene: Scene,
     pub action_context: crate::ActionContext,
     /// Shared Symmetry setting (SYM-ST-01); tool context, not scene data.

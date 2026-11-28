@@ -26,11 +26,11 @@ impl Editor {
         if numeric_only && self.live.is_some() {
             return Ok(None);
         }
-        if let Some(s) = &mut self.ellipsoid {
+        if let Some(s) = &mut self.session.ellipsoid {
             s.preview = None;
-        } else if let Some(s) = &mut self.shape {
+        } else if let Some(s) = &mut self.session.shape {
             s.preview = None;
-        } else if let Some(s) = &mut self.cone {
+        } else if let Some(s) = &mut self.session.cone {
             s.preview = None;
         } else if let Some(l) = self.live.take() {
             self.scene = l.base;
@@ -48,29 +48,29 @@ impl Editor {
     /// it otherwise (MTU-Q6, provisional). Its values stay; nothing is
     /// previewed until a value changes.
     pub(super) fn rebase_numeric_primitive(&mut self) {
-        if let Some(s) = &self.ellipsoid
+        if let Some(s) = &self.session.ellipsoid
             && self.ellipsoid_target_ok(s.target).is_err()
         {
-            self.ellipsoid = None;
+            self.session.ellipsoid = None;
         }
-        if let Some(s) = &self.shape
+        if let Some(s) = &self.session.shape
             && self.shape_target_ok(s.target, s.kind()).is_err()
         {
-            self.shape = None;
+            self.session.shape = None;
         }
-        if let Some(s) = &self.cone
+        if let Some(s) = &self.session.cone
             && !self
                 .scene
                 .items
                 .iter()
                 .any(|i| i.id == s.target && self.scene.shows(i))
         {
-            self.cone = None;
+            self.session.cone = None;
         }
         for preview in [
-            self.ellipsoid.as_mut().map(|s| &mut s.preview),
-            self.shape.as_mut().map(|s| &mut s.preview),
-            self.cone.as_mut().map(|s| &mut s.preview),
+            self.session.ellipsoid.as_mut().map(|s| &mut s.preview),
+            self.session.shape.as_mut().map(|s| &mut s.preview),
+            self.session.cone.as_mut().map(|s| &mut s.preview),
         ]
         .into_iter()
         .flatten()
@@ -170,7 +170,7 @@ impl Editor {
 
     /// Change the action center and axis.
     pub(super) fn handle_action_context(&mut self, context: crate::ActionContext) -> Result<()> {
-        if self.cone.is_some() {
+        if self.session.cone.is_some() {
             return Err("Numeric Cone uses world coordinates; context changes during this session remain uncharacterized".into());
         }
         // Resolve before publishing context so invalid Selection requests
@@ -430,17 +430,17 @@ impl Editor {
         Ok(())
     }
     pub fn require_idle(&self) -> Result<()> {
-        if self.bridge.is_some() {
+        if self.session.bridge.is_some() {
             return Err("Drop or Cancel Bridge first".into());
         }
-        if self.reduction.is_some() {
+        if self.session.reduction.is_some() {
             return Err("Drop or Cancel Polygon Reduction first".into());
         }
         if self.live.is_some()
-            || self.cone.is_some()
-            || self.ellipsoid.is_some()
-            || self.shape.is_some()
-            || self.spike.is_some()
+            || self.session.cone.is_some()
+            || self.session.ellipsoid.is_some()
+            || self.session.shape.is_some()
+            || self.session.spike.is_some()
         {
             Err("Drop or Cancel the active tool first".into())
         } else {

@@ -287,7 +287,7 @@ impl Operandi {
                 return;
             }
             if cone {
-                let Some(session) = &self.editor.cone else {
+                let Some(session) = &self.editor.session.cone else {
                     return;
                 };
                 let mut p = session.requested.clone();
@@ -296,7 +296,7 @@ impl Operandi {
                 p.axis = normal;
                 self.run(Command::ConfigureCone(p));
             } else {
-                let Some(session) = &self.editor.ellipsoid else {
+                let Some(session) = &self.editor.session.ellipsoid else {
                     return;
                 };
                 let mut p = session.requested.clone();
@@ -309,7 +309,7 @@ impl Operandi {
             return;
         }
         if cone {
-            let Some(session) = &self.editor.cone else {
+            let Some(session) = &self.editor.session.cone else {
                 return;
             };
             let mut p = session.requested.clone();
@@ -322,7 +322,7 @@ impl Operandi {
             p.axis = normal;
             self.run(Command::ConfigureCone(p));
         } else {
-            let Some(session) = &self.editor.ellipsoid else {
+            let Some(session) = &self.editor.session.ellipsoid else {
                 return;
             };
             let mut p = session.requested.clone();

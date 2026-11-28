@@ -125,7 +125,7 @@ fn mv03_surface_errors_and_cone_overlap_keep_authoritative_drop_order() {
             "Correct the current stage or Cancel before Drop: surface invalid",
         );
         let target = e.scene.selection.item.unwrap();
-        e.cone = Some(NumericCone {
+        e.session.cone = Some(NumericCone {
             target,
             requested: Default::default(),
             preview: None,
@@ -138,7 +138,7 @@ fn mv03_surface_errors_and_cone_overlap_keep_authoritative_drop_order() {
         );
         // A raw overlap: Drop closes Cone, but the surface tool stays open,
         // so the mode change refuses and nothing changes.
-        e.cone.as_mut().unwrap().error = None;
+        e.session.cone.as_mut().unwrap().error = None;
         refusal(&mut e, "Finish the current tool before changing mode");
     }
 }
@@ -205,7 +205,7 @@ fn mv04_route_queries_are_pure_and_never_a_cached_permit() {
         "Correct the current stage or Cancel before Drop: changed after presentation",
     );
     let target = e.scene.selection.item.unwrap();
-    e.cone = Some(NumericCone {
+    e.session.cone = Some(NumericCone {
         target,
         requested: Default::default(),
         preview: None,

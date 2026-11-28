@@ -15,7 +15,7 @@ fn counts(e: &Editor) -> (usize, usize) {
 /// Arming draws nothing (Jason, 2026-11-05); place the remembered shape the
 /// way a panel edit or viewport drag would.
 fn place(e: &mut Editor) {
-    let p = e.shape.as_ref().unwrap().requested.clone();
+    let p = e.session.shape.as_ref().unwrap().requested.clone();
     e.dispatch(Command::ConfigureShape(p)).unwrap();
 }
 fn tube_points() -> Vec<DVec3> {
@@ -38,7 +38,7 @@ fn arming_previews_and_drop_appends_one_undo_step() {
     // The preview isn't committed yet.
     assert_eq!(e.scene, base);
     e.dispatch(Command::Drop).unwrap();
-    assert!(e.shape.is_none());
+    assert!(e.session.shape.is_none());
     assert_eq!(counts(&e), (288, 288));
     assert_eq!(e.history.undo.last().unwrap().label, "Torus");
     // Nothing is selected afterwards (every NPR oracle).
@@ -67,7 +67,7 @@ fn needs_a_mesh() {
     let mut e = Editor::default();
     let err = e.dispatch(Command::ArmShape(ShapeKind::Arc)).unwrap_err();
     assert!(err.contains("New Mesh"), "{err}");
-    assert!(e.shape.is_none());
+    assert!(e.session.shape.is_none());
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn invalid_values_are_refused_until_corrected() {
         e.dispatch(Command::ConfigureShape(ShapeParameters::Capsule(bad)))
             .is_err()
     );
-    let s = e.shape.as_ref().unwrap();
+    let s = e.session.shape.as_ref().unwrap();
     assert!(s.error.is_some() && s.preview.is_none());
     assert!(e.dispatch(Command::Apply).is_err());
     assert!(e.dispatch(Command::Drop).is_err());
@@ -100,7 +100,7 @@ fn apply_keeps_the_tool_for_another_shape() {
     e.dispatch(Command::ArmShape(ShapeKind::Arc)).unwrap();
     e.dispatch(Command::Apply).unwrap();
     assert_eq!(counts(&e), (17, 1));
-    assert!(e.shape.is_some());
+    assert!(e.session.shape.is_some());
     let moved = ArcParameters {
         center: DVec3::new(3., 0., 0.),
         ..Default::default()
@@ -134,12 +134,12 @@ fn settings_are_remembered_and_reset_restores_them() {
     e.dispatch(Command::Drop).unwrap();
     e.dispatch(Command::ArmShape(ShapeKind::Torus)).unwrap();
     assert_eq!(
-        e.shape.as_ref().unwrap().requested,
+        e.session.shape.as_ref().unwrap().requested,
         ShapeParameters::Torus(small)
     );
     e.dispatch(Command::ResetShape).unwrap();
     assert_eq!(
-        e.shape.as_ref().unwrap().requested,
+        e.session.shape.as_ref().unwrap().requested,
         ShapeParameters::Torus(Default::default())
     );
     assert_eq!(
@@ -152,7 +152,7 @@ fn settings_are_remembered_and_reset_restores_them() {
 fn tube_waits_for_points() {
     let mut e = editor();
     e.dispatch(Command::ArmShape(ShapeKind::Tube)).unwrap();
-    assert!(e.shape.as_ref().unwrap().preview.is_none());
+    assert!(e.session.shape.as_ref().unwrap().preview.is_none());
     assert!(e.dispatch(Command::Apply).is_err() || counts(&e) == (0, 0));
     let tube = TubeParameters {
         points: tube_points(),
@@ -180,7 +180,7 @@ fn another_tool_drops_the_shown_shape_first() {
     assert_eq!(e.open_task_slots(), 1);
     // The same tool's button drops it.
     e.dispatch(Command::ArmShape(ShapeKind::Capsule)).unwrap();
-    assert!(e.shape.is_none());
+    assert!(e.session.shape.is_none());
     assert_eq!(counts(&e), (288 + 242, 288 + 264));
 }
 
@@ -189,7 +189,7 @@ fn selection_waits_for_the_tool() {
     let mut e = editor();
     e.dispatch(Command::ArmShape(ShapeKind::Arc)).unwrap();
     assert!(e.dispatch(Command::ClearSelection).is_err());
-    assert!(e.shape.is_some());
+    assert!(e.session.shape.is_some());
 }
 
 #[test]

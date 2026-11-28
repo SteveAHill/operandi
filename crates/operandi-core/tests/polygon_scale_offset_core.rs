@@ -560,7 +560,7 @@ fn live_tool_and_pen_owners_refuse_without_consuming_their_state() {
     let mut e = editor_with(square_mesh(), vec![0]);
     e.dispatch(Command::NewMesh).unwrap();
     e.dispatch(Command::PenStart).unwrap();
-    assert!(e.pen_draft.is_some());
+    assert!(e.session.pen_draft.is_some());
     assert_refused(e, 0.25, "Pen");
 }
 

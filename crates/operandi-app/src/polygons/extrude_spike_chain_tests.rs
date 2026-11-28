@@ -388,7 +388,7 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     // nothing about the selection, editor or live state is set here.
     assert!(menu_enabled(&a, &ctx, app_menu::line_action("Spike")));
     a.menu_action(&ctx, app_menu::line_action("Spike"));
-    let spike = a.editor.spike.clone().expect("Spike armed");
+    let spike = a.editor.session.spike.clone().expect("Spike armed");
     assert_eq!(spike.target, first.active().unwrap().id, "{}", a.status);
     assert!(a.editor.live.is_none());
     assert_eq!(a.editor.scene, first, "Spike activation: first unchanged");
@@ -410,7 +410,7 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
 
     type_field(&mut a, &ctx, "spi_strength", "0.25");
     assert!(a.field_errors.is_empty(), "{:?}", a.field_errors);
-    assert_eq!(a.editor.spike.as_ref().unwrap().requested, STRENGTH);
+    assert_eq!(a.editor.session.spike.as_ref().unwrap().requested, STRENGTH);
     unchanged(&a, "Strength 0.25 configured");
 
     // Invalid dimensioned Strength: kept as a visible draft with an error;
@@ -426,6 +426,7 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     assert_eq!(field_text(&mut a, &ctx, "spi_strength"), "0.25 m");
     let s = a
         .editor
+        .session
         .spike
         .as_ref()
         .expect("still armed, no tool switch");
@@ -433,7 +434,7 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
 
     type_field(&mut a, &ctx, "spi_strength", "0.25");
     assert!(a.field_errors.is_empty(), "{:?}", a.field_errors);
-    assert_eq!(a.editor.spike.as_ref().unwrap().requested, STRENGTH);
+    assert_eq!(a.editor.session.spike.as_ref().unwrap().requested, STRENGTH);
     unchanged(&a, "corrected");
 
     // 3. Spike Apply on the selected moved cap only.
@@ -450,7 +451,10 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     );
     assert!(a.editor.history.undo[1].before == first && a.editor.history.undo[1].after == second);
     assert!(a.editor.history.redo.is_empty());
-    assert!(a.editor.spike.is_some(), "Spike stays armed after Apply");
+    assert!(
+        a.editor.session.spike.is_some(),
+        "Spike stays armed after Apply"
+    );
 
     let m2 = mesh(&second);
     let tolerance = 2e-6 * 1f64.max(DVec3::new(1., 1., 0.85).length());
@@ -499,7 +503,11 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
     second.validate().unwrap();
 
     drop_with_q(&mut a, &ctx);
-    assert!(a.editor.spike.is_none(), "Q drops Spike: {}", a.status);
+    assert!(
+        a.editor.session.spike.is_none(),
+        "Q drops Spike: {}",
+        a.status
+    );
     assert_eq!(a.editor.scene, second, "Drop keeps the Spike stage");
     assert_eq!(
         labels(&a.editor.history.undo),
@@ -550,7 +558,7 @@ fn extrude_moved_cap_hands_over_to_partial_spike_with_walls_and_both_stages() {
             (undo, redo)
         );
         assert!(
-            a.editor.live.is_none() && a.editor.spike.is_none(),
+            a.editor.live.is_none() && a.editor.session.spike.is_none(),
             "{step}"
         );
         frame(&mut a, &ctx, vec![]);

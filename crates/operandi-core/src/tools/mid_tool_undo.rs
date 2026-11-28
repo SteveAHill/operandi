@@ -191,15 +191,15 @@ impl Editor {
                 self.identities.observe(&self.scene)?;
             }
             ReopenSession::Live(Box::new(l))
-        } else if let Some(s) = self.cone.take() {
+        } else if let Some(s) = self.session.cone.take() {
             ReopenSession::Cone(s)
-        } else if let Some(s) = self.ellipsoid.take() {
+        } else if let Some(s) = self.session.ellipsoid.take() {
             ReopenSession::Ellipsoid(s)
-        } else if let Some(s) = self.shape.take() {
+        } else if let Some(s) = self.session.shape.take() {
             ReopenSession::Shape(s)
-        } else if let Some(s) = self.spike.take() {
+        } else if let Some(s) = self.session.spike.take() {
             ReopenSession::Spike(s)
-        } else if let Some(s) = self.bridge.take() {
+        } else if let Some(s) = self.session.bridge.take() {
             ReopenSession::Bridge(s)
         } else {
             return Ok(None);
@@ -234,11 +234,11 @@ impl Editor {
                 self.identities.observe(&self.scene)?;
                 self.live = Some(*l);
             }
-            ReopenSession::Cone(s) => self.cone = Some(s),
-            ReopenSession::Ellipsoid(s) => self.ellipsoid = Some(s),
-            ReopenSession::Shape(s) => self.shape = Some(s),
-            ReopenSession::Spike(s) => self.spike = Some(s),
-            ReopenSession::Bridge(s) => self.bridge = Some(s),
+            ReopenSession::Cone(s) => self.session.cone = Some(s),
+            ReopenSession::Ellipsoid(s) => self.session.ellipsoid = Some(s),
+            ReopenSession::Shape(s) => self.session.shape = Some(s),
+            ReopenSession::Spike(s) => self.session.spike = Some(s),
+            ReopenSession::Bridge(s) => self.session.bridge = Some(s),
         }
         self.history.tool_steps = Some(0);
         self.history.tool_redo_floor = Some(self.history.redo.len());
@@ -267,24 +267,36 @@ impl Editor {
             .live
             .as_ref()
             .is_some_and(|l| l.preview_error.is_some())
-            || self.cone.as_ref().is_some_and(|s| s.error.is_some())
-            || self.ellipsoid.as_ref().is_some_and(|s| s.error.is_some())
-            || self.shape.as_ref().is_some_and(|s| s.error.is_some());
+            || self
+                .session
+                .cone
+                .as_ref()
+                .is_some_and(|s| s.error.is_some())
+            || self
+                .session
+                .ellipsoid
+                .as_ref()
+                .is_some_and(|s| s.error.is_some())
+            || self
+                .session
+                .shape
+                .as_ref()
+                .is_some_and(|s| s.error.is_some());
         if invalid {
             return None;
         }
         let session = if let Some(l) = &self.live {
             ReopenSession::Live(Box::new(l.clone()))
-        } else if let Some(s) = &self.cone {
+        } else if let Some(s) = &self.session.cone {
             ReopenSession::Cone(s.clone())
-        } else if let Some(s) = &self.ellipsoid {
+        } else if let Some(s) = &self.session.ellipsoid {
             ReopenSession::Ellipsoid(s.clone())
-        } else if let Some(s) = &self.shape {
+        } else if let Some(s) = &self.session.shape {
             ReopenSession::Shape(s.clone())
-        } else if let Some(s) = &self.spike {
+        } else if let Some(s) = &self.session.spike {
             ReopenSession::Spike(s.clone())
         } else {
-            ReopenSession::Bridge(self.bridge.clone()?)
+            ReopenSession::Bridge(self.session.bridge.clone()?)
         };
         Some(TweakState {
             bevel_start: false,
@@ -302,11 +314,11 @@ impl Editor {
         self.identities.observe(&self.scene)?;
         match state.session {
             ReopenSession::Live(l) => self.live = Some(*l),
-            ReopenSession::Cone(s) => self.cone = Some(s),
-            ReopenSession::Ellipsoid(s) => self.ellipsoid = Some(s),
-            ReopenSession::Shape(s) => self.shape = Some(s),
-            ReopenSession::Spike(s) => self.spike = Some(s),
-            ReopenSession::Bridge(s) => self.bridge = Some(s),
+            ReopenSession::Cone(s) => self.session.cone = Some(s),
+            ReopenSession::Ellipsoid(s) => self.session.ellipsoid = Some(s),
+            ReopenSession::Shape(s) => self.session.shape = Some(s),
+            ReopenSession::Spike(s) => self.session.spike = Some(s),
+            ReopenSession::Bridge(s) => self.session.bridge = Some(s),
         }
         Ok(())
     }

@@ -239,11 +239,11 @@ impl Editor {
         let unported_topology = match &cmd {
             Command::Apply => {
                 topology_tool
-                    || self.spike.is_some()
-                    || self.bridge.is_some()
-                    || self.cone.is_some()
-                    || self.ellipsoid.is_some()
-                    || self.shape.is_some()
+                    || self.session.spike.is_some()
+                    || self.session.bridge.is_some()
+                    || self.session.cone.is_some()
+                    || self.session.ellipsoid.is_some()
+                    || self.session.shape.is_some()
             }
             // Live Drop publishes session/history only: its preview was
             // already rebound. Numeric constructors append at Drop, which is
@@ -453,10 +453,10 @@ impl Editor {
                 // Allocation marks belong to the shared document bank, not
                 // staged snapshots. Err cannot rewind their consumed ranges.
                 if preserve_numeric_draft {
-                    self.ellipsoid = staged.ellipsoid;
-                    self.shape = staged.shape;
-                    self.cone = staged.cone;
-                    self.spike = staged.spike;
+                    self.session.ellipsoid = staged.session.ellipsoid;
+                    self.session.shape = staged.session.shape;
+                    self.session.cone = staged.session.cone;
+                    self.session.spike = staged.session.spike;
                 }
                 // Existing invalid-preview diagnostics are UI/session state. They do
                 // not publish the failed geometry or replace accepted history.
