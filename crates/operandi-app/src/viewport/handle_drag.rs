@@ -503,9 +503,10 @@ impl Operandi {
         let Some(mut frame) = self.editor.live.as_ref().and_then(|l| l.action_frame) else {
             return;
         };
-        // AC-75: under Local the handle's own axes.
-        if let Some(basis) = self.local_handle_basis() {
-            frame.basis = basis;
+        // The drag is measured along the handle's own axes: the pivot
+        // service's (under Local the last-selected cluster's, AC-75).
+        if let Some(handle) = self.editor.handle_frame() {
+            frame.basis = handle.basis;
         }
         let (_, right, up, _) = self.camera.basis();
         let d = p - start;

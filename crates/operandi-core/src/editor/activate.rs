@@ -562,6 +562,7 @@ impl Editor {
             params,
             applied: false,
             preview_error: None,
+            pivots: Default::default(),
             // The action-centre layer: tools that work about a frame
             // capture it now.
             placed_centre: None,

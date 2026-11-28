@@ -1,5 +1,18 @@
 # Milestone progress ledger
 
+- **Local's axes as the rule sheet has them (2026-11-28, branch ac-rewrite-3b, on step 3):** Jason's report: a cube's opposite X walls under Local leaned opposite ways about the direction they share. A-LOCAL now: Z the cluster's normal at any tilt, X along the surface nearest the item's X and pointed to +X, Y = Z × X (`piece_axes`; AC-Q5's "normal on the nearest item axis" is gone). Opposite walls share their X, so the red ring turns them the same way; typed and dragged tests on X walls, Z walls and top+bottom (`ac_local_opposite_walls.rs`, `ac_local_walls_tests.rs`). Visible change: under Local blue is now the normal everywhere (a floor polygon had Y up). Rulebook: the Local Scale case recorded with Z on the normal passes; the typed Local Rotate Y 30 case is a known gap (ACR-Q29). Provisional: ACR-Q29, ACR-Q30.
+- **Action Center rule sheet v6, step 3: one pivot service (2026-11-27, branch ac-rewrite-3):**
+  `PivotRequest::resolve` answers once per drag base with the handle and,
+  per mesh, groups (stable identity, frame, twin frame, targets with
+  their Symmetry role and side); `Editor::live_pivots` keeps it on the
+  live tool and checks it against what it read. Move, Rotate, Scale
+  (Stretch) and Transform's preview, handle and handle drag read only
+  that; the preview no longer gathers targets, clusters, mirror roles or
+  frames. Local's axes are `AxisOrientation::Local`, so Local centre +
+  another axis and another centre + Local axes work (mixing rules). A
+  refused live switch restores the placed-centre marker. Behaviour is
+  otherwise unchanged. Not yet: Item mode, the menu table, falloff side
+  sampling, S-09's mirrored frame. Provisional: ACR-Q21..Q27.
 - **Kit framework, slice 1 (2026-11-27, branch kits-framework-1):** kit
   API 1 (docs/KITS.md). `kit.toml` manifest with strict checks, a Kits
   folder in the data folder, `kits.toml` for which kits are on (off after

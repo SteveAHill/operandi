@@ -145,6 +145,32 @@ pub(crate) fn is_size_box_for(h: FalloffHandle, field: Option<Falloff>) -> bool 
     )
 }
 
+/// Where point handle `kind` of `start` is, in the falloff's own space:
+/// Linear Start or End, the Radial or Cylinder centre. `None` for size
+/// handles and falloffs without point handles (#65: only points snap).
+fn handle_point(start: Falloff, kind: FalloffHandle) -> Option<DVec3> {
+    let (FalloffHandle::Point(point) | FalloffHandle::Axis(point, _)) = kind;
+    match start {
+        Falloff::Linear(f) => Some(if point == 0 { f.start } else { f.end }),
+        Falloff::Radial(f) if point == 0 => Some(f.center),
+        Falloff::Cylinder(f) if point == 0 => Some(f.center),
+        _ => None,
+    }
+}
+
+/// `delta` as handle `kind` applies it: a per-axis handle keeps only its
+/// axis.
+fn moved_only(kind: FalloffHandle, delta: DVec3) -> DVec3 {
+    match kind {
+        FalloffHandle::Axis(_, axis) => {
+            let mut only = DVec3::ZERO;
+            only[axis] = delta[axis];
+            only
+        }
+        FalloffHandle::Point(_) => delta,
+    }
+}
+
 /// `start` with handle `kind` moved by `delta` in the falloff's own
 /// space; a per-axis handle keeps only its axis. `None` for a Path (its
 /// points live apart) and falloffs without handles.
@@ -359,6 +385,23 @@ impl Operandi {
                 self.run(Command::FalloffPath(points));
             }
             return;
+        }
+        // #65: with snapping on, a point handle (Linear Start/End, the
+        // Radial and Cylinder centres) snaps where it lands; an axis handle
+        // snaps along its axis.
+        if let Some(base) = handle_point(start, kind) {
+            let space = self.falloff_space();
+            let from_world = space.transform_point3(base);
+            let landed = from_world + space.transform_vector3(moved_only(kind, delta));
+            let line = match kind {
+                FalloffHandle::Axis(_, axis) => space
+                    .transform_vector3(DVec3::AXES[axis])
+                    .try_normalize()
+                    .map(|d| (from_world, d)),
+                FalloffHandle::Point(_) => None,
+            };
+            let snapped = self.snap_placement(landed, &[], line, r);
+            delta = space.inverse().transform_vector3(snapped - from_world);
         }
         let Some(next) = moved_falloff(start, kind, delta) else {
             return;

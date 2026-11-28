@@ -1328,14 +1328,11 @@ impl Operandi {
                 axis: AxisOrientation::World,
             };
             self.action_context_choice(ui, Button::selectable(current == origin, "Origin"), origin);
-            let local = ActionContext {
-                center: CenterMode::Local,
-                axis: AxisOrientation::World,
-            };
+            // C-LOCAL with A-LOCAL: each cluster's own centre and axes.
             self.action_context_choice(
                 ui,
-                Button::selectable(current.center == CenterMode::Local, "Local"),
-                local,
+                Button::selectable(current == ActionContext::LOCAL, "Local"),
+                ActionContext::LOCAL,
             )
             .on_hover_text("Each connected piece about its own centre, with axes from its own polygons");
             // The rulebook's item rows (ACS table, pivot_service.rs): one

@@ -636,7 +636,7 @@ pub mod profile;
 pub use profile::{ProfilePick, ProfilePoint, ProfileShape};
 #[path = "slicing/slice.rs"]
 pub mod slice;
-#[path = "slicing/slice_cut.rs"]
+#[path = "geometry/slice_cut.rs"]
 pub(crate) mod slice_cut;
 #[path = "slicing/support_edges.rs"]
 pub(crate) mod support_edges;

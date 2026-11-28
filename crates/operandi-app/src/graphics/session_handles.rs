@@ -70,10 +70,7 @@ impl Operandi {
         let Some(shape) = self.session_shape() else {
             return Vec::new();
         };
-        if self.editor.is_armed()
-            || self.handle_preferences.selected
-                == crate::handle_preferences::HandleDetail::Invisible
-        {
+        if self.editor.is_armed() || !self.handle_preferences.selected_shown() {
             return Vec::new();
         }
         let Some((center, _)) = self.camera.project(shape.position, r) else {

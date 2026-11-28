@@ -489,10 +489,7 @@ fn slanted_edge(targets: Targets) -> (Operandi, Rect) {
     app.camera.distance = rect.height() as f64 * app.camera.lens / 288.3;
     app.run(Command::Mode(Mode::Edge));
     app.editor.scene.selection.edges = vec![(0, 1)];
-    app.run(Command::ActionContext(ActionContext {
-        center: CenterMode::Local,
-        ..app.editor.action_context
-    }));
+    app.run(Command::ActionContext(ActionContext::LOCAL));
     app.snapping = SnappingPreferences {
         enabled: true,
         global: Targets::default(),

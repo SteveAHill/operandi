@@ -40,7 +40,7 @@ impl Operandi {
         {
             return Vec::new();
         }
-        if self.handle_preferences.selected == crate::handle_preferences::HandleDetail::Invisible {
+        if !self.handle_preferences.selected_shown() {
             return Vec::new();
         }
         // On-screen handle lengths follow Handle Scale: Standard, and with
@@ -584,11 +584,10 @@ impl Operandi {
                 };
             }
             a
-        } else if let Some(basis) = self.local_handle_basis() {
-            // AC-75: under Local the arrows follow the last selected
-            // element's cluster.
-            basis * a
-        } else if let Some(frame) = l.action_frame {
+        } else if let Some(frame) = self.editor.handle_frame().or(l.action_frame) {
+            // The transform tools' arrows are the pivot service's handle
+            // (under Local the last selected element's cluster, AC-75);
+            // the other frame tools show their action frame.
             frame.basis * a
         } else {
             a
@@ -658,8 +657,8 @@ impl Operandi {
         let frame = l.action_frame?;
         // The pivot service places the frame (ACS-01/07); the polygon
         // stage's handle follows its live caps.
-        if let Some(local) = self.local_handle_frame() {
-            return Some(local);
+        if let Some(handle) = self.editor.handle_frame() {
+            return Some(handle);
         }
         let center = if l.tool.transforms_items() {
             frame.center

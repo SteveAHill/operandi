@@ -252,7 +252,9 @@ impl Operandi {
             // CP-D01: items whose Display Visible is No (or under No (Hide
             // Children)) leave the view; empty in the common case.
             let display_hidden = display_scene.display_hidden();
-            let shown = |i: &operandi_core::Item| i.visible && !display_hidden.contains(&i.id);
+            let shown = |i: &operandi_core::Item| {
+                i.visible && !display_hidden.contains(&i.id) && !self.show_meshes_hides(i)
+            };
             // Which items draw with the active look, looked up once for the
             // frame: asking the selection per item cost the square of the
             // item count with thousands selected (panel_speed_tests.rs).
