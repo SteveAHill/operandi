@@ -176,6 +176,29 @@ contribute.
    cargo test --locked --workspace
    ```
 
+   CI also runs the area dependency check, which you can run yourself:
+
+   ```bash
+   python3 scripts/area-deps.py --check --strict --no-report
+   ```
+
+   The source is filed in area folders (`edges/`, `slicing/`, `settings/`
+   ...; listed in [docs/CODEMAP.md](docs/CODEMAP.md)), and the areas have
+   an order, from the tools at the top down to the shared basics
+   ([docs/AREA_DEPENDENCIES.md](docs/AREA_DEPENDENCIES.md)). The check
+   fails when your change makes a lower area use a higher one for the
+   first time, because that ties the code in a knot. The message names
+   both areas and a file that does it. Usually the fix is small: move the
+   shared piece (a type, a helper) down into the area both sides already
+   use, or ask the other area's type for the answer through a method
+   instead of reaching into it. The file and its module name can stay the
+   same; only its folder and its `#[path]` line change. If the link is
+   really needed, say so in the pull request; only the maintainer adds
+   lines to `scripts/area-deps-baseline.txt`. When the check reports
+   *stale* baseline lines, your change removed an old link: run
+   `python3 scripts/area-deps.py --write-baseline` and commit the shorter
+   baseline (its diff should only remove lines).
+
 6. New icons come only from the icon studio in
    [`tools/icon-studio`](tools/icon-studio): small 3D scenes rendered with
    Cycles, so the set keeps one look (same camera, lights and materials).
@@ -203,6 +226,13 @@ contribute.
    the pull request.
 9. Open a pull request and fill in its checklist. Jason reviews and merges;
    `main` only changes through reviewed pull requests.
+
+**Making a kit** (an optional add-on, such as an importer for a new file
+type) doesn't need a change to Operandi at all: a kit lives in its own
+repository and people install it from a zip.
+[docs/KITS.md](docs/KITS.md) is the kit contract, and
+[`examples/kits/off_import`](examples/kits/off_import) is a small kit to
+start from.
 
 Don't commit build output (`target/`, `development/`), `.docx` files, your
 own scenes (`*.opscene` outside `fixtures/`), anything from Modo, or

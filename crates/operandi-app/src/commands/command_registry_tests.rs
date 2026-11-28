@@ -256,7 +256,7 @@ fn every_parser_name_is_in_the_registry() {
             .iter()
             .map(|(c, _)| c.to_string()),
     );
-    names.extend(pie_menu::ALL.iter().map(|c| c.to_string()));
+    names.extend(pie_menu::OLD_ACTIONS.iter().map(|(c, _, _)| c.to_string()));
     names.extend(input::NAV_LOCK_HIDE_ACTIONS.iter().map(|c| c.to_string()));
     // The Input Map: every action is a command, except the Image Viewer's
     // keys, which only that window handles.
@@ -1448,6 +1448,10 @@ fn control_command(context: &str, surface: &str, label: &str) -> Option<String> 
     });
     if shading && shading_claims(label) {
         return Some("item.channel".to_owned());
+    }
+    // An Image Map's Browse… (#56) runs its own command.
+    if surface == "properties/Texture" && label == "Browse…" {
+        return Some("operandi.texture.loadImage".into());
     }
     // An item tab's Name row runs item.name (rename_active).
     let shading_tab = |t: &str| {

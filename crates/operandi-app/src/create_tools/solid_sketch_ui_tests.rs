@@ -470,3 +470,79 @@ fn a_new_node_takes_the_nearer_of_seam_and_target() {
         }
     }
 }
+
+/// #45 (Jason, 2026-11-27): red, green and blue all size the node (X, Y,
+/// Z); green stretches Size Y only.
+#[test]
+fn green_square_stretches_size_y_only() {
+    let (mut a, ctx, size) = app();
+    a.execute("Solid Sketch");
+    let at = screen(&a, DVec3::ZERO);
+    click(&mut a, &ctx, size, at, Modifiers::NONE);
+    // From the front the node's Y (world Y here) points up the screen.
+    a.camera.view = View::Front;
+    draw(&mut a, &ctx, size, vec![]);
+    let (_, c, axes, s) = a.sketch_current_frame().unwrap();
+    let green = screen(&a, c + axes[1] * s.y);
+    let to = screen(&a, c + axes[1] * 0.4);
+    drag(
+        &mut a,
+        &ctx,
+        size,
+        green,
+        to,
+        PointerButton::Primary,
+        Modifiers::NONE,
+    );
+    let node = &session(&a).sketch().nodes[0];
+    assert!((node.size.y - 0.4).abs() < 0.03, "{}", node.size);
+    assert!((node.size.x - 0.1).abs() < 1e-9 && (node.size.z - 0.1).abs() < 1e-9);
+    assert_eq!(node.twist, 0., "green no longer twists");
+}
+
+/// #45: Twist has its own dark green handle beyond the green square;
+/// dragging it right turns the node one way, left the other, and leaves
+/// the size alone.
+#[test]
+fn twist_handle_turns_with_left_right_drags() {
+    let (mut a, ctx, size) = app();
+    a.execute("Solid Sketch");
+    let at = screen(&a, DVec3::ZERO);
+    click(&mut a, &ctx, size, at, Modifiers::NONE);
+    a.camera.view = View::Front;
+    draw(&mut a, &ctx, size, vec![]);
+    let r = a.viewport_rect;
+    let handle = a.sketch_twist_handle(r).expect("a twist handle");
+    let (_, c, axes, s) = a.sketch_current_frame().unwrap();
+    let green = screen(&a, c + axes[1] * s.y);
+    assert!(handle.distance(green) > 8., "apart from the green square");
+    drag(
+        &mut a,
+        &ctx,
+        size,
+        handle,
+        handle + vec2(60., 0.),
+        PointerButton::Primary,
+        Modifiers::NONE,
+    );
+    let node = &session(&a).sketch().nodes[0];
+    let right = node.twist;
+    assert!(right.abs() > 0.1, "twisted: {right}");
+    assert!(
+        (node.size - DVec3::splat(0.1)).length() < 1e-9,
+        "{}",
+        node.size
+    );
+    let handle = a.sketch_twist_handle(r).unwrap();
+    drag(
+        &mut a,
+        &ctx,
+        size,
+        handle,
+        handle + vec2(-120., 0.),
+        PointerButton::Primary,
+        Modifiers::NONE,
+    );
+    let left = session(&a).sketch().nodes[0].twist;
+    assert!(left.signum() != right.signum(), "{right} then {left}");
+}
