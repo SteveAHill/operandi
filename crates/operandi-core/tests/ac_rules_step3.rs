@@ -411,7 +411,11 @@ fn local_axes_without_a_pick_order_are_repeatable() {
     let mut e = editor(two_clusters(), vec![1, 0], Symmetry::OFF, origin_local);
     e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
     let pivots = e.live_pivots().unwrap().unwrap();
-    close(pivots.handle.basis.y_axis, DVec3::Y, "polygon 0 listed last");
+    close(
+        pivots.handle.basis.y_axis,
+        DVec3::Y,
+        "polygon 0 listed last",
+    );
 }
 
 fn selection_and_its_axes() -> ActionContext {
