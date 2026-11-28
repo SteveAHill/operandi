@@ -157,6 +157,8 @@ pub use polygon_kind::{CurveKind, PolygonRepresentation};
 pub mod multires;
 #[path = "polygons/polygon.rs"]
 pub mod polygon;
+#[path = "render/post_effects.rs"]
+pub mod post_effects;
 #[path = "render/render_settings.rs"]
 pub mod render_settings;
 #[path = "materials/shading.rs"]
