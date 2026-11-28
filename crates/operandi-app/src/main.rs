@@ -447,6 +447,8 @@ mod polygon_part_dialog;
 mod polygon_unify_dialog;
 #[path = "rigging/pose_tool_ui.rs"]
 mod pose_tool_ui;
+#[path = "render/post_effects_ui.rs"]
+mod post_effects_ui;
 #[path = "settings/preferences.rs"]
 mod preferences;
 #[cfg(test)]
@@ -4580,6 +4582,9 @@ mod picture_capture_tests;
 #[cfg(test)]
 #[path = "view/placement_snap_tests.rs"]
 mod placement_snap_tests;
+#[cfg(test)]
+#[path = "render/post_effects_ui_tests.rs"]
+mod post_effects_ui_tests;
 #[cfg(test)]
 #[path = "presets/preset_drop_tests.rs"]
 mod preset_drop_tests;
