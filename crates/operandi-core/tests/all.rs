@@ -150,6 +150,8 @@ mod delete_orphan_points;
 mod diagonal_redirect_spec;
 #[path = "dicer.rs"]
 mod dicer;
+#[path = "document_state_tool_session.rs"]
+mod document_state_tool_session;
 #[path = "doors.rs"]
 mod doors;
 #[path = "drag_cost_probe.rs"]
