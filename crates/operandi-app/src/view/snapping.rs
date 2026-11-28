@@ -1534,6 +1534,9 @@ pub(super) fn show_popover(
         HeaderAction::Pin if state.pinned => return None,
         HeaderAction::Pin => state.pinned = true,
         HeaderAction::Drag(delta) => {
+            // #60: a drag pins it, so it stays where it is dropped
+            // (UIC-185: only a pinned popover moves).
+            state.pinned = true;
             let size = rect.size();
             let max = (screen.max - size).max(screen.min);
             state.at = (state.at + delta).clamp(screen.min, max);

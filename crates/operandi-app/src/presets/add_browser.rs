@@ -320,6 +320,9 @@ pub(crate) fn show(
             state.place = Some(rect.min);
         }
         crate::popup_title::TitleAction::Drag(delta) => {
+            // #60: a drag pins it too, so it stays where it is dropped
+            // (UIC-185: only a pinned popover moves).
+            state.pinned = true;
             state.place = Some(state.place.unwrap_or(rect.min) + delta);
         }
         crate::popup_title::TitleAction::None => {}
