@@ -370,6 +370,50 @@ fn origin_centre_with_local_axes() {
     }
 }
 
+/// Jason, 2026-11-28: Local axes with a single centre keep the frame of the
+/// cluster holding the last-selected element. A selection with no pick
+/// order (Select All, or a list a script set in one go) still has a last
+/// entry, so the choice is fixed and repeatable: the cluster of the last
+/// polygon in the list, here the highest-numbered one, whichever cluster
+/// was clicked before.
+#[test]
+fn local_axes_without_a_pick_order_are_repeatable() {
+    let origin_local = ActionContext {
+        center: CenterMode::Origin,
+        axis: AxisOrientation::Local,
+    };
+    let want = ActionFrame {
+        center: DVec3::ZERO,
+        basis: b_frame().basis,
+    };
+    for clicked_first in [vec![0], vec![1], vec![]] {
+        for round in 0..2 {
+            let mut e = editor(
+                two_clusters(),
+                clicked_first.clone(),
+                Symmetry::OFF,
+                origin_local,
+            );
+            e.dispatch(Command::Selection(SelectionOperation::All))
+                .unwrap();
+            assert_eq!(e.scene.selection.faces, [0, 1]);
+            e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
+            let pivots = e.live_pivots().unwrap().unwrap();
+            same_frame(
+                pivots.handle,
+                want,
+                &format!("Select All after {clicked_first:?}, round {round}"),
+            );
+            same_frame(e.handle_frame().unwrap(), want, "the view's handle");
+        }
+    }
+    // A script's list counts in the order it gave.
+    let mut e = editor(two_clusters(), vec![1, 0], Symmetry::OFF, origin_local);
+    e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
+    let pivots = e.live_pivots().unwrap().unwrap();
+    close(pivots.handle.basis.y_axis, DVec3::Y, "polygon 0 listed last");
+}
+
 fn selection_and_its_axes() -> ActionContext {
     ActionContext {
         center: CenterMode::Selection,

@@ -36,7 +36,7 @@ The **Center** and **Axis** submenus let you keep one half of an Action Center a
 **Local** is the one that needs a word of explanation, because it works on each connected piece (each *cluster*) of your selection separately:
 
 - **Local** center with another axis, for example **Local** and then **Axis > World**: each cluster still turns and scales about its own middle, but all of them use that one set of axes. Handy for scaling many separate panels flat along the world Y direction, each in place.
-- Another center with **Local** axes, for example **Local** and then **Center > Origin**: everything turns and scales about that one center, with the axes of the cluster you selected last.
+- Another center with **Local** axes, for example **Local** and then **Center > Origin**: everything turns and scales about that one center, with the axes of the cluster you selected last. When the selection was made in one go, with **Select All** or by a script, the last polygon, edge or point in its list counts as selected last, so the same selection always gives the same axes.
 
 The handle always shows the center and axes your values are measured in. Under **Local** it sits on the cluster you selected last.
 
