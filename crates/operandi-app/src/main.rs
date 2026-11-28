@@ -4150,7 +4150,14 @@ impl eframe::App for Operandi {
             self.status = note;
         }
         self.keyboard(ctx);
-        native_menu::sync(self.menu_model(ctx));
+        native_menu::sync(
+            self.menu_model(ctx),
+            app_menu::preferences_key_equivalent(
+                self.bindings
+                    .get(app_menu::PREFERENCES_LINE)
+                    .map(String::as_str),
+            ),
+        );
         self.persist_layout(ctx);
         self.journal_when_due(ctx);
         identity_audit::capture(self, ctx);

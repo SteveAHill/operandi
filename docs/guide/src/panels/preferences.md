@@ -3,7 +3,8 @@
 
 **Preferences** (**Edit > Preferences…**, **Ctrl+,**) holds the settings
 that are yours rather than the scene's: they apply to every scene and are
-kept between sessions.
+kept between sessions. On a Mac it is also in the application menu,
+**Operandi > Preferences…**.
 
 ![The Preferences window on its Input page](../images/panel-preferences.png)
 
