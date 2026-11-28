@@ -49,7 +49,7 @@ impl Editor {
     pub(crate) fn session_ownership(&self) -> SessionOwnership<'_> {
         SessionOwnership {
             bridge: self.session.bridge.is_some(),
-            live: self.live.as_ref(),
+            live: self.session.live.as_ref(),
             cone: self.session.cone.as_ref(),
             ellipsoid: self.session.ellipsoid.as_ref(),
             shape: self.session.shape.as_ref(),
@@ -154,13 +154,16 @@ mod tests {
         e.dispatch(Command::Activate(Tool::Move)).unwrap();
         assert!(std::ptr::eq(
             e.session_ownership().live.unwrap(),
-            e.live.as_ref().unwrap()
+            e.session.live.as_ref().unwrap()
         ));
         e.dispatch(Command::Cancel).unwrap();
         begin(&mut e);
         let view = e.session_ownership();
         assert!(std::ptr::eq(view.extrusion, &e.i2));
-        assert!(std::ptr::eq(view.live.unwrap(), e.live.as_ref().unwrap()));
+        assert!(std::ptr::eq(
+            view.live.unwrap(),
+            e.session.live.as_ref().unwrap()
+        ));
         let HistoryRoute::LocalExtrude(stage) =
             view.history_route(HistoryAction::Undo, HistoryPosition::of(&e))
         else {
@@ -170,7 +173,7 @@ mod tests {
         // One resolver is selected; the mirrored Live remains a raw observation.
         assert_eq!(stage.cursor, 1);
         assert_eq!(view.live.unwrap().tool, Tool::Extrude);
-        e.live = None;
+        e.session.live = None;
         assert!(e.session_ownership().live.is_none());
         assert!(matches!(
             e.session_ownership()
@@ -267,7 +270,7 @@ mod tests {
         }
         for cursor in [1, 2] {
             e.i2.selected.as_mut().unwrap().cursor = cursor;
-            e.live = None;
+            e.session.live = None;
             for action in [HistoryAction::Undo, HistoryAction::Redo] {
                 assert!(matches!(
                     e.session_ownership().history_route(
@@ -293,7 +296,7 @@ mod tests {
                 Some(LocalResumeObstacle::LivePreview)
             };
             assert_eq!(e.session_ownership().local_resume_obstacle(), expected);
-            e.live.as_mut().unwrap().preview_error = Some("invalid".into());
+            e.session.live.as_mut().unwrap().preview_error = Some("invalid".into());
             assert_eq!(
                 e.session_ownership().local_resume_obstacle(),
                 Some(LocalResumeObstacle::LivePreview)
@@ -304,8 +307,8 @@ mod tests {
                 Some(LocalResumeObstacle::IncomingTaskOrSelection)
             );
             e.selection_start = None;
-            e.live.as_mut().unwrap().preview_error = None;
-            e.live.as_mut().unwrap().applied = true;
+            e.session.live.as_mut().unwrap().preview_error = None;
+            e.session.live.as_mut().unwrap().applied = true;
             assert_eq!(
                 e.session_ownership().local_resume_obstacle(),
                 Some(LocalResumeObstacle::LivePreview)

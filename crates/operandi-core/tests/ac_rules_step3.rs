@@ -150,7 +150,7 @@ fn uses() -> [Use; 5] {
 }
 impl Use {
     fn params(&self, e: &Editor) -> Parameters {
-        let mut p = e.live.as_ref().unwrap().params.clone();
+        let mut p = e.session.live.as_ref().unwrap().params.clone();
         match self.tool {
             Tool::Move => p.delta = self.moved,
             Tool::Rotate => p.delta = self.turned,
@@ -217,7 +217,7 @@ fn check(make: impl Fn() -> Editor, want: &Want) {
         let before = points(&e);
 
         // The service's answer, asked directly.
-        let live = e.live.as_ref().unwrap();
+        let live = e.session.live.as_ref().unwrap();
         let resolved = e.pivot_request(&live.base, u.tool).resolve().unwrap();
         same_frame(resolved.handle, want.handle, &format!("{what}: handle"));
         assert_eq!(resolved.items.len(), 1, "{what}");
@@ -538,7 +538,7 @@ fn the_answer_follows_placement_symmetry_and_context() {
     // The Action Center, while the tool holds a turn: the same values are
     // applied again about the new frames, from the original base.
     let before = points(&e);
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = dvec3(0., 0., 90.);
     e.dispatch(Command::Preview(p.clone())).unwrap();
     let undo_steps = e.history.undo.len();
@@ -547,7 +547,7 @@ fn the_answer_follows_placement_symmetry_and_context() {
     let fourth = e.live_pivots().unwrap().unwrap();
     assert_eq!(fourth.items[0].groups.len(), 2, "one group per cluster");
     assert_eq!(e.handle_frame().unwrap(), fourth.handle);
-    let live = e.live.as_ref().unwrap();
+    let live = e.session.live.as_ref().unwrap();
     assert_eq!(live.base.active().unwrap().mesh.vertices.to_vec(), before);
     assert_eq!(live.params, p, "the values are kept");
     assert_eq!(e.history.undo.len(), undo_steps, "no extra undo step");
@@ -585,11 +585,14 @@ fn a_refused_live_switch_restores_the_placed_centre() {
     e.dispatch(Command::Activate(Tool::Scale)).unwrap();
     let placed = dvec3(1.2, 0., 0.4);
     e.dispatch(Command::SetActionCenter(placed)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = DVec3::splat(3e8);
     e.dispatch(Command::Preview(p)).unwrap();
     let before = e.clone();
-    assert_eq!(before.live.as_ref().unwrap().placed_centre, Some(placed));
+    assert_eq!(
+        before.session.live.as_ref().unwrap().placed_centre,
+        Some(placed)
+    );
 
     // About a point 40 m away instead: frame resolution succeeds, the
     // candidate geometry doesn't.
@@ -600,10 +603,10 @@ fn a_refused_live_switch_restores_the_placed_centre() {
     e.validate_action_context(far).unwrap();
     assert!(e.dispatch(Command::ActionContext(far)).is_err());
     assert!(e == before, "the refused switch changed the editor");
-    let live = e.live.as_ref().unwrap();
+    let live = e.session.live.as_ref().unwrap();
     assert_eq!(live.placed_centre, Some(placed));
     assert_eq!(live.action_frame.unwrap().center, placed);
     assert_eq!(e.handle_frame().unwrap().center, placed);
     e.dispatch(Command::Cancel).unwrap();
-    assert_eq!(e.scene, before.live.unwrap().base);
+    assert_eq!(e.scene, before.session.live.unwrap().base);
 }

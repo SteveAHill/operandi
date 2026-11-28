@@ -65,7 +65,7 @@ impl Editor {
     /// Every other live tool: the values it starts with when nothing is
     /// remembered from an earlier use.
     fn reset_live_to_factory(&mut self) -> Result<()> {
-        let live = self.live.as_ref().ok_or("No active tool")?;
+        let live = self.session.live.as_ref().ok_or("No active tool")?;
         let tool = live.tool;
         let mut probe = self.clone();
         probe.forget_tool_memory();
@@ -74,9 +74,10 @@ impl Editor {
         probe.auto_activate_flags = false;
         probe.session.armed = None;
         probe.scene = live.base.clone();
-        probe.live = None;
+        probe.session.live = None;
         probe.dispatch_inner(Command::Activate(tool), &mut None)?;
         let factory = probe
+            .session
             .live
             .as_ref()
             .filter(|l| l.tool == tool)
@@ -89,7 +90,7 @@ impl Editor {
         if live.applied {
             self.dispatch(Command::Preview(factory))
         } else {
-            let l = self.live.as_mut().unwrap();
+            let l = self.session.live.as_mut().unwrap();
             l.params = factory;
             l.preview_error = None;
             Ok(())

@@ -184,7 +184,7 @@ impl Operandi {
         if mode == crate::link_mode::LinkMode::Independent {
             return;
         }
-        let tool = self.editor.live.as_ref().map(|l| l.tool);
+        let tool = self.editor.session.live.as_ref().map(|l| l.tool);
         let kind = scrub::Kind::for_field(key, unit, tool);
         let parse = |t: &String| numeric::parse_quantity(t, kind.quantity()).ok();
         let Some(typed) = self.fields.get(key).and_then(parse) else {
@@ -224,7 +224,7 @@ impl Operandi {
         value: f64,
         unit: &str,
     ) -> bool {
-        let tool = self.editor.live.as_ref().map(|l| l.tool);
+        let tool = self.editor.session.live.as_ref().map(|l| l.tool);
         // UIC-53: a click on a whole-number field's arrows steps it by one,
         // as its own undo step.
         let kind = scrub::Kind::for_field(key, unit, tool);
@@ -367,7 +367,7 @@ impl Operandi {
         if e.session.cone.is_some() {
             return "Cone";
         }
-        if let Some(live) = &e.live {
+        if let Some(live) = &e.session.live {
             return live.tool.label();
         }
         if let Some(tool) = self.edge_click {
@@ -402,7 +402,7 @@ impl Operandi {
             ToolPanel::Shape
         } else if e.session.cone.is_some() {
             ToolPanel::Cone
-        } else if let Some(live) = &e.live {
+        } else if let Some(live) = &e.session.live {
             if live.tool.is_smooth_shift() {
                 ToolPanel::Surface
             } else if live.tool.is_primitive() {
@@ -1390,7 +1390,7 @@ mod history_widget_tests {
         assert!(!widget(&a, &ctx, false, 0.3, vec![]).0.enabled());
 
         let mut a = local();
-        let mut p = a.editor.live.as_ref().unwrap().params.clone();
+        let mut p = a.editor.session.live.as_ref().unwrap().params.clone();
         p.extent = DVec3::Z * 0.5;
         a.editor.dispatch(Command::Preview(p)).unwrap();
         let (_, text) = widget(&a, &context(), false, 0., vec![]);

@@ -184,7 +184,7 @@ impl Editor {
         }
         let shown = self.scene.clone();
         let shown_identities = self.identities.current.clone();
-        let session = if let Some(l) = self.live.take() {
+        let session = if let Some(l) = self.session.live.take() {
             self.scene = l.base.clone();
             if let Some(ids) = &l.identity_base {
                 self.identities.current = ids.clone();
@@ -232,7 +232,7 @@ impl Editor {
                 self.scene = r.shown;
                 self.identities.current = r.shown_identities;
                 self.identities.observe(&self.scene)?;
-                self.live = Some(*l);
+                self.session.live = Some(*l);
             }
             ReopenSession::Cone(s) => self.session.cone = Some(s),
             ReopenSession::Ellipsoid(s) => self.session.ellipsoid = Some(s),
@@ -253,7 +253,11 @@ impl Editor {
         // An Extrude stage keeps its own Begin/Move Extrude history.
         if self.i2_active()
             || (self.i2.selected.is_some()
-                && self.live.as_ref().is_some_and(|l| l.tool == Tool::Extrude))
+                && self
+                    .session
+                    .live
+                    .as_ref()
+                    .is_some_and(|l| l.tool == Tool::Extrude))
         {
             return None;
         }
@@ -264,6 +268,7 @@ impl Editor {
     fn session_snapshot(&self) -> Option<TweakState> {
         self.tweak_session()?;
         let invalid = self
+            .session
             .live
             .as_ref()
             .is_some_and(|l| l.preview_error.is_some())
@@ -285,7 +290,7 @@ impl Editor {
         if invalid {
             return None;
         }
-        let session = if let Some(l) = &self.live {
+        let session = if let Some(l) = &self.session.live {
             ReopenSession::Live(Box::new(l.clone()))
         } else if let Some(s) = &self.session.cone {
             ReopenSession::Cone(s.clone())
@@ -313,7 +318,7 @@ impl Editor {
         self.identities.current = state.identities;
         self.identities.observe(&self.scene)?;
         match state.session {
-            ReopenSession::Live(l) => self.live = Some(*l),
+            ReopenSession::Live(l) => self.session.live = Some(*l),
             ReopenSession::Cone(s) => self.session.cone = Some(s),
             ReopenSession::Ellipsoid(s) => self.session.ellipsoid = Some(s),
             ReopenSession::Shape(s) => self.session.shape = Some(s),
@@ -330,7 +335,7 @@ impl Editor {
     pub(crate) fn is_tweak(&self, cmd: &Command) -> bool {
         is_tweak_command(cmd)
             || (matches!(cmd, Command::Continue)
-                && self.live.as_ref().is_some_and(|l| {
+                && self.session.live.as_ref().is_some_and(|l| {
                     matches!(l.tool, Tool::Bevel | Tool::TwistBevel | Tool::EdgeExtend)
                 }))
     }
@@ -448,7 +453,7 @@ impl Editor {
         // Only the transform tools move their base along with each drag, and
         // Bevel and Edge Extend with each fresh one they stack; a primitive's base is the
         // session's start already.
-        if !self.live.as_ref().is_some_and(|l| {
+        if !self.session.live.as_ref().is_some_and(|l| {
             l.tool.is_transform()
                 || matches!(l.tool, Tool::Bevel | Tool::TwistBevel | Tool::EdgeExtend)
         }) {

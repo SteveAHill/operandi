@@ -876,7 +876,7 @@ impl crate::Editor {
         if let Some(c) = c {
             next.background_constraint_preset = c;
         }
-        if let Some(l) = next.live.as_ref().filter(|l| l.applied) {
+        if let Some(l) = next.session.live.as_ref().filter(|l| l.applied) {
             next.dispatch(crate::Command::Preview(l.params.clone()))?;
         }
         *self = next;
@@ -892,7 +892,7 @@ impl crate::Editor {
         let Some(c) = self.working_constraint() else {
             return Ok(());
         };
-        let Some(live) = self.live.as_ref() else {
+        let Some(live) = self.session.live.as_ref() else {
             return Ok(());
         };
         // A tool in a UV view moves UVs, not points on a surface.

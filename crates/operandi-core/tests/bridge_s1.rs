@@ -69,7 +69,7 @@ fn bridge_switches_from_active_i2_without_overlapping_owners() {
     e.dispatch(Command::BeginExtrude).unwrap();
     e.dispatch(Command::ArmBridge).unwrap();
     assert!(e.session.bridge.is_some());
-    assert!(e.live.is_none());
+    assert!(e.session.live.is_none());
     assert!(!e.i2.selected.as_ref().is_some_and(|s| s.cursor > 0));
     e.scene.validate().unwrap();
 }

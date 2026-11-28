@@ -26,6 +26,7 @@ pub(super) struct LiveP {
 /// The live tool this panel serves.
 pub(super) fn live_tool(app: &Operandi) -> Option<&Live> {
     app.editor
+        .session
         .live
         .as_ref()
         .filter(|l| !l.tool.is_primitive() && !l.tool.is_smooth_shift())

@@ -152,7 +152,10 @@ mod tests {
         a.sync_layer_locator();
         assert_eq!(a.editor.scene.selection.item, Some(locator));
         a.activate(Tool::Move);
-        assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+        assert_eq!(
+            a.editor.session.live.as_ref().map(|l| l.tool),
+            Some(Tool::Move)
+        );
         assert_eq!(a.editor.scene.selected_items(), vec![locator]);
         // Unchanged layer: picking the mesh again isn't undone, and the
         // tool follows the mesh.
@@ -165,7 +168,10 @@ mod tests {
         a.shading.selected = vec![layer];
         a.sync_layer_locator();
         assert_eq!(a.editor.scene.selection.item, Some(locator));
-        assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+        assert_eq!(
+            a.editor.session.live.as_ref().map(|l| l.tool),
+            Some(Tool::Move)
+        );
         // Two texture layers: no single target.
         a.run(Command::Drop);
         let second = a.editor.scene.shader_tree.next_id;
@@ -241,7 +247,7 @@ mod tests {
         dragged.run(Command::SelectItem(Some(locator)));
         dragged.run(Command::Activate(Tool::Scale));
         let before = dragged.editor.session.tweaks.undo_steps();
-        let mut p = dragged.editor.live.as_ref().unwrap().params.clone();
+        let mut p = dragged.editor.session.live.as_ref().unwrap().params.clone();
         p.delta = DVec3::new(2., 1., 1.);
         dragged.run(Command::Preview(p.clone()));
         dragged.editor.end_tweak();
@@ -263,7 +269,7 @@ mod tests {
             "one tweak"
         );
         assert_eq!(
-            typed.editor.live.as_ref().map(|l| l.tool),
+            typed.editor.session.live.as_ref().map(|l| l.tool),
             Some(Tool::Scale),
             "the tool stays"
         );

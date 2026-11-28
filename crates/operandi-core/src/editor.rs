@@ -157,7 +157,6 @@ pub struct Editor {
     pub action_context: crate::ActionContext,
     /// Shared Symmetry setting (SYM-ST-01); tool context, not scene data.
     pub symmetry: crate::Symmetry,
-    pub live: Option<Live>,
     /// The document's key time, channel/key selections and playback
     /// (animation.rs; per scene tab).
     pub anim: crate::animation::AnimSession,

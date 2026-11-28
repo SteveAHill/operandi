@@ -24,7 +24,7 @@ pub enum ActiveTask {
 impl Editor {
     /// The open task, if any.
     pub fn active_task(&self) -> Option<ActiveTask> {
-        if let Some(live) = &self.live {
+        if let Some(live) = &self.session.live {
             Some(ActiveTask::Live(live.tool))
         } else if self.session.cone.is_some() {
             Some(ActiveTask::Cone)
@@ -56,7 +56,7 @@ impl Editor {
     /// tasks are exclusive; tests check it stays at most one.
     pub fn open_task_slots(&self) -> usize {
         [
-            self.live.is_some(),
+            self.session.live.is_some(),
             self.session.cone.is_some(),
             self.session.ellipsoid.is_some(),
             self.session.shape.is_some(),

@@ -289,7 +289,7 @@ impl Operandi {
             None
         };
         let command_id = session.or_else(|| {
-            let live = self.editor.live.as_ref()?;
+            let live = self.editor.session.live.as_ref()?;
             Some(tool_info::info(live.tool).command_id)
         })?;
         id(command_id)
@@ -316,6 +316,7 @@ impl Operandi {
             && self.editor.scene.selection.mode == Mode::Item
             && self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .is_some_and(|l| l.tool.transforms_items());
@@ -1150,6 +1151,7 @@ impl Operandi {
         // name its panel fields.
         let (attr, value) = if self
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| l.tool == Tool::EdgeExtend)
@@ -1157,6 +1159,7 @@ impl Operandi {
             live_fields::edge_extend_attr(attr, value)
         } else if let Some(l) = self
             .editor
+            .session
             .live
             .as_ref()
             .filter(|l| l.tool == Tool::VertexBevel)
@@ -1343,7 +1346,14 @@ impl Operandi {
                 fail(self, "Activate Smooth Shift or Thicken first");
                 return;
             }
-            let mut p = self.editor.live.as_ref().unwrap().params.smooth_shift;
+            let mut p = self
+                .editor
+                .session
+                .live
+                .as_ref()
+                .unwrap()
+                .params
+                .smooth_shift;
             if value == "?" {
                 self.status = match attr.as_str() {
                     "shift" => format!("{} m", p.offset),
@@ -1390,7 +1400,14 @@ impl Operandi {
                     if let Err(e) = staged.dispatch(Command::ConfigureSmoothShift(p)) {
                         self.status = e;
                     } else if self.confirm_fields() {
-                        let mut current = self.editor.live.as_ref().unwrap().params.smooth_shift;
+                        let mut current = self
+                            .editor
+                            .session
+                            .live
+                            .as_ref()
+                            .unwrap()
+                            .params
+                            .smooth_shift;
                         match attr.as_str() {
                             "shift" => current.offset = p.offset,
                             "scale" => current.scale = p.scale,

@@ -69,7 +69,7 @@ fn close(a: DVec3, b: DVec3, what: &str) {
 /// Runs `tool` with `delta` and returns the world points after.
 fn run(e: &mut Editor, tool: Tool, delta: DVec3) -> Vec<DVec3> {
     e.dispatch(Command::Activate(tool)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = delta;
     e.dispatch(Command::Preview(p)).unwrap();
     e.dispatch(Command::Drop).unwrap();
@@ -89,7 +89,13 @@ fn selection_centres_on_the_item_space_box() {
     let want = w.transform_point3(DVec3::new(2.5, 0.5, 0.5));
     e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
     close(
-        e.live.as_ref().unwrap().action_frame.unwrap().center,
+        e.session
+            .live
+            .as_ref()
+            .unwrap()
+            .action_frame
+            .unwrap()
+            .center,
         want,
         "frame centre",
     );
@@ -110,7 +116,13 @@ fn selection_centres_on_the_item_space_box() {
     let mut e = fixture(CenterMode::SelectionAutoAxis);
     e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
     close(
-        e.live.as_ref().unwrap().action_frame.unwrap().center,
+        e.session
+            .live
+            .as_ref()
+            .unwrap()
+            .action_frame
+            .unwrap()
+            .center,
         want,
         "auto axis centre",
     );

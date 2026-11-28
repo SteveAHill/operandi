@@ -7,7 +7,7 @@ impl Editor {
         // PF-12: Apply on an Edge Extend still at its Reset values adds the
         // new zero-width row, as a click start does (`extend_from_click`);
         // a live preview at those values leaves the mesh alone.
-        if let Some(l) = self.live.as_ref()
+        if let Some(l) = self.session.live.as_ref()
             && l.tool == Tool::EdgeExtend
             && !l.applied
             && !self.session.extend_from_click
@@ -19,7 +19,11 @@ impl Editor {
                 return Err(e);
             }
         }
-        if let Some(l) = self.live.as_ref().filter(|l| l.tool.is_smooth_shift())
+        if let Some(l) = self
+            .session
+            .live
+            .as_ref()
+            .filter(|l| l.tool.is_smooth_shift())
             && let Some(e) = &l.preview_error
         {
             return Err(format!("Correct this stage before Apply: {e}"));
@@ -55,29 +59,33 @@ impl Editor {
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if self.live.as_ref().is_some_and(|l| {
+        if self.session.live.as_ref().is_some_and(|l| {
             (matches!(l.tool, Tool::Bevel | Tool::TwistBevel | Tool::Extrude)
                 || l.tool.is_smooth_shift())
                 && !l.applied
         }) {
             let mut staged = self.clone();
-            let p = staged.live.as_ref().unwrap().params.clone();
+            let p = staged.session.live.as_ref().unwrap().params.clone();
             let before = staged.scene.clone();
             staged.preview(p.clone(), true)?;
             if staged.scene != before {
-                staged.record(staged.live.as_ref().unwrap().tool.label().into(), before);
+                staged.record(
+                    staged.session.live.as_ref().unwrap().tool.label().into(),
+                    before,
+                );
             }
-            if staged.live.as_ref().unwrap().tool == Tool::Extrude {
+            if staged.session.live.as_ref().unwrap().tool == Tool::Extrude {
                 *staged.presets.get_mut::<crate::ExtrudePreset>() = p;
             }
             let base = staged.scene.clone();
-            let l = staged.live.as_mut().unwrap();
+            let l = staged.session.live.as_mut().unwrap();
             l.base = base;
             l.identity_base = Some(staged.identities.current.clone());
             l.identity_preview = None;
             l.applied = false;
             *self = staged;
         } else if self
+            .session
             .live
             .as_ref()
             .is_some_and(|l| l.tool.is_bevel() && l.applied && l.preview_error.is_none())
@@ -85,7 +93,7 @@ impl Editor {
             // Panel edits make Bevel live at once (TA-01), so Apply finds a
             // live stage: it keeps that bevel as it is and the next edit or
             // Apply bevels the result again (bevel-activation rule 6).
-            let l = self.live.as_ref().unwrap();
+            let l = self.session.live.as_ref().unwrap();
             let mut next = l.clone();
             if l.base != self.scene {
                 self.identities.record_before = l.identity_base.clone();
@@ -96,8 +104,8 @@ impl Editor {
             next.identity_base = Some(self.identities.current.clone());
             next.identity_preview = None;
             next.applied = false;
-            self.live = Some(next);
-        } else if self.live.as_ref().is_some_and(|l| {
+            self.session.live = Some(next);
+        } else if self.session.live.as_ref().is_some_and(|l| {
             matches!(l.tool, Tool::Bevel | Tool::TwistBevel | Tool::Extrude)
                 || l.tool.is_smooth_shift()
         }) {
@@ -105,7 +113,7 @@ impl Editor {
                 "Apply is unavailable during a live polygon preview; Drop or Continue this stage"
                     .into(),
             );
-        } else if let Some(live) = self.live.as_ref() {
+        } else if let Some(live) = self.session.live.as_ref() {
             // Legacy internal callers remain idempotent. The GUI disables
             // Apply while interactive, as the approved presentation policy.
             let p = live.params.clone();
@@ -132,6 +140,7 @@ impl Editor {
 
     pub(super) fn reset_primitive(&mut self) -> Result<()> {
         let live = self
+            .session
             .live
             .as_ref()
             .filter(|l| l.tool.is_primitive())
@@ -168,12 +177,12 @@ impl Editor {
     /// Replace a live primitive's settings: rebuild the preview when
     /// something is drawn, otherwise just store them without creating geometry.
     pub(super) fn set_primitive_params(&mut self, params: Parameters) -> Result<()> {
-        let live = self.live.as_ref().ok_or("No active primitive")?;
+        let live = self.session.live.as_ref().ok_or("No active primitive")?;
         if self.scene != live.base {
             let mut staged = self.clone();
             staged.dispatch(Command::Preview(params))?;
             *self = staged;
-        } else if let Some(l) = self.live.as_mut() {
+        } else if let Some(l) = self.session.live.as_mut() {
             l.params = params;
         }
         Ok(())
@@ -219,13 +228,18 @@ impl Editor {
             self.revision = self.revision.wrapping_add(1);
             return Ok(AfterCommand::Done);
         }
-        if let Some(error) = self.live.as_ref().and_then(|l| l.preview_error.as_ref()) {
+        if let Some(error) = self
+            .session
+            .live
+            .as_ref()
+            .and_then(|l| l.preview_error.as_ref())
+        {
             return Err(format!(
                 "Correct the current stage or Cancel before Drop: {error}"
             ));
         }
         let session_base = self.tweak_session_base();
-        if let Some(l) = self.live.take() {
+        if let Some(l) = self.session.live.take() {
             // RPT-08: dropping the tool forgets the amount a middle-click
             // repeats.
             self.session.last_transform_step = None;
@@ -341,7 +355,7 @@ impl Editor {
         self.session.shape = None;
         self.session.cone = None;
         let session_base = self.tweak_session_base();
-        if let Some(l) = self.live.take() {
+        if let Some(l) = self.session.live.take() {
             self.session.last_transform_step = None;
             if matches!(l.tool, Tool::Bevel | Tool::TwistBevel | Tool::EdgeExtend) {
                 // Cancel restores this stage and keeps the bevels finished

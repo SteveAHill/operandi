@@ -81,7 +81,7 @@ fn t_starts_tweak_in_every_mode_and_leaves_the_selection_alone() {
         let before = a.editor.scene.clone();
         draw(&mut a, &ctx, SIZE, vec![key(Key::T)]);
         assert_eq!(
-            a.editor.live.as_ref().map(|l| l.tool),
+            a.editor.session.live.as_ref().map(|l| l.tool),
             Some(Tool::Tweak),
             "{mode:?}: {}",
             a.status
@@ -100,7 +100,7 @@ fn t_starts_tweak_in_every_mode_and_leaves_the_selection_alone() {
         };
         draw(&mut a, &ctx, SIZE, vec![release]);
         draw(&mut a, &ctx, SIZE, vec![key(Key::T)]);
-        assert!(a.editor.live.is_none(), "{mode:?}: {}", a.status);
+        assert!(a.editor.session.live.is_none(), "{mode:?}: {}", a.status);
     }
 }
 
@@ -174,7 +174,7 @@ fn dragging_a_point_moves_only_it_and_keeps_it_under_the_pointer() {
     // TWK-24: one undo step (a tweak of the session, Jason 2026-11-04),
     // and the tool stays live.
     assert_eq!(a.editor.session.tweaks.undo_steps(), 1);
-    assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Tweak);
+    assert_eq!(a.editor.session.live.as_ref().unwrap().tool, Tool::Tweak);
 }
 
 #[test]
@@ -226,7 +226,10 @@ fn each_drag_is_its_own_undo_step_and_undo_keeps_the_tool() {
     assert_eq!(a.editor.session.tweaks.undo_steps(), 2);
     a.run(Command::Undo);
     assert!(a.editor.scene == first, "{}", a.status);
-    assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Tweak));
+    assert_eq!(
+        a.editor.session.live.as_ref().map(|l| l.tool),
+        Some(Tool::Tweak)
+    );
     a.run(Command::Undo);
     assert!(a.editor.scene == start);
     a.run(Command::Redo);
@@ -255,7 +258,7 @@ fn empty_space_and_clicks_without_moving_change_nothing() {
     drag(&mut a, &ctx, on, on);
     assert!(a.editor.scene == before);
     assert_eq!(a.editor.history.undo.len(), steps);
-    assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Tweak);
+    assert_eq!(a.editor.session.live.as_ref().unwrap().tool, Tool::Tweak);
 }
 
 #[test]
@@ -423,7 +426,7 @@ fn a_point_on_the_symmetry_plane_stays_on_it() {
 /// Sets Tweak's options the way the panel does (a Preview of the live
 /// parameters with only the options changed).
 fn set_options(a: &mut Operandi, f: impl FnOnce(&mut operandi_core::TweakOptions)) {
-    let mut p = a.editor.live.as_ref().unwrap().params.clone();
+    let mut p = a.editor.session.live.as_ref().unwrap().params.clone();
     f(&mut p.tweak_options);
     a.run(Command::Preview(p));
 }
@@ -481,7 +484,14 @@ fn range_spreads_a_drag_and_one_undo_restores_every_point() {
     // The options stay for the next drag; the drag is one undo step that
     // brings back every weighted point (TWK-21).
     assert_eq!(
-        a.editor.live.as_ref().unwrap().params.tweak_options.range,
+        a.editor
+            .session
+            .live
+            .as_ref()
+            .unwrap()
+            .params
+            .tweak_options
+            .range,
         1.5
     );
     assert!(a.editor.session.tweaks.can_undo());
@@ -554,7 +564,14 @@ fn a_typed_range_is_kept() {
     draw(&mut a, &ctx, SIZE, vec![]);
     draw(&mut a, &ctx, SIZE, vec![]);
     assert_eq!(
-        a.editor.live.as_ref().unwrap().params.tweak_options.range,
+        a.editor
+            .session
+            .live
+            .as_ref()
+            .unwrap()
+            .params
+            .tweak_options
+            .range,
         1.5
     );
     assert_eq!(a.fields["tweak_range"], a.confirmed_fields["tweak_range"]);
@@ -562,7 +579,14 @@ fn a_typed_range_is_kept() {
     a.fields.insert("tweak_range".into(), "-2 m".into());
     assert!(a.confirm_fields(), "{}", a.status);
     assert_eq!(
-        a.editor.live.as_ref().unwrap().params.tweak_options.range,
+        a.editor
+            .session
+            .live
+            .as_ref()
+            .unwrap()
+            .params
+            .tweak_options
+            .range,
         0.
     );
     // It still works for the next drag.
@@ -575,7 +599,14 @@ fn a_typed_range_is_kept() {
         - start[point(1, 0) as usize];
     assert!(moved.x > 0., "neighbour didn't follow");
     assert_eq!(
-        a.editor.live.as_ref().unwrap().params.tweak_options.range,
+        a.editor
+            .session
+            .live
+            .as_ref()
+            .unwrap()
+            .params
+            .tweak_options
+            .range,
         1.5
     );
 }
@@ -592,7 +623,14 @@ fn right(pos: Pos2, pressed: bool, modifiers: Modifiers) -> Event {
 }
 
 fn range(a: &Operandi) -> f64 {
-    a.editor.live.as_ref().unwrap().params.tweak_options.range
+    a.editor
+        .session
+        .live
+        .as_ref()
+        .unwrap()
+        .params
+        .tweak_options
+        .range
 }
 
 /// Right-press at `from`, move through `path` and release at its end.
@@ -670,7 +708,7 @@ fn right_drag_grows_range_to_the_right_and_shrinks_it_to_the_left() {
         Modifiers::NONE,
     );
     assert!((range(&a) - 40. * rate).abs() < 1e-9, "{}", range(&a));
-    assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Tweak);
+    assert_eq!(a.editor.session.live.as_ref().unwrap().tool, Tool::Tweak);
 }
 
 #[test]
@@ -823,7 +861,7 @@ fn one_right_drag_is_one_undo_step_and_the_tool_stays() {
     assert_eq!(a.editor.session.tweaks.undo_steps(), steps + 1);
     a.run(Command::Undo);
     assert_eq!(range(&a), 0.5);
-    assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Tweak);
+    assert_eq!(a.editor.session.live.as_ref().unwrap().tool, Tool::Tweak);
     draw(&mut a, &ctx, SIZE, vec![]);
     assert_eq!(a.fields["tweak_range"], workspace::number_text(0.5, " m"));
     a.run(Command::Redo);
@@ -888,7 +926,10 @@ fn symmetry_toggled_with_tweak_open_applies_to_the_next_drag() {
         "{}",
         a.status
     );
-    assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Tweak));
+    assert_eq!(
+        a.editor.session.live.as_ref().map(|l| l.tool),
+        Some(Tool::Tweak)
+    );
     let before = a.editor.scene.active().unwrap().mesh.vertices.clone();
     let from = screen(&a, DVec3::new(1., 1., 0.));
     drag(&mut a, &ctx, from, from + vec2(60., -30.));
@@ -926,7 +967,16 @@ fn symmetry_toggled_with_move_open_applies_live() {
     a.run(Command::Mode(Mode::Vertex));
     a.editor.scene.selection.vertices = vec![point(1, 1), point(-1, 1)];
     a.activate(Tool::Move);
-    let centre = |a: &Operandi| a.editor.live.as_ref().unwrap().action_frame.unwrap().center;
+    let centre = |a: &Operandi| {
+        a.editor
+            .session
+            .live
+            .as_ref()
+            .unwrap()
+            .action_frame
+            .unwrap()
+            .center
+    };
     assert!(centre(&a).x.abs() < 1e-9, "both sides: on the plane");
     let steps = a.editor.history.undo.len();
     a.execute("toggle symmetry");
@@ -937,7 +987,7 @@ fn symmetry_toggled_with_move_open_applies_live() {
         a.status
     );
     assert_eq!(
-        a.editor.live.as_ref().map(|l| l.tool),
+        a.editor.session.live.as_ref().map(|l| l.tool),
         Some(Tool::Move),
         "{}",
         a.status
@@ -1054,7 +1104,7 @@ fn symmetry_button_and_shortcut_work_with_a_tool_open() {
         let toggle = find_text(&out, "Toggle Symmetry").expect("menu open");
         click(&mut a, &ctx, toggle);
         assert_eq!(a.editor.symmetry.axis, Some(0), "{tool:?}: {}", a.status);
-        assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(tool));
+        assert_eq!(a.editor.session.live.as_ref().map(|l| l.tool), Some(tool));
 
         let used: Vec<String> = a.bindings.values().cloned().collect();
         let free = ["F13", "F14", "F15", "F16", "F17", "F18"]
@@ -1066,7 +1116,7 @@ fn symmetry_button_and_shortcut_work_with_a_tool_open() {
         draw(&mut a, &ctx, SIZE, vec![Event::PointerMoved(c)]);
         draw(&mut a, &ctx, SIZE, vec![key(Key::from_name(free).unwrap())]);
         assert_eq!(a.editor.symmetry.axis, None, "{tool:?}: {}", a.status);
-        assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(tool));
+        assert_eq!(a.editor.session.live.as_ref().map(|l| l.tool), Some(tool));
     }
 }
 

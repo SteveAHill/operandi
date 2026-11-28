@@ -34,7 +34,7 @@ fn beveled_scaled_sphere_component_frames_preserve_scene_history_and_attributes(
     a.run(Command::NewMesh);
     a.activate(Tool::Sphere);
     a.run(Command::Preview(
-        a.editor.live.as_ref().unwrap().params.clone(),
+        a.editor.session.live.as_ref().unwrap().params.clone(),
     ));
     a.run(Command::Drop);
     for (i, face) in a
@@ -172,7 +172,10 @@ fn scale_center_handle_scales_uniformly() {
             assert!(ratio > 1.4, "{ratio} {}", a.status);
         }
     }
-    assert_eq!(a.editor.live.as_ref().unwrap().params.delta, DVec3::ONE);
+    assert_eq!(
+        a.editor.session.live.as_ref().unwrap().params.delta,
+        DVec3::ONE
+    );
 }
 #[test]
 fn extrude_click_starts_then_gizmo_and_free_drag() {
@@ -219,7 +222,10 @@ fn extrude_click_starts_then_gizmo_and_free_drag() {
         "{}",
         a.status
     );
-    assert_eq!(a.editor.live.as_ref().unwrap().params.extent, DVec3::ZERO);
+    assert_eq!(
+        a.editor.session.live.as_ref().unwrap().params.extent,
+        DVec3::ZERO
+    );
     // Dropping right after the click keeps the in-place extrusion (one Undo).
     let mut dropped = a.editor.clone();
     dropped.dispatch(Command::Drop).unwrap();
@@ -241,7 +247,7 @@ fn extrude_click_starts_then_gizmo_and_free_drag() {
         ],
     );
     let (_, right, _, _) = a.camera.basis();
-    let extent = a.editor.live.as_ref().unwrap().params.extent;
+    let extent = a.editor.session.live.as_ref().unwrap().params.extent;
     assert!(extent.length() > 0., "{}", a.status);
     assert!(
         extent.normalize().dot(right) > 0.999,
@@ -261,7 +267,7 @@ fn extrude_click_starts_then_gizmo_and_free_drag() {
             pointer(to, false, Modifiers::NONE),
         ],
     );
-    let after = a.editor.live.as_ref().unwrap().params.extent;
+    let after = a.editor.session.live.as_ref().unwrap().params.extent;
     assert!(after.y > extent.y + 1e-6, "{after} {}", a.status);
     assert!((after.x - extent.x).abs() < 1e-9 && (after.z - extent.z).abs() < 1e-9);
     a.editor.scene.validate().unwrap();
@@ -309,7 +315,15 @@ fn move_drags_freely_from_the_model_off_the_handles() {
     let (mut a, start) = vertex_move_app(&ctx);
     let size = vec2(1440., 900.);
     let before = a.editor.scene.active().unwrap().mesh.vertices[0];
-    let center = a.editor.live.as_ref().unwrap().action_frame.unwrap().center;
+    let center = a
+        .editor
+        .session
+        .live
+        .as_ref()
+        .unwrap()
+        .action_frame
+        .unwrap()
+        .center;
     draw(&mut a, &ctx, size, vec![Event::PointerMoved(start)]);
     draw(
         &mut a,
@@ -333,7 +347,7 @@ fn move_drags_freely_from_the_model_off_the_handles() {
     // C-AUTO (AC-RULES v6; it was "the press on the model keeps the
     // center"): with no Action Center every press puts the center under
     // the pointer, at its own depth; it then follows the moved point.
-    let live = a.editor.live.as_ref().expect("Move stays active");
+    let live = a.editor.session.live.as_ref().expect("Move stays active");
     assert_eq!(live.tool, Tool::Move);
     let (origin, _) = a.camera.ray(start, a.viewport_rect);
     let placed = DVec3::new(origin.x, origin.y, center.z);
@@ -400,7 +414,10 @@ fn command_z_undoes_each_move_drag_and_keeps_the_tool() {
             "{}",
             a.status
         );
-        assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+        assert_eq!(
+            a.editor.session.live.as_ref().map(|l| l.tool),
+            Some(Tool::Move)
+        );
         // The fields show the restarted tool, not the undone offset.
         assert!(
             a.fields.get("delta0").is_none_or(|v| v == "0 m"),
@@ -413,7 +430,10 @@ fn command_z_undoes_each_move_drag_and_keeps_the_tool() {
         a.editor.scene.active().unwrap().mesh.vertices[0],
         positions[1]
     );
-    assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+    assert_eq!(
+        a.editor.session.live.as_ref().map(|l| l.tool),
+        Some(Tool::Move)
+    );
 }
 
 #[test]
@@ -482,7 +502,7 @@ fn every_transform_tool_drags_freely_on_the_model_in_every_mode() {
             assert_ne!(a.editor.scene, before, "{mode:?} {tool:?}: {}", a.status);
             // The drag is a tweak of the tool session (Jason, 2026-11-04).
             assert!(a.editor.session.tweaks.can_undo(), "{mode:?}");
-            assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(tool));
+            assert_eq!(a.editor.session.live.as_ref().map(|l| l.tool), Some(tool));
         }
     }
 }
@@ -562,7 +582,7 @@ fn local_scale_y_handle_drag_lengthens_two_leaning_edges() {
     );
     let end = handle + vec2(0., -45.);
     draw(&mut a, &ctx, size, vec![Event::PointerMoved(end)]);
-    let factor = a.editor.live.as_ref().unwrap().params.delta.y;
+    let factor = a.editor.session.live.as_ref().unwrap().params.delta.y;
     assert!(factor > 1.3, "Y factor {factor}");
     check(&a, factor, "dragging");
     draw(
@@ -689,7 +709,7 @@ fn live_cancel_footer_describes_move_session_and_continued_bevel() {
     };
     run(&mut a);
     assert_eq!(a.editor.scene, activation);
-    assert!(a.editor.live.is_none());
+    assert!(a.editor.session.live.is_none());
 
     let mut a = crate::tests::box_app();
     a.editor.scene.selection.faces = vec![5];

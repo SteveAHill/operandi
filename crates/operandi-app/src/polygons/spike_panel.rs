@@ -125,11 +125,11 @@ mod tests {
         a.fields.insert("spi_strength".into(), "invalid".into());
         a.execute("Move");
         assert!(a.editor.session.spike.is_some());
-        assert!(a.editor.live.is_none());
+        assert!(a.editor.session.live.is_none());
         a.fields.insert("spi_strength".into(), "0.25".into());
         a.execute("Move");
         assert!(a.editor.session.spike.is_none());
-        assert!(a.editor.live.is_some());
+        assert!(a.editor.session.live.is_some());
     }
     #[test]
     fn spi_panel_menu_art_input_route_and_compact_field_reachability() {

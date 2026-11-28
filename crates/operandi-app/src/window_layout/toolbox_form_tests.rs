@@ -413,7 +413,10 @@ fn uv_tab_buttons_run_their_lines() {
     // 2026-11-24) starts its tool; the started one is lit (its command's
     // answer).
     a.execute("Rotate");
-    assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Rotate));
+    assert_eq!(
+        a.editor.session.live.as_ref().map(|l| l.tool),
+        Some(Tool::Rotate)
+    );
     assert!(a.line_state("Rotate").unwrap().on);
     assert!(!a.line_state("Move").unwrap().on);
     // While a tool is live the island buttons are greyed with the reason,
@@ -836,7 +839,7 @@ fn edit_tab_slide_follows_the_mode_and_rows_wait_for_the_tool() {
     assert!(a.line_enabled("operandi.mode.is vertex"));
     click_tall(&mut a, &ctx, "Edit Slide", Modifiers::NONE);
     assert_eq!(
-        a.editor.live.as_ref().map(|l| l.tool),
+        a.editor.session.live.as_ref().map(|l| l.tool),
         Some(Tool::VertexSlide)
     );
     assert!(a.line_state("Edit Slide").unwrap().on);

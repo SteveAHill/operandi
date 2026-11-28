@@ -56,7 +56,7 @@ fn moved(e: &mut Editor, delta: DVec3) -> (Vec<DVec3>, Vec<DVec3>) {
     };
     let before = world(e);
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = delta;
     e.dispatch(Command::Preview(p)).unwrap();
     e.dispatch(Command::Drop).unwrap();

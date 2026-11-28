@@ -1340,7 +1340,7 @@ pub(super) fn set_selection_steps(app: &mut Operandi, i: usize, steps: u32) {
 /// bounding box (Linear and Radial keep their last settings, FAL-M-03).
 pub(super) fn fitted_on_choose(editor: &operandi_core::Editor, f: Falloff) -> Falloff {
     match f {
-        Falloff::Cylinder(c) if editor.live.is_some() => {
+        Falloff::Cylinder(c) if editor.session.live.is_some() => {
             c.auto_size(&editor.scene).map_or(f, Falloff::Cylinder)
         }
         _ => f,
@@ -1355,6 +1355,7 @@ impl Operandi {
         self.menu_owned_input = true;
         let enabled = self
             .editor
+            .session
             .live
             .as_ref()
             .is_none_or(|l| l.tool.card().layers.falloff);
@@ -1542,7 +1543,7 @@ impl Operandi {
     /// (FO-02), as it does Constrain to Background.
     pub(super) fn escape_clears_falloff(&self) -> bool {
         self.editor.spatial_falloff.is_some()
-            && !self.editor.live.as_ref().is_some_and(|l| l.applied)
+            && !self.editor.session.live.as_ref().is_some_and(|l| l.applied)
             && self
                 .editor
                 .session

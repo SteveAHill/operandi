@@ -428,7 +428,7 @@ fn unknown_lines_show_red_and_do_nothing() {
     frame(&mut a, &ctx, vec![key_event(Key::D, true, mods)]);
     frame(&mut a, &ctx, vec![Event::PointerMoved(AT + vec2(120., 0.))]);
     frame(&mut a, &ctx, vec![key_event(Key::D, false, mods)]);
-    assert!(a.editor.live.is_some(), "{}", a.status);
+    assert!(a.editor.session.live.is_some(), "{}", a.status);
 }
 
 /// The pie widget's own steps for a sub-pie: `enter` keeps the centre,

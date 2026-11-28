@@ -79,7 +79,7 @@ fn points(e: &Editor) -> Vec<DVec3> {
 /// points during the preview; the caller drops or cancels.
 fn preview(e: &mut Editor, tool: Tool, delta: DVec3) -> Vec<DVec3> {
     e.dispatch(Command::Activate(tool)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = delta;
     e.dispatch(Command::Preview(p)).unwrap();
     points(e)

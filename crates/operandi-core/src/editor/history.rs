@@ -55,7 +55,7 @@ impl Editor {
         // Only supported unapplied surface tools and transform tools can
         // reach ordinary Undo with live state; the policy above is its
         // single guard.
-        self.live = None;
+        self.session.live = None;
         self.history.selection_run = 0;
         if let Some(c) = self.history.undo.pop() {
             if let Some(report) = report {
@@ -115,7 +115,7 @@ impl Editor {
             .live_transform_tool()
             .or_else(|| self.live_primitive_tool());
         if transform.is_some() && !self.history.redo.is_empty() {
-            self.live = None;
+            self.session.live = None;
         }
         self.history.selection_run = 0;
         if let Some(c) = self.history.redo.pop() {

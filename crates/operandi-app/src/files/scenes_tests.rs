@@ -80,7 +80,7 @@ fn a_live_tool_stays_with_its_scene() {
 fn a_live_tools_tweak_history_stays_with_its_scene() {
     use operandi_core::{HistoryRequest, Parameters};
     fn drag(a: &mut Operandi, delta: DVec3) {
-        let base = a.editor.live.as_ref().unwrap().params.clone();
+        let base = a.editor.session.live.as_ref().unwrap().params.clone();
         a.editor.session.tweak_held = true;
         for t in [0.5, 1.] {
             a.editor
@@ -131,7 +131,13 @@ fn a_live_tools_tweak_history_stays_with_its_scene() {
     };
     undo(&mut a);
     assert_eq!(a.editor.scene, first);
-    assert!(a.editor.live.as_ref().is_some_and(|l| l.tool == Tool::Move));
+    assert!(
+        a.editor
+            .session
+            .live
+            .as_ref()
+            .is_some_and(|l| l.tool == Tool::Move)
+    );
     undo(&mut a);
     assert_eq!(a.editor.scene, original);
     a.editor

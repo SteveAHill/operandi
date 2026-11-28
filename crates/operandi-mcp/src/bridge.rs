@@ -762,7 +762,7 @@ impl Bridge {
             "revision": e.revision,
             "items": items,
             "selection": selection_json(e),
-            "live_tool": e.live.as_ref().map(|l| l.tool.label()),
+            "live_tool": e.session.live.as_ref().map(|l| l.tool.label()),
             "symmetry": {"axis": e.symmetry.axis, "offset": e.symmetry.offset},
             "undo": e.history.undo.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(),
             "redo": e.history.redo.iter().rev().map(|c| c.label.as_str()).collect::<Vec<_>>(),
@@ -1606,6 +1606,7 @@ fn curve_extrude_run(e: &mut Editor, params: Option<&Value>) -> Result<()> {
     };
     e.dispatch(Command::ActivatePreset("CurveExtrude".into()))?;
     let mut p = e
+        .session
         .live
         .as_ref()
         .map(|l| l.params.clone())
@@ -1914,6 +1915,7 @@ fn tool_run_with(
         e.dispatch(Command::AddedFalloffs(falloffs[1..].to_vec()))?;
     }
     let mut p = e
+        .session
         .live
         .as_ref()
         .map(|l| l.params.clone())
@@ -2070,7 +2072,8 @@ fn tool_run_with(
         _ => false,
     };
     if zero_apply {
-        e.live
+        e.session
+            .live
             .as_mut()
             .ok_or("The tool did not start a live session")?
             .params = p;

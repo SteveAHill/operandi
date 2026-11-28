@@ -255,7 +255,7 @@ impl Operandi {
                             .haul_tool(operandi_core::haul::Button::Middle)
                             .is_none()
                         && let Some(live) =
-                            self.editor.live.clone().filter(|l| {
+                            self.editor.session.live.clone().filter(|l| {
                                 matches!(l.tool, Tool::Box | Tool::Sphere | Tool::Cylinder)
                             })
                     {
@@ -277,6 +277,7 @@ impl Operandi {
                         && modifiers.is_none()
                         && let Some(tool) = self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .map(|l| l.tool)
@@ -372,7 +373,7 @@ impl Operandi {
                     }
                     if button == PointerButton::Secondary
                         && input::navigation(modifiers).is_none()
-                        && let Some(live) = self.editor.live.as_ref()
+                        && let Some(live) = self.editor.session.live.as_ref()
                         && live.tool.is_primitive()
                         // Sphere and Cylinder right-drag through the drag
                         // layer below; Box keeps its own Segments drag.
@@ -412,6 +413,7 @@ impl Operandi {
                         && let Some((layer, f)) = falloff_panel::selection_layer(&self.editor)
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.tool.card().layers.falloff)
@@ -471,6 +473,7 @@ impl Operandi {
                         && let Some((layer, f)) = falloff_panel::soft_selection_layer(&self.editor)
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.tool.card().layers.falloff)
@@ -529,6 +532,7 @@ impl Operandi {
                         && input::navigation(modifiers).is_none()
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.tool == Tool::Tweak)
@@ -561,6 +565,7 @@ impl Operandi {
                         && input::navigation(modifiers).is_none()
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.tool.is_smooth_shift())
@@ -588,7 +593,7 @@ impl Operandi {
                         });
                         continue;
                     }
-                    if self.editor.live.is_some()
+                    if self.editor.session.live.is_some()
                         || self.editor.session.pen_draft.is_some()
                         || input::navigation(modifiers).is_some()
                     {
@@ -910,6 +915,7 @@ impl Operandi {
                         && !self.text_editor_focused(ui.ctx())
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.tool == Tool::VertexCreate)
@@ -986,6 +992,7 @@ impl Operandi {
                             .is_none()
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.tool.transforms_items());
@@ -1003,6 +1010,7 @@ impl Operandi {
                         && self.falloff_hit(pos, r).is_none()
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.applied && self.editor.scene != l.base)
@@ -1090,7 +1098,7 @@ impl Operandi {
                         self.begin_solid_draw(false, pos, r)
                     } else if self.editor.session.cone.is_some() {
                         self.begin_solid_draw(true, pos, r)
-                    } else if let Some(l) = self.editor.live.clone() {
+                    } else if let Some(l) = self.editor.session.live.clone() {
                         if l.tool.is_primitive() {
                             self.begin_primitive(l, pos, r, modifiers)
                         } else if l.tool == Tool::Tweak && self.topology_pen_open() {
@@ -1153,7 +1161,7 @@ impl Operandi {
                             && !modifiers.alt
                         {
                             self.run(Command::Continue);
-                            if let Some(l) = &self.editor.live {
+                            if let Some(l) = &self.editor.session.live {
                                 self.run(Command::Preview(l.params.clone()));
                             }
                             input::GestureKind::Blocked

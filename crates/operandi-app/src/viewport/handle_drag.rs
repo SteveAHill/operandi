@@ -359,7 +359,7 @@ impl Operandi {
         };
         // The step so far is kept before the centre moves, so the snap
         // below sees the mesh as it now is.
-        if self.editor.live.as_ref().is_some_and(|l| l.applied) {
+        if self.editor.session.live.as_ref().is_some_and(|l| l.applied) {
             self.run(Command::Drop);
             self.activate(tool);
         }
@@ -392,7 +392,7 @@ impl Operandi {
             None => self.editor.action_context,
         };
         if context != self.editor.action_context {
-            if self.editor.live.as_ref().is_some_and(|l| l.applied) {
+            if self.editor.session.live.as_ref().is_some_and(|l| l.applied) {
                 self.run(Command::Drop);
                 self.activate(tool);
             }
@@ -416,7 +416,7 @@ impl Operandi {
             self.status = "Element falloff: press on a vertex, edge or polygon".into();
             return input::GestureKind::Blocked;
         };
-        if self.editor.live.as_ref().is_some_and(|l| l.applied) {
+        if self.editor.session.live.as_ref().is_some_and(|l| l.applied) {
             self.run(Command::Drop);
             self.activate(tool);
         }
@@ -500,7 +500,13 @@ impl Operandi {
         tool: Tool,
         r: Rect,
     ) {
-        let Some(mut frame) = self.editor.live.as_ref().and_then(|l| l.action_frame) else {
+        let Some(mut frame) = self
+            .editor
+            .session
+            .live
+            .as_ref()
+            .and_then(|l| l.action_frame)
+        else {
             return;
         };
         // The drag is measured along the handle's own axes: the pivot
@@ -682,7 +688,12 @@ impl Operandi {
             Tool::EdgeExtend | Tool::VertexTear => {
                 let (_, right, up, _) = self.camera.basis();
                 let world = (right * d.x as f64 - up * d.y as f64) * scale;
-                let frame = self.editor.live.as_ref().and_then(|l| l.action_frame);
+                let frame = self
+                    .editor
+                    .session
+                    .live
+                    .as_ref()
+                    .and_then(|l| l.action_frame);
                 params.delta += frame.map_or(world, |f| f.basis.transpose() * world);
             }
             // UV Unwrap, Relax and Unwrap & Relax: Iterations (UV-Q6).

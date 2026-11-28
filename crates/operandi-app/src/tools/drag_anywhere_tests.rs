@@ -64,7 +64,7 @@ impl Rig {
     fn activate(&mut self, tool: Tool) {
         self.a.activate(tool);
         assert_eq!(
-            self.a.editor.live.as_ref().map(|l| l.tool),
+            self.a.editor.session.live.as_ref().map(|l| l.tool),
             Some(tool),
             "{}",
             self.a.status
@@ -80,7 +80,7 @@ impl Rig {
         self.frame(vec![pointer(from + by, false, Modifiers::NONE)]);
     }
     fn params(&self) -> Parameters {
-        self.a.editor.live.as_ref().unwrap().params.clone()
+        self.a.editor.session.live.as_ref().unwrap().params.clone()
     }
 }
 
@@ -103,7 +103,7 @@ fn bevel_up_shifts_and_right_grows_the_cap() {
     rig.a.run(Command::Undo);
     assert_eq!(rig.params().inset, up.inset);
     assert_eq!(
-        rig.a.editor.live.as_ref().map(|l| l.tool),
+        rig.a.editor.session.live.as_ref().map(|l| l.tool),
         Some(Tool::Bevel)
     );
 }
@@ -132,7 +132,7 @@ fn smooth_shift_offsets_up_and_scales_right() {
     // The first click starts it, as before.
     rig.drag(corner, vec2(0., 0.));
     assert!(
-        rig.a.editor.live.as_ref().unwrap().applied,
+        rig.a.editor.session.live.as_ref().unwrap().applied,
         "{}",
         rig.a.status
     );
@@ -396,7 +396,7 @@ impl Rig {
             .0
     }
     fn tool(&self) -> Option<Tool> {
-        self.a.editor.live.as_ref().map(|l| l.tool)
+        self.a.editor.session.live.as_ref().map(|l| l.tool)
     }
 }
 

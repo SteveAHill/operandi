@@ -42,7 +42,7 @@ fn editor() -> Editor {
 /// Instance Mirror with its defaults (X axis, through the origin).
 fn instance_mirror(e: &mut Editor) {
     e.dispatch(Command::Activate(Tool::Mirror)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.duplicate.copier = Some(operandi_core::duplicate_copier::Copier::Instance);
     p.duplicate.placed = true;
     e.session.tweak_held = true;

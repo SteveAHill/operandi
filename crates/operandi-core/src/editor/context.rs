@@ -23,12 +23,12 @@ impl Editor {
         ) {
             context.axis.basis()?;
         }
-        if context.axis == crate::AxisOrientation::Selection && self.live.is_none() {
+        if context.axis == crate::AxisOrientation::Selection && self.session.live.is_none() {
             // The same world-space frame a tool gets on activation, so a
             // moved mesh doesn't grey the choice out.
             Self::extrude_frame(context, Tool::Move, &self.scene)?;
         }
-        if let Some(live) = &self.live {
+        if let Some(live) = &self.session.live {
             if live.action_frame.is_none() {
                 return Err(
                     "Drop or Cancel this tool before changing Action Center or axes".into(),
@@ -62,7 +62,7 @@ impl Editor {
         let previous = self.symmetry;
         let staged = (
             self.scene.clone(),
-            self.live.clone(),
+            self.session.live.clone(),
             self.session.cone.clone(),
             self.session.ellipsoid.clone(),
             self.session.shape.clone(),
@@ -73,7 +73,7 @@ impl Editor {
             self.symmetry = previous;
             (
                 self.scene,
-                self.live,
+                self.session.live,
                 self.session.cone,
                 self.session.ellipsoid,
                 self.session.shape,
@@ -101,7 +101,7 @@ impl Editor {
     pub(super) fn follow_symmetry(&mut self, previous: crate::Symmetry) -> Result<()> {
         let previous = previous.through(self.scene.workplane.center);
         let current = self.active_symmetry();
-        if let Some(live) = &self.live
+        if let Some(live) = &self.session.live
             && let Some(frame) = live.action_frame
             && live.tool != Tool::Bend
         {
@@ -120,11 +120,12 @@ impl Editor {
                 ..request(current)
             }
             .frame()?;
-            if let Some(live) = &mut self.live {
+            if let Some(live) = &mut self.session.live {
                 live.action_frame = Some(now);
             }
         }
         if let Some(parameters) = self
+            .session
             .live
             .as_ref()
             .filter(|live| live.applied)
@@ -196,6 +197,7 @@ impl Editor {
     /// Use World Transforms.
     pub fn primitive_fit_falloff(&self) -> Result<crate::Falloff> {
         let live = self
+            .session
             .live
             .as_ref()
             .filter(|l| matches!(l.tool, Tool::Box | Tool::Sphere | Tool::Cylinder))
@@ -313,14 +315,19 @@ impl Editor {
     /// BN-45 (BH-Q12, provisional): the status bar text while Bend's axis
     /// runs along its spine, so the bend can't move anything.
     pub fn bend_notice(&self) -> Option<&'static str> {
-        let live = self.live.as_ref().filter(|l| l.tool == Tool::Bend)?;
+        let live = self
+            .session
+            .live
+            .as_ref()
+            .filter(|l| l.tool == Tool::Bend)?;
         live.params
             .bend
             .axis_along_spine(self.bend_axes(&self.scene))
             .then_some(crate::bend::AXIS_ALONG_SPINE)
     }
     pub fn bend_axes(&self, scene: &Scene) -> glam::DMat3 {
-        self.live
+        self.session
+            .live
             .as_ref()
             .and_then(|l| l.action_frame)
             .or_else(|| self.action_context.resolve(scene).ok())
@@ -428,7 +435,7 @@ impl Editor {
         if !point.is_finite() || point.abs().max_element() > 1e9 {
             return Err("The center must be a finite point".into());
         }
-        let live = self.live.as_ref().ok_or("No active tool")?;
+        let live = self.session.live.as_ref().ok_or("No active tool")?;
         let mut p = live.params.clone();
         if let Some(plane) = refit {
             // The target is the scene the tool started from, so the bend
@@ -443,7 +450,7 @@ impl Editor {
             p.bend.axis = fitted.axis;
         }
         p.bend.base = point;
-        let live = self.live.as_mut().ok_or("No active tool")?;
+        let live = self.session.live.as_mut().ok_or("No active tool")?;
         if live.applied {
             self.preview(p, false)
         } else {

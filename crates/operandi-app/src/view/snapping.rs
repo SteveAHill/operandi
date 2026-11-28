@@ -1240,7 +1240,7 @@ impl super::Operandi {
         if self.snap_session.targets.is_some() {
             return;
         }
-        let Some(live) = self.editor.live.as_ref() else {
+        let Some(live) = self.editor.session.live.as_ref() else {
             return;
         };
         let base = &live.base;
@@ -1270,7 +1270,7 @@ impl super::Operandi {
         r: egui::Rect,
     ) -> Option<crate::snap_service::SnapHit> {
         use crate::snap_service::Owner;
-        let live = self.editor.live.as_ref()?;
+        let live = self.editor.session.live.as_ref()?;
         let (base, scene) = (&live.base, &self.editor.scene);
         let active = base.selection.item;
         let item_mode = base.selection.mode == operandi_core::Mode::Item;
@@ -1469,6 +1469,7 @@ impl super::Operandi {
         // as it was before the preview, not to its own cut.
         let scene = self
             .editor
+            .session
             .live
             .as_ref()
             .map_or(&self.editor.scene, |l| &l.base);

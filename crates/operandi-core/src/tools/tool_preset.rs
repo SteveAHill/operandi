@@ -627,7 +627,7 @@ impl crate::Editor {
         // Topology Pen's options stick for the session (TP-10): a new
         // activation starts from the last ones, falloff included.
         if row.actor.topology_pen
-            && let Some(live) = staged.live.as_mut()
+            && let Some(live) = staged.session.live.as_mut()
         {
             let pen = staged.topology_pen_memory;
             live.params.topology_pen = pen;
@@ -644,7 +644,7 @@ impl crate::Editor {
     /// taken into the active mesh's space. Anything missing leaves the
     /// falloff as it is.
     pub(crate) fn place_row_falloff_at_tool(&mut self) {
-        let Some(live) = self.live.as_ref() else {
+        let Some(live) = self.session.live.as_ref() else {
             return;
         };
         if !self
@@ -727,7 +727,12 @@ impl crate::Editor {
         let Some(session) = &self.session.preset else {
             return;
         };
-        if let Some(live) = self.live.as_ref().filter(|l| l.tool == session.tool) {
+        if let Some(live) = self
+            .session
+            .live
+            .as_ref()
+            .filter(|l| l.tool == session.tool)
+        {
             if session.row().actor.topology_pen {
                 // The falloff is edited in Tweak's options (Move uses them).
                 let t = live.params.tweak_options;
@@ -745,7 +750,7 @@ impl crate::Editor {
     /// The name of the live tool as the user picked it: the row's label
     /// while one is open.
     pub fn live_tool_label(&self) -> Option<&'static str> {
-        let live = self.live.as_ref()?;
+        let live = self.session.live.as_ref()?;
         Some(
             self.session
                 .preset

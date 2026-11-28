@@ -51,7 +51,7 @@ fn at(e: &Editor, id: u64) -> DVec3 {
 /// Start row `row`, change its values, place it and drop.
 fn run(e: &mut Editor, row: &str, set: impl FnOnce(&mut DuplicateParameters)) {
     e.dispatch(Command::ActivatePreset(row.into())).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     set(&mut p.duplicate);
     p.duplicate.placed = true;
     e.session.tweak_held = true;
@@ -204,7 +204,7 @@ fn drop_is_one_undo_step_and_cancel_changes_nothing() {
     // Cancel.
     e.dispatch(Command::ActivatePreset("TransformArray".into()))
         .unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.duplicate.placed = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.dispatch(Command::Cancel).unwrap();
@@ -222,7 +222,7 @@ fn the_plain_array_button_makes_copies_after_transform_array() {
     e.dispatch(Command::ActivatePreset("TransformArray".into()))
         .unwrap();
     e.dispatch(Command::Activate(Tool::Array)).unwrap();
-    let live = e.live.as_ref().unwrap();
+    let live = e.session.live.as_ref().unwrap();
     assert_eq!(live.params.duplicate.copier, None);
     let mut p = live.params.clone();
     p.duplicate.placed = true;
@@ -239,7 +239,7 @@ fn transform_pen_puts_items_on_the_path_points() {
     e.dispatch(Command::ActivatePreset("PenTransform".into()))
         .unwrap();
     assert_eq!(e.live_tool_label(), Some("Transform Pen"));
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     assert_eq!(
         p.duplicate.curve_clone.curve.kind,
         path_tools::PathKind::Pen

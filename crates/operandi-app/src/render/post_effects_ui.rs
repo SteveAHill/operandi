@@ -137,7 +137,7 @@ impl Operandi {
 
     /// The Image Processing tab.
     pub(crate) fn image_processing_tab(&mut self, ui: &mut Ui) {
-        let idle = self.editor.live.is_none();
+        let idle = self.editor.session.live.is_none();
         let before = self.editor.scene.render.clone();
         let mut s = before.clone();
         let defaults = PostEffects::default();

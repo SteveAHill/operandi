@@ -21,7 +21,7 @@ impl Operandi {
     }
     pub(super) fn all_handles(&self, r: Rect) -> Vec<(usize, Pos2, Pos2, String)> {
         self.handle_origin.set(None);
-        let Some(l) = &self.editor.live else {
+        let Some(l) = &self.editor.session.live else {
             // #37: a drawn Cone, Ellipsoid, Torus, Capsule or Text.
             return self.session_handles(r);
         };
@@ -415,7 +415,7 @@ impl Operandi {
     }
     pub(crate) fn handle_axis(&self, axis: usize) -> DVec3 {
         // Frame-based tools point their handles along their card's frame.
-        if let Some(l) = self.editor.live.as_ref() {
+        if let Some(l) = self.editor.session.live.as_ref() {
             match l.tool.card().handles.axes {
                 HandleAxes::Tool => {}
                 HandleAxes::VertexRail | HandleAxes::VertexNormal => {
@@ -471,13 +471,14 @@ impl Operandi {
         if axis > 2
             && self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .is_some_and(|l| l.tool == Tool::Scale)
         {
             return DVec3::ZERO;
         }
-        let Some(l) = &self.editor.live else {
+        let Some(l) = &self.editor.session.live else {
             return DVec3::ZERO;
         };
         let a = [DVec3::X, DVec3::Y, DVec3::Z][axis];
@@ -653,7 +654,7 @@ impl Operandi {
     /// otherwise the action frame, with the polygon stage's Symmetry
     /// centre for component tools. Snapping measures in this same frame.
     pub(crate) fn transform_handle_frame(&self) -> Option<operandi_core::ActionFrame> {
-        let l = self.editor.live.as_ref()?;
+        let l = self.editor.session.live.as_ref()?;
         let frame = l.action_frame?;
         // The pivot service places the frame (ACS-01/07); the polygon
         // stage's handle follows its live caps.
@@ -671,7 +672,7 @@ impl Operandi {
         })
     }
     pub(crate) fn transform_handle_center(&self) -> DVec3 {
-        let Some(l) = self.editor.live.as_ref() else {
+        let Some(l) = self.editor.session.live.as_ref() else {
             return DVec3::ZERO;
         };
         self.transform_handle_frame()
@@ -692,6 +693,7 @@ impl Operandi {
         };
         let radius = if self
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| combined_handles(l.tool))
@@ -736,6 +738,7 @@ impl Operandi {
                 if (3..6).contains(&ring)
                     && self
                         .editor
+                        .session
                         .live
                         .as_ref()
                         .is_some_and(|l| combined_handles(l.tool)) =>
@@ -749,13 +752,14 @@ impl Operandi {
     pub(super) fn handle_hit_axes(&self, p: Pos2, r: Rect) -> Option<usize> {
         if self
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| l.tool.card().handles.kind == HandleKind::Spine)
         {
             return self.twist_bevel_hit(p, r);
         }
-        if let Some(live) = &self.editor.live
+        if let Some(live) = &self.editor.session.live
             && matches!(live.tool, Tool::Move | Tool::Rotate | Tool::Transform)
             && let Some(free) = self.handles(r).into_iter().find(|h| {
                 h.0 == FREE_HANDLE && Rect::from_center_size(h.2, vec2(12., 12.)).contains(p)
@@ -763,7 +767,7 @@ impl Operandi {
         {
             return Some(free.0);
         }
-        if let Some(live) = &self.editor.live
+        if let Some(live) = &self.editor.session.live
             && combined_handles(live.tool)
         {
             let handles = self.handles(r);
@@ -793,6 +797,7 @@ impl Operandi {
         }
         if self
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| l.tool == Tool::Rotate)
@@ -808,6 +813,7 @@ impl Operandi {
             h.0 == SCALE_UNIFORM_HANDLE
                 && self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     .is_some_and(|l| l.tool == Tool::Scale)
@@ -817,6 +823,7 @@ impl Operandi {
         }
         if self
             .editor
+            .session
             .live
             .as_ref()
             // Every primitive the same way (Jason, 2026-11-21): its side
@@ -847,7 +854,7 @@ impl Operandi {
     /// Edge Slide's handle frame (`HandleAnchor::EdgeRail`), once per drag;
     /// see `operandi_core::edge_slide_handle_frame`.
     pub(super) fn edge_slide_frame(&self) -> Option<(DVec3, DVec3, f64)> {
-        let l = self.editor.live.as_ref()?;
+        let l = self.editor.session.live.as_ref()?;
         let symmetry = self.editor.active_symmetry();
         self.edge_slide_frame_memo.get_with(
             &l.base,
@@ -858,7 +865,7 @@ impl Operandi {
     /// The vertex tools' handle frame (`HandleAnchor::Vertex`), once per
     /// drag; see `operandi_core::vertex_handle_frame`.
     pub(super) fn vertex_frame(&self) -> Option<(DVec3, DVec3, DVec3, f64)> {
-        let l = self.editor.live.as_ref()?;
+        let l = self.editor.session.live.as_ref()?;
         let symmetry = self.editor.active_symmetry();
         let pick = operandi_core::handle_pick(l.tool);
         self.vertex_frame_memo
@@ -869,7 +876,7 @@ impl Operandi {
     /// The selection's average normal (`operandi_core::selection_normal`)
     /// for the live tool's base, once per drag: the Bevels' gizmo direction.
     fn bevel_normal(&self, of: operandi_core::NormalOf) -> Option<DVec3> {
-        let l = self.editor.live.as_ref()?;
+        let l = self.editor.session.live.as_ref()?;
         let key = (self.editor.active_symmetry(), of);
         self.selection_normal_memo.get_with(&l.base, key, || {
             operandi_core::selection_normal(&l.base, key.0, of)
@@ -896,7 +903,7 @@ impl Operandi {
     /// The edge tools' handle frame (`HandleAnchor::Edge`), once per drag;
     /// see `operandi_core::edge_handle_frame`.
     pub(super) fn edge_handle_frame(&self) -> Option<(DVec3, DVec3, DVec3)> {
-        let l = self.editor.live.as_ref()?;
+        let l = self.editor.session.live.as_ref()?;
         let symmetry = self.editor.active_symmetry();
         let pick = operandi_core::handle_pick(l.tool);
         self.edge_frame_memo

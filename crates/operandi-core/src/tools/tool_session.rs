@@ -10,6 +10,8 @@ use crate::Tool;
 
 #[derive(Clone, Default, PartialEq)]
 pub struct ToolSession {
+    /// The open tool: its base scene, parameters and preview (editor.rs).
+    pub live: Option<crate::Live>,
     /// CS-01: the live tool is armed: picked, values editable, nothing
     /// drawn and the mesh as it was, until the first click or Apply.
     pub armed: Option<Tool>,

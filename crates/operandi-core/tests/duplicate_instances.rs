@@ -28,7 +28,7 @@ fn editor(center: DVec3, mode: Mode) -> Editor {
     e
 }
 fn params(e: &Editor) -> Parameters {
-    e.live.as_ref().unwrap().params.clone()
+    e.session.live.as_ref().unwrap().params.clone()
 }
 fn instance_on(d: &mut DuplicateParameters) {
     d.copier = Some(operandi_core::duplicate_copier::Copier::Instance);

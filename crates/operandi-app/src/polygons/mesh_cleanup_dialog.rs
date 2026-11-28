@@ -757,10 +757,15 @@ mod callback_tests {
                 offset: 0.2,
                 ..Default::default()
             }));
-            let params = a.editor.live.as_ref().unwrap().params.clone();
+            let params = a.editor.session.live.as_ref().unwrap().params.clone();
             a.run(Command::Preview(params));
             let stage = a.editor.scene.clone();
-            let live = a.editor.live.as_ref().expect("confirmed live stage");
+            let live = a
+                .editor
+                .session
+                .live
+                .as_ref()
+                .expect("confirmed live stage");
             assert!(live.applied);
             assert!(live.preview_error.is_none());
             assert_eq!(

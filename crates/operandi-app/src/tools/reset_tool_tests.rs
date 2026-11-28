@@ -15,11 +15,17 @@ fn polygon_app() -> Operandi {
 }
 
 fn params(a: &Operandi) -> Parameters {
-    a.editor.live.as_ref().expect("a live tool").params.clone()
+    a.editor
+        .session
+        .live
+        .as_ref()
+        .expect("a live tool")
+        .params
+        .clone()
 }
 
 fn tool(a: &Operandi) -> Option<Tool> {
-    a.editor.live.as_ref().map(|l| l.tool)
+    a.editor.session.live.as_ref().map(|l| l.tool)
 }
 
 /// What `t` starts with on a fresh launch, on the same scene.

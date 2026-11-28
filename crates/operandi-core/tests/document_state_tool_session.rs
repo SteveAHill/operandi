@@ -11,14 +11,14 @@ fn moving_cube() -> Editor {
     e.dispatch(Command::Activate(Tool::Box)).unwrap();
     e.dispatch(Command::Preview(Parameters {
         size: DVec3::splat(2.),
-        ..e.live.as_ref().unwrap().params.clone()
+        ..e.session.live.as_ref().unwrap().params.clone()
     }))
     .unwrap();
     e.dispatch(Command::Drop).unwrap();
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     e.dispatch(Command::Preview(Parameters {
         delta: DVec3::X,
-        ..e.live.as_ref().unwrap().params.clone()
+        ..e.session.live.as_ref().unwrap().params.clone()
     }))
     .unwrap();
     e.dispatch(Command::CommitTransformStep).unwrap();
@@ -28,7 +28,7 @@ fn moving_cube() -> Editor {
 #[test]
 fn a_tab_switch_takes_the_tool_session_with_the_scene() {
     let mut a = moving_cube();
-    assert!(a.live.is_some());
+    assert!(a.session.live.is_some());
     assert!(a.session.last_transform_step.is_some());
     a.session.armed = Some(Tool::Scale);
     a.session.extend_from_click = true;
@@ -40,11 +40,11 @@ fn a_tab_switch_takes_the_tool_session_with_the_scene() {
     let mut b = Editor::default();
     a.swap_document_state(&mut b);
     // The scene's own session went with it.
-    assert!(a.live.is_none());
+    assert!(a.session.live.is_none());
     assert_eq!(a.session.armed, None);
     assert!(!a.session.extend_from_click);
     assert!(a.session.gesture_partners.is_empty());
-    assert_eq!(b.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+    assert_eq!(b.session.live.as_ref().map(|l| l.tool), Some(Tool::Move));
     assert_eq!(b.session.armed, Some(Tool::Scale));
     assert!(b.session.extend_from_click);
     assert_eq!(b.session.gesture_partners, vec![(1, Component::Vertex(0))]);
@@ -58,5 +58,5 @@ fn a_tab_switch_takes_the_tool_session_with_the_scene() {
 
     a.swap_document_state(&mut b);
     assert!(a == before);
-    assert!(b.live.is_none() && b.session.armed.is_none() && !b.session.extend_from_click);
+    assert!(b.session.live.is_none() && b.session.armed.is_none() && !b.session.extend_from_click);
 }

@@ -245,6 +245,7 @@ impl Operandi {
             // the cached path, rebuilt when the mesh changes during a drag.
             let live_item = self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .filter(|l| l.tool.is_primitive())
@@ -313,7 +314,7 @@ impl Operandi {
                         .sum::<DVec3>()
                         .normalize_or_zero();
                     let center = world.iter().copied().sum::<DVec3>() / world.len() as f64;
-                    let flat_preview = self.editor.live.as_ref().is_some_and(|live| {
+                    let flat_preview = self.editor.session.live.as_ref().is_some_and(|live| {
                         live.tool == Tool::Box
                             && live
                                 .params
@@ -499,7 +500,7 @@ impl Operandi {
                         && s.tag.is_none()
                         && s.faces_of(*id).contains(&(*fi as u32)));
                 let pre = (hover.is_some_and(|(i, f, _)| i == *id && f == *fi as u32)
-                    && self.editor.live.is_none()
+                    && self.editor.session.live.is_none()
                     && polygon_rollovers)
                     || whole_rollover == Some(*id)
                     || drop_flags
@@ -534,7 +535,7 @@ impl Operandi {
                     &style_colors,
                     mirror || selected || pre,
                 );
-                let color = if self.editor.live.as_ref().is_some_and(|l| {
+                let color = if self.editor.session.live.as_ref().is_some_and(|l| {
                     l.tool.is_primitive()
                         && l.base
                             .active()
@@ -684,7 +685,7 @@ impl Operandi {
                         let selected = whole || picked[source];
                         let pre = (hover
                             .is_some_and(|(i, f, _)| i == item.id && f == source as u32)
-                            && self.editor.live.is_none()
+                            && self.editor.session.live.is_none()
                             && polygon_rollovers)
                             || whole_rollover == Some(item.id);
                         if !wireframe {
@@ -869,7 +870,7 @@ impl Operandi {
             }
             // Approved temporary flat drawing display, separate from scene
             // topology/history/persistence. Exact reference flat mesh is open.
-            if let Some(live) = &self.editor.live
+            if let Some(live) = &self.editor.session.live
                 && let Some(radial) = live.params.radial
                 && let Some(normal) = (0..3).find(|&axis| radial.radius[axis] == 0.)
             {
@@ -1073,7 +1074,7 @@ impl Operandi {
                 // changes the mesh.
                 let all_flat = self.mesh_items_preferences.defer_smoothing
                     && self.navigation.is_some()
-                    && self.editor.live.is_some();
+                    && self.editor.session.live.is_some();
                 self.resident_cache.sync_materials(display_scene, all_flat);
                 // While a tool or drag is live, an item whose placement alone
                 // changed reuses its cached geometry through a matrix on the
@@ -1084,7 +1085,7 @@ impl Operandi {
                 // reuse their geometry through a matrix too, and settle at
                 // their places a few at a time once time stops
                 // (`Resident::begin_frame`).
-                let live = self.editor.live.is_some()
+                let live = self.editor.session.live.is_some()
                     || self.navigation.is_some()
                     || self.editor.anim.playing.is_some()
                     || self.anim_ui.time_moved;
@@ -1249,7 +1250,7 @@ impl Operandi {
                     }
                     if let Some((id, f, _)) = hover
                         && id == item.id
-                        && self.editor.live.is_none()
+                        && self.editor.session.live.is_none()
                         && polygon_rollovers
                     {
                         draw.overlay_look = group;
@@ -1587,7 +1588,7 @@ impl Operandi {
                     );
                 }
             }
-            let hovered_component = if self.editor.live.is_none() && self.rollovers_on() {
+            let hovered_component = if self.editor.session.live.is_none() && self.rollovers_on() {
                 response
                     .hover_pos()
                     .and_then(|p| self.rollover_component_on(p, r, &surface()))
@@ -1825,6 +1826,7 @@ impl Operandi {
             if self.navigation.is_none()
                 && self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     .is_some_and(|l| l.tool == Tool::Tweak)
@@ -1837,12 +1839,14 @@ impl Operandi {
             if self.navigation.is_none()
                 && !self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     .is_some_and(|l| l.tool == Tool::Tweak)
                 && self.element_falloff().is_some()
                 && self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     // Element Push highlights what a press would push.
@@ -1980,8 +1984,12 @@ impl Operandi {
                             .unwrap_or("No mesh"),
                         count,
                         selection.mode,
-                        self.editor.live.as_ref().map(|l| l.tool.label()).unwrap_or(
-                            if self.editor.session.reduction.is_some() {
+                        self.editor
+                            .session
+                            .live
+                            .as_ref()
+                            .map(|l| l.tool.label())
+                            .unwrap_or(if self.editor.session.reduction.is_some() {
                                 "Polygon Reduction · numeric"
                             } else if self.editor.session.bridge.is_some() {
                                 "Bridge · numeric"
@@ -2002,8 +2010,7 @@ impl Operandi {
                                 "Cone · numeric"
                             } else {
                                 "Selection"
-                            }
-                        )
+                            })
                     ),
                     FontId::proportional(11.),
                     palette::label(),
@@ -2012,7 +2019,7 @@ impl Operandi {
             // How to finish or leave the active tool, with the user's own
             // keys (tool_exit_hint.rs); live tools lead with what they do.
             let exit = self.tool_exit_hint();
-            let lead = self.editor.live.as_ref().map(|l| {
+            let lead = self.editor.session.live.as_ref().map(|l| {
                 if matches!(l.tool, Tool::Bevel | Tool::TwistBevel | Tool::Extrude) {
                     "Handles edit this stage · Shift-click continues on caps"
                 } else {
@@ -2097,12 +2104,13 @@ impl Operandi {
                     let primitive_side = axis >= 3
                         && self
                             .editor
+                            .session
                             .live
                             .as_ref()
                             .is_some_and(|l| l.tool.is_primitive());
                     // What Ctrl does on this handle; it is read at the press
                     // (HM-01/12a).
-                    let tool = self.editor.live.as_ref().map(|l| l.tool);
+                    let tool = self.editor.session.live.as_ref().map(|l| l.tool);
                     let family = match tool {
                         Some(Tool::Transform | Tool::EdgeExtend) if axis < 9 => Some(axis / 3),
                         Some(Tool::Rotate) if axis < 3 => Some(1),
@@ -2158,6 +2166,7 @@ impl Operandi {
                 let fade = self.handle_fade(origin, end, r);
                 if self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     .is_some_and(|l| l.tool.card().handles.kind == HandleKind::Spine)
@@ -2205,12 +2214,14 @@ impl Operandi {
                 let uniform = axis == SCALE_UNIFORM_HANDLE
                     && self
                         .editor
+                        .session
                         .live
                         .as_ref()
                         .is_some_and(|l| l.tool == Tool::Scale);
                 // A blue scale handle (square end) instead of an arrow.
                 let scale_look = self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     .is_some_and(|l| scale_look_handle(l.tool, axis));
@@ -2219,7 +2230,7 @@ impl Operandi {
                 } else if uniform || scale_look {
                     palette::handles()[2]
                 } else {
-                    palette::handles()[if self.editor.live.as_ref().is_some_and(|l| {
+                    palette::handles()[if self.editor.session.live.as_ref().is_some_and(|l| {
                         // Handle 0 runs along the normal: blue.
                         matches!(
                             l.tool.card().handles.kind,
@@ -2229,6 +2240,7 @@ impl Operandi {
                         if axis == 0 { 2 } else { 0 }
                     } else if self
                         .editor
+                        .session
                         .live
                         .as_ref()
                         .is_some_and(|l| l.tool == Tool::Transform)
@@ -2236,6 +2248,7 @@ impl Operandi {
                         axis % 3
                     } else if self
                         .editor
+                        .session
                         .live
                         .as_ref()
                         .is_some_and(|l| l.tool == Tool::EdgeExtend)
@@ -2254,7 +2267,7 @@ impl Operandi {
                     .min(2)]
                 };
                 let color = color.gamma_multiply(fade);
-                if self.editor.live.as_ref().is_some_and(|l| {
+                if self.editor.session.live.as_ref().is_some_and(|l| {
                     let kind = l.tool.card().handles.kind;
                     kind == HandleKind::Rings
                         || (kind == HandleKind::Combined && (3..6).contains(&axis))
@@ -2284,7 +2297,7 @@ impl Operandi {
                         self.draw_scale_center(&painter, end, rim, fade);
                     } else if axis >= 3
                         || scale_look
-                        || self.editor.live.as_ref().is_some_and(|l| {
+                        || self.editor.session.live.as_ref().is_some_and(|l| {
                             l.tool == Tool::Scale
                                 || (axis == 1 && l.tool.card().handles.kind == HandleKind::Pair)
                         })
@@ -2370,7 +2383,7 @@ impl Operandi {
             // Points still without a mirror partner, as small yellow
             // squares (at most 10,000 drawn): the Symmetry Tool's, and the
             // unpaired warning when a tool starts (section 8).
-            if self.editor.live.is_some()
+            if self.editor.session.live.is_some()
                 && self.viewport_preferences.show_asymmetries
                 && let Some(item) = self.editor.scene.active()
                 && let Ok(world) = self.editor.scene.world_matrix(item.id)
@@ -2574,6 +2587,7 @@ impl Operandi {
         let xray = self.handle_preferences.xray_opacity();
         let Some(center) = self
             .editor
+            .session
             .live
             .as_ref()
             .and_then(|l| l.action_frame)

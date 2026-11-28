@@ -105,7 +105,7 @@ fn draw(e: &mut Editor, t: T) {
     let x = 3.;
     match t {
         T::Box | T::Sphere | T::Cylinder | T::Move | T::Bevel => {
-            let mut p = e.live.as_ref().unwrap().params.clone();
+            let mut p = e.session.live.as_ref().unwrap().params.clone();
             match t {
                 T::Move => p.delta = DVec3::Y * 0.5,
                 T::Bevel => p.inset = 0.1,
@@ -553,7 +553,7 @@ fn changing_mode_drops_rotate_and_scale_too() {
             ModeRouteEligibility::DropsToolFirst
         );
         e.dispatch(Command::Mode(Mode::Edge)).unwrap();
-        assert!(e.live.is_none(), "{tool:?}");
+        assert!(e.session.live.is_none(), "{tool:?}");
         assert_eq!(e.scene.selection.mode, Mode::Edge, "{tool:?}");
         assert_eq!(e.mode_route_eligibility(), ModeRouteEligibility::Direct);
     }

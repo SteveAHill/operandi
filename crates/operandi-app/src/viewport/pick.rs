@@ -69,7 +69,7 @@ impl Operandi {
     pub(crate) fn whole_item_rollover(&self, id: u64) -> Option<u64> {
         let scene = &self.editor.scene;
         (scene.selection.mode == Mode::Item
-            && self.editor.live.is_none()
+            && self.editor.session.live.is_none()
             && scene.item(id).is_some_and(|i| i.is_viewport_selectable()))
         .then_some(id)
     }

@@ -63,7 +63,7 @@ impl Editor {
     /// transform tool that stays armed with nothing pending.
     pub fn backup_ready(&self) -> bool {
         let armed_transform = self
-            .live
+            .session.live
             .as_ref()
             .is_some_and(|l| l.tool.is_transform() && !self.transform_change_pending())
             // Drags kept as tweaks aren't recorded until Drop.

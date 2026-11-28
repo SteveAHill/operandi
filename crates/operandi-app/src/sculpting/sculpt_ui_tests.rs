@@ -346,7 +346,7 @@ fn a_modeling_tool_turns_the_brush_off_and_back() {
     frame(&mut a, &ctx, vec![]);
     assert_eq!(a.sculpt.brush, None);
     a.activate_sculpt(SculptBrush::Push);
-    assert!(a.editor.live.is_none(), "the brush dropped Move");
+    assert!(a.editor.session.live.is_none(), "the brush dropped Move");
     assert_eq!(a.sculpt.brush, Some(SculptBrush::Push));
     // Q drops it (SC-93 said Space; CV-03 gives Space to Mini Properties).
     frame(

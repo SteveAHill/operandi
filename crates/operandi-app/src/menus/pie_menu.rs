@@ -730,6 +730,7 @@ impl Operandi {
             // must be dropped first.
             let ok = self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .is_none_or(|l| l.tool.card().layers.falloff);

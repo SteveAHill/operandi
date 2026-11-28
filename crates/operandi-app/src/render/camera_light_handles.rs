@@ -210,7 +210,7 @@ impl Operandi {
     /// The selected camera or light's handles, when Move, Rotate or
     /// Transform is active on it in Item mode.
     pub(super) fn item_handles(&self, r: Rect) -> Option<Handles> {
-        let live = self.editor.live.as_ref()?;
+        let live = self.editor.session.live.as_ref()?;
         let scene = &self.editor.scene;
         if !tool_shows_item_channels(live.tool) || scene.selection.mode != Mode::Item {
             return None;
@@ -416,7 +416,7 @@ mod tests {
         a.run(Command::Undo);
         let item = a.editor.scene.item(id).unwrap();
         assert_eq!(item.light.as_ref().unwrap().width, 1.0);
-        assert!(a.editor.live.is_some(), "the tool stays");
+        assert!(a.editor.session.live.is_some(), "the tool stays");
         // No handles without a channel tool.
         a.run(Command::Cancel);
         assert!(a.item_handles(r).is_none());

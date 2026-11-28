@@ -113,7 +113,7 @@ const MENU_SELECTION_LINES: &[&str] = &[
 /// bridge session is open (the menus' old rule, `unavailable::TOOL_ACTIVE`).
 fn selection_why(a: &Operandi) -> Option<&'static str> {
     crate::unavailable::unless(
-        a.editor.live.is_none()
+        a.editor.session.live.is_none()
             && a.editor.session.ellipsoid.is_none()
             && a.editor.session.shape.is_none()
             && a.editor.session.spike.is_none()
@@ -211,8 +211,9 @@ fn answers(r: &mut Commands) {
         for name in tool_info::info(tool).names {
             r.answer(name, |a, c| {
                 CommandState::lit(
-                    tool_info::by_name(&c.lowered())
-                        .is_some_and(|t| a.editor.live.as_ref().is_some_and(|l| l.tool == t)),
+                    tool_info::by_name(&c.lowered()).is_some_and(|t| {
+                        a.editor.session.live.as_ref().is_some_and(|l| l.tool == t)
+                    }),
                 )
             })
             .unwrap_or_else(|e| panic!("{e}"));
@@ -238,7 +239,10 @@ fn answers(r: &mut Commands) {
         .expect("Select Symmetrical is a command");
     r.answer(symmetrical, |a, _| {
         CommandState::unless(crate::unavailable::first([
-            crate::unavailable::unless(a.editor.live.is_none(), crate::unavailable::TOOL_ACTIVE),
+            crate::unavailable::unless(
+                a.editor.session.live.is_none(),
+                crate::unavailable::TOOL_ACTIVE,
+            ),
             crate::unavailable::unless(
                 a.editor.symmetry.axis.is_some(),
                 "Turn Symmetry on (X, Y or Z) first",
@@ -287,7 +291,12 @@ fn answers(r: &mut Commands) {
             } else {
                 Tool::LinearAlign
             };
-            let live = a.editor.live.as_ref().is_some_and(|l| l.tool == tool);
+            let live = a
+                .editor
+                .session
+                .live
+                .as_ref()
+                .is_some_and(|l| l.tool == tool);
             let s = &a.editor.scene.selection;
             let usable = match s.mode {
                 Mode::Vertex => s.vertices.len() >= 2,
@@ -438,7 +447,7 @@ fn answers(r: &mut Commands) {
     // The UV island buttons wait for the active tool to drop.
     r.answer("operandi.uv.preset", |a, _| {
         CommandState::unless(crate::unavailable::unless(
-            a.editor.live.is_none(),
+            a.editor.session.live.is_none(),
             crate::unavailable::TOOL_ACTIVE,
         ))
     })
@@ -447,7 +456,7 @@ fn answers(r: &mut Commands) {
     for name in UV_OP_COMMANDS {
         r.answer(name, |a, _| {
             CommandState::unless(crate::unavailable::unless(
-                a.editor.live.is_none(),
+                a.editor.session.live.is_none(),
                 crate::unavailable::TOOL_ACTIVE,
             ))
         })
@@ -551,7 +560,10 @@ fn mode_is(a: &Operandi, modes: &str) -> bool {
 
 /// Idle: no tool live (the Edit tab's commands wait for it to drop).
 fn idle(a: &Operandi) -> Option<&'static str> {
-    crate::unavailable::unless(a.editor.live.is_none(), crate::unavailable::TOOL_ACTIVE)
+    crate::unavailable::unless(
+        a.editor.session.live.is_none(),
+        crate::unavailable::TOOL_ACTIVE,
+    )
 }
 
 /// The Edit tab's answers (layouts stage 3 batch 6; the old rows read the
@@ -565,7 +577,7 @@ fn edit_answers(r: &mut Commands) {
                 "Switch to Vertices or Edges mode (Polygon Slide isn't built yet)",
             )
             .map(str::to_owned),
-            on: tool.is_some_and(|t| a.editor.live.as_ref().is_some_and(|l| l.tool == t)),
+            on: tool.is_some_and(|t| a.editor.session.live.as_ref().is_some_and(|l| l.tool == t)),
             title: None,
         }
     })
@@ -711,7 +723,7 @@ fn sculpt_answers(r: &mut Commands) {
 fn remesh_state(a: &Operandi, kind: crate::remesh_dialog::RemeshKind) -> CommandState {
     CommandState {
         unavailable: crate::unavailable::unless(
-            a.editor.live.is_none() && a.remesh_job.is_none(),
+            a.editor.session.live.is_none() && a.remesh_job.is_none(),
             crate::unavailable::TOOL_ACTIVE,
         )
         .map(str::to_owned),
@@ -1200,7 +1212,7 @@ fn file_answers(r: &mut Commands) {
 /// live tool nor only locked items.
 fn item_answers(r: &mut Commands) {
     fn reason(a: &Operandi, freeze: bool) -> Option<String> {
-        if a.editor.live.is_some() {
+        if a.editor.session.live.is_some() {
             return Some(crate::unavailable::TOOL_ACTIVE.to_owned());
         }
         let items: Vec<&operandi_core::Item> = a
@@ -1472,6 +1484,7 @@ fn phrases(r: &mut Commands) {
         a.tool_properties_open = true;
         a.surface_mini_properties = a
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| l.tool.is_smooth_shift());
@@ -2179,6 +2192,7 @@ fn tables(r: &mut Commands) {
         let name = a.editor.uv_seam_name();
         if let Some(mut p) = a
             .editor
+            .session
             .live
             .as_ref()
             .filter(|l| l.tool == tool)

@@ -515,7 +515,7 @@ fn mb_q8_shift_adds_an_item_and_ctrl_a_unit_in_this_mesh() {
             a.status
         );
         assert_eq!(a.editor.history.undo.len(), undo + 1, "{name}");
-        assert!(a.editor.live.is_none(), "{name}: no drag");
+        assert!(a.editor.session.live.is_none(), "{name}: no drag");
         // Ctrl: into the current mesh.
         let (mut a, ctx) = create_panel();
         let faces = a.editor.scene.active().unwrap().mesh.faces.len();
@@ -525,7 +525,7 @@ fn mb_q8_shift_adds_an_item_and_ctrl_a_unit_in_this_mesh() {
             a.editor.scene.active().unwrap().mesh.faces.len() > faces,
             "{name}"
         );
-        assert!(a.editor.live.is_none(), "{name}: no drag");
+        assert!(a.editor.session.live.is_none(), "{name}: no drag");
     }
 }
 

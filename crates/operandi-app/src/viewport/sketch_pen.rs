@@ -34,6 +34,7 @@ impl Operandi {
             return points;
         }
         self.editor
+            .session
             .live
             .as_ref()
             .filter(|l| l.tool == Tool::SketchExtrude)
@@ -54,7 +55,7 @@ impl Operandi {
             stroke.plane_normal,
         ) else {
             self.status = "Sketch Extrude cannot project this pointer onto its frozen plane".into();
-            if let Some(live) = &mut self.editor.live {
+            if let Some(live) = &mut self.editor.session.live {
                 live.preview_error = Some(self.status.clone());
             }
             return;
@@ -75,13 +76,14 @@ impl Operandi {
         }
         if path.len() > 257 {
             self.status = "Sketch Extrude path exceeds 257 points".into();
-            if let Some(live) = &mut self.editor.live {
+            if let Some(live) = &mut self.editor.session.live {
                 live.preview_error = Some(self.status.clone());
             }
             return;
         }
         let Some(live) = self
             .editor
+            .session
             .live
             .as_ref()
             .filter(|l| l.tool == Tool::SketchExtrude)
@@ -107,7 +109,7 @@ impl Operandi {
             }
             Err(error) => {
                 self.status = error.clone();
-                if let Some(live) = &mut self.editor.live {
+                if let Some(live) = &mut self.editor.session.live {
                     live.preview_error = Some(error);
                 }
             }

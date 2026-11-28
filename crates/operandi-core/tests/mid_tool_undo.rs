@@ -40,7 +40,7 @@ fn held(e: &mut Editor, previews: impl IntoIterator<Item = Command>) {
     e.end_tweak();
 }
 fn box_params(e: &Editor, x: f64, depth: f64) -> Parameters {
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.position = DVec3::new(x, 0., 0.);
     p.size = DVec3::new(1., 1., depth);
     if let Some(r) = p.radial.as_mut() {
@@ -54,7 +54,7 @@ fn draw(e: &mut Editor, x: f64) {
     held(e, steps);
 }
 fn live_tool(e: &Editor) -> Option<Tool> {
-    e.live.as_ref().map(|l| l.tool)
+    e.session.live.as_ref().map(|l| l.tool)
 }
 fn closed(label: &str) -> HistoryEffect {
     HistoryEffect::ToolClosed {
@@ -92,7 +92,7 @@ fn box_z_drag_undo_keeps_the_box_and_drop_makes_one_step() {
     assert!(!c.foreground_closed);
     assert_eq!(e.scene, drawn);
     assert_eq!(live_tool(&e), Some(Tool::Box));
-    assert_eq!(e.live.as_ref().unwrap().params.size.z, 1.);
+    assert_eq!(e.session.live.as_ref().unwrap().params.size.z, 1.);
     // Redo puts it back.
     redo(&mut e);
     assert_eq!(e.scene, pulled);
@@ -154,7 +154,7 @@ fn drawn_primitive_closes_first_then_undo_removes_the_mesh() {
     assert!(e.scene.active().is_some());
     undo(&mut e); // New Mesh
     assert!(e.scene.active().is_none());
-    assert!(e.live.is_none());
+    assert!(e.session.live.is_none());
 }
 
 #[test]
@@ -186,7 +186,7 @@ fn top_face_cube() -> Editor {
     e
 }
 fn drag_move(e: &mut Editor, delta: DVec3) {
-    let base = e.live.as_ref().unwrap().params.clone();
+    let base = e.session.live.as_ref().unwrap().params.clone();
     let frames = [0.5, 1.].map(|t| {
         Command::Preview(Parameters {
             delta: delta * t,
@@ -213,7 +213,7 @@ fn move_drags_undo_one_at_a_time_then_close_move() {
     undo(&mut e);
     assert_eq!(e.scene, first);
     assert_eq!(live_tool(&e), Some(Tool::Move));
-    assert_eq!(e.live.as_ref().unwrap().params.delta, DVec3::ZERO);
+    assert_eq!(e.session.live.as_ref().unwrap().params.delta, DVec3::ZERO);
     undo(&mut e);
     assert_eq!(e.scene, original);
     assert_eq!(live_tool(&e), Some(Tool::Move));
@@ -520,7 +520,7 @@ fn bevel_drags_undo_one_at_a_time_and_drop_is_one_step() {
     let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
     let start = e.scene.clone();
-    let base = e.live.as_ref().unwrap().params.clone();
+    let base = e.session.live.as_ref().unwrap().params.clone();
     let inset = [0.05, 0.1, 0.15].map(|i| {
         Command::Preview(Parameters {
             inset: i,
@@ -565,7 +565,7 @@ fn bevel_cancel_after_undo_takes_back_the_session() {
     let mut e = top_face_cube();
     let original = e.scene.clone();
     e.dispatch(Command::Activate(Tool::Bevel)).unwrap();
-    let base = e.live.as_ref().unwrap().params.clone();
+    let base = e.session.live.as_ref().unwrap().params.clone();
     for inset in [0.1, 0.2] {
         held(
             &mut e,

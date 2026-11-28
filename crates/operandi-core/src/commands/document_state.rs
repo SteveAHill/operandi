@@ -42,7 +42,7 @@ impl Editor {
         swap(&mut a.paint, &mut b.paint);
         // The open tool waits in its scene for the scene's return, with its
         // own history and sessions.
-        swap(&mut a.live, &mut b.live);
+        swap(&mut a.session.live, &mut b.session.live);
         swap(&mut a.session.armed, &mut b.session.armed);
         swap(
             &mut a.session.extend_from_click,
@@ -103,7 +103,6 @@ fn every_field_is_sorted(e: Editor) {
         anim: _,
         #[cfg(feature = "painting")]
             paint: _,
-        live: _,
         multi_fresh: _,
         multi_extrude: _,
         extrude_moved_caps: _,
@@ -199,6 +198,7 @@ fn every_history_field_is_sorted(h: crate::History) {
 fn every_session_field_is_sorted(t: crate::ToolSession) {
     let crate::ToolSession {
         // Document (swapped above).
+        live: _,
         armed: _,
         extend_from_click: _,
         preset: _,

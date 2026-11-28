@@ -96,7 +96,7 @@ impl Editor {
         let faces = &self.scene.selection.faces;
         !self.i2_active()
             && self.session.pen_draft.is_none()
-            && self.live.is_none()
+            && self.session.live.is_none()
             && self.selection_start.is_none()
             && self.scene.selection.mode == Mode::Polygon
             && !faces.is_empty()

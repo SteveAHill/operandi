@@ -1648,7 +1648,7 @@ impl Operandi {
             return;
         };
         let id = item.id;
-        let idle = self.editor.live.is_none();
+        let idle = self.editor.session.live.is_none();
         // LP-04: Targeting rows above the light's own section.
         if l.kind.has_targeting() {
             crate::form::rows::section(ui, "Targeting", false, |ui| {

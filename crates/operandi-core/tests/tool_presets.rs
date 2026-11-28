@@ -21,7 +21,7 @@ fn points(e: &Editor) -> Vec<DVec3> {
     e.scene.active().unwrap().mesh.vertices.clone()
 }
 fn live(e: &Editor) -> Parameters {
-    e.live.as_ref().unwrap().params.clone()
+    e.session.live.as_ref().unwrap().params.clone()
 }
 fn mine() -> Falloff {
     RadialFalloff {
@@ -168,7 +168,7 @@ fn flare_pushes_the_top_fully_and_the_foot_not_at_all() {
     let user = e.action_context;
     let before = points(&e);
     preset(&mut e, "Flare");
-    assert_eq!(e.live.as_ref().unwrap().tool, Tool::Push);
+    assert_eq!(e.session.live.as_ref().unwrap().tool, Tool::Push);
     assert_eq!(e.live_tool_label(), Some("Flare"));
     assert_eq!(e.action_context.center, CenterMode::Automatic);
     let Some(Falloff::Linear(f)) = e.spatial_falloff else {

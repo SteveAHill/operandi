@@ -63,7 +63,7 @@ fn check(what: &str, op: impl Fn(&mut Editor)) {
 fn drawn(tool: Tool) -> impl Fn(&mut Editor) {
     move |e: &mut Editor| {
         e.dispatch(Command::Activate(tool)).unwrap();
-        let mut p = e.live.as_ref().unwrap().params.clone();
+        let mut p = e.session.live.as_ref().unwrap().params.clone();
         p.position = DVec3::new(0.4, 1.2, -0.7);
         p.size = DVec3::new(1., 2., 0.5);
         if let Some(r) = p.radial.as_mut() {

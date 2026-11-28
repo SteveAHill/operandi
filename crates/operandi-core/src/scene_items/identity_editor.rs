@@ -53,7 +53,11 @@ impl Editor {
         if selected != self.scene.selection.faces {
             return Err("Stable target selection changed".into());
         }
-        if let Some(live) = self.live.as_ref().filter(|l| l.tool == Tool::Extrude)
+        if let Some(live) = self
+            .session
+            .live
+            .as_ref()
+            .filter(|l| l.tool == Tool::Extrude)
             && (matches!(&cmd, Command::Preview(_))
                 || matches!(&cmd, Command::Apply) && !live.applied)
         {
@@ -210,7 +214,7 @@ impl Editor {
         // Invalidate even a byte-identical replacement, rather than infer that
         // coincident/recreated components survived. Selection/context-only routes
         // do not enter this category. Changed unported meshes also rebind in sync.
-        let topology_tool = self.live.as_ref().is_some_and(|l| {
+        let topology_tool = self.session.live.as_ref().is_some_and(|l| {
             matches!(
                 l.tool,
                 Tool::Box
@@ -253,7 +257,7 @@ impl Editor {
             Command::ConfigureBevel(_)
             | Command::ConfigureSmoothShift(_)
             | Command::ConfigureChamfer(_) => {
-                topology_tool && self.live.as_ref().is_some_and(|l| l.applied)
+                topology_tool && self.session.live.as_ref().is_some_and(|l| l.applied)
             }
             _ => false,
         };
@@ -412,7 +416,7 @@ impl Editor {
                     }
                 }
             }
-            if staged.live.is_none() {
+            if staged.session.live.is_none() {
                 staged.multi_fresh.clear();
             }
             for c in staged
@@ -460,7 +464,7 @@ impl Editor {
                 }
                 // Existing invalid-preview diagnostics are UI/session state. They do
                 // not publish the failed geometry or replace accepted history.
-                if let (Some(l), Some(s)) = (&mut self.live, &staged.live) {
+                if let (Some(l), Some(s)) = (&mut self.session.live, &staged.session.live) {
                     if let Some(report) = report {
                         report.live_diagnostic_changed = l.preview_error != s.preview_error;
                     }

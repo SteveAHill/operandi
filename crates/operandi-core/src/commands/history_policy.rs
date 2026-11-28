@@ -365,7 +365,11 @@ impl Editor {
                 pending_preview: None,
             });
         }
-        let live = self.live.as_ref().filter(|l| l.tool.is_primitive())?;
+        let live = self
+            .session
+            .live
+            .as_ref()
+            .filter(|l| l.tool.is_primitive())?;
         Some(PrimitiveSession {
             owner: HistoryOwner::LiveTool(live.tool),
             pending_preview: pending(live.base != self.scene, live.tool.label()),

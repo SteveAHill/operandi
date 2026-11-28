@@ -749,7 +749,7 @@ impl crate::Editor {
     /// tool. (A tool in a UV view runs on a stand-in scene built for each
     /// preview, `uv_pipe.rs`; its answer is about that scene.)
     pub fn live_pivots(&self) -> Option<Result<Arc<Resolved>>> {
-        let live = self.live.as_ref()?;
+        let live = self.session.live.as_ref()?;
         let frame = live.action_frame?;
         if !matches!(
             live.tool,
@@ -801,7 +801,7 @@ impl crate::Editor {
     /// its pivots can't be resolved, or for a tool in a UV view, whose
     /// handle is its UV frame (`Live::action_frame`).
     pub fn handle_frame(&self) -> Option<ActionFrame> {
-        if self.live.as_ref()?.params.uv.is_some() {
+        if self.session.live.as_ref()?.params.uv.is_some() {
             return None;
         }
         Some(self.live_pivots()?.ok()?.handle)
@@ -824,12 +824,12 @@ impl crate::Editor {
     /// the selection-based centre (ACS-01). Positive or Negative.
     pub fn symmetry_primary(&self, scene: &Scene) -> Side {
         let symmetry = self.active_symmetry();
-        if let Some(frame) = self.live.as_ref().and_then(|l| l.action_frame)
+        if let Some(frame) = self.session.live.as_ref().and_then(|l| l.action_frame)
             && scene.active().is_some()
         {
             return side_of_world(scene, symmetry, frame.center);
         }
-        let tool = self.live.as_ref().map_or(Tool::Move, |l| l.tool);
+        let tool = self.session.live.as_ref().map_or(Tool::Move, |l| l.tool);
         self.pivot_request(scene, tool)
             .primary()
             .unwrap_or(Side::Negative)
@@ -843,7 +843,7 @@ impl crate::Editor {
     /// several meshes, or nothing to show.
     pub fn symmetry_handle_centre(&self) -> Option<DVec3> {
         use crate::tool_card::HandleAnchor;
-        let live = self.live.as_ref()?;
+        let live = self.session.live.as_ref()?;
         let request = self.pivot_request(&live.base, live.tool);
         let symmetry = request.mesh_symmetry()?;
         let frame = live.action_frame?;

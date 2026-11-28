@@ -6,12 +6,20 @@ impl Editor {
     pub(crate) fn preview(&mut self, p: Parameters, apply: bool) -> Result<()> {
         // Bend's centre is the action centre: the frame follows `bend.base`
         // however it changed (panel fields, a click, undo inside the tool).
-        let bend_center =
-            (self.live.as_ref().is_some_and(|l| l.tool == Tool::Bend)).then_some(p.bend.base);
+        let bend_center = (self
+            .session
+            .live
+            .as_ref()
+            .is_some_and(|l| l.tool == Tool::Bend))
+        .then_some(p.bend.base);
         let result = self.preview_tool(p, apply);
         if result.is_ok()
             && let Some(center) = bend_center
-            && let Some(frame) = self.live.as_mut().and_then(|l| l.action_frame.as_mut())
+            && let Some(frame) = self
+                .session
+                .live
+                .as_mut()
+                .and_then(|l| l.action_frame.as_mut())
         {
             frame.center = center;
         }
@@ -23,7 +31,7 @@ impl Editor {
         self.constrain_preview()
     }
     pub(super) fn preview_tool(&mut self, p: Parameters, apply: bool) -> Result<()> {
-        let live = self.live.as_ref().ok_or("No active tool")?;
+        let live = self.session.live.as_ref().ok_or("No active tool")?;
         // Started from a UV view: the pipe runs on the map's UVs (UVT-130,
         // uv_pipe.rs).
         if p.uv.is_some() && crate::uv_pipe::runs_on_uvs(live.tool) {
@@ -45,7 +53,7 @@ impl Editor {
     /// One live tool preview on the primary mesh.
     pub(crate) fn preview_one(&mut self, mut p: Parameters, apply: bool) -> Result<()> {
         let inferred = self.inferred_mode();
-        let live = self.live.as_ref().ok_or("No active tool")?;
+        let live = self.session.live.as_ref().ok_or("No active tool")?;
         let mut scene = live.base.clone();
         // An inferred start: the tool and every layer see its own mode.
         if let Some(mode) = inferred {
@@ -81,7 +89,11 @@ impl Editor {
             }
             Tool::Box => {
                 if !apply && !live.applied && p.cube_shape() == live.params.cube_shape() {
-                    self.live.as_mut().ok_or("No active primitive")?.params = p;
+                    self.session
+                        .live
+                        .as_mut()
+                        .ok_or("No active primitive")?
+                        .params = p;
                     return Ok(());
                 }
                 // The Cube's one generator, shared with its MeshOp (#14),
@@ -882,7 +894,7 @@ impl Editor {
                         self.identities.current = ids.clone();
                         self.identities.observe(&self.scene)?;
                     }
-                    let l = self.live.as_mut().unwrap();
+                    let l = self.session.live.as_mut().unwrap();
                     l.identity_preview = None;
                     l.params = p;
                     l.applied = true;
@@ -964,7 +976,7 @@ impl Editor {
                     .current
                     .meshes
                     .insert(item.id, ids.clone().into());
-                self.live.as_mut().unwrap().identity_preview =
+                self.session.live.as_mut().unwrap().identity_preview =
                     Some((result.correspondence.clone(), ids));
                 scene.active_mut().unwrap().mesh = result.mesh.into();
                 // While the tool is live the moving caps stay selected (a
@@ -1309,7 +1321,7 @@ impl Editor {
             }
         }
         // A drag that only moves points skips re-checking every polygon.
-        if let Some(live) = &self.live {
+        if let Some(live) = &self.session.live {
             for item in &scene.items {
                 if let Some(before) = live.base.item(item.id) {
                     item.mesh.shared().prove_points_moved(before.mesh.shared());
@@ -1317,7 +1329,7 @@ impl Editor {
             }
         }
         // ACS-31: a dragged guide's twin follows in the preview too.
-        if let Some(live) = &self.live {
+        if let Some(live) = &self.session.live {
             crate::character_rig::sync(&mut scene, &live.base);
         }
         scene.validate()?;
@@ -1327,7 +1339,7 @@ impl Editor {
         if twist_note.is_some() {
             self.symmetry_note = twist_note;
         }
-        let l = self.live.as_mut().ok_or("No tool")?;
+        let l = self.session.live.as_mut().ok_or("No tool")?;
         l.params = p;
         l.preview_error = None;
         l.applied = true;

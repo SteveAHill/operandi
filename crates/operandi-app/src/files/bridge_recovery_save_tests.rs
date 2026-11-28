@@ -268,7 +268,7 @@ fn editor_differences(a: &Editor, b: &Editor) -> Vec<&'static str> {
         session.cone,
         scene,
         action_context,
-        live,
+        session.live,
         history.undo,
         history.redo,
         revision,

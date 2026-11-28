@@ -134,6 +134,7 @@ impl Operandi {
     /// The live Topology Pen options (defaults when the pen isn't up).
     pub(super) fn pen_options(&self) -> TopologyPenOptions {
         self.editor
+            .session
             .live
             .as_ref()
             .filter(|_| self.topology_pen_open())
@@ -747,7 +748,7 @@ impl Operandi {
                     self.activate_preset(&id);
                 }
                 // The Position field shows where the loop went.
-                if let Some(l) = self.editor.live.as_mut() {
+                if let Some(l) = self.editor.session.live.as_mut() {
                     l.params.topology_pen.position = t;
                 }
                 self.status = if ok {
@@ -819,6 +820,7 @@ impl Operandi {
         let o = self.pen_options();
         let Some(base) = self
             .editor
+            .session
             .live
             .as_ref()
             .and_then(|l| l.base.item(pick.grab.item))
@@ -883,7 +885,7 @@ impl Operandi {
     pub(super) fn pen_tweak_release(&mut self, pick: viewport::tweak_view::TweakPick) -> bool {
         let welds = std::mem::take(&mut self.pen.weld);
         self.pen.weld_at = None;
-        let Some(live) = self.editor.live.as_ref() else {
+        let Some(live) = self.editor.session.live.as_ref() else {
             return false;
         };
         let delta = live.params.delta;
@@ -895,7 +897,7 @@ impl Operandi {
                 .and_then(|i| pick.grab.element.points(&i.mesh).ok())
                 .unwrap_or_default();
             self.pen.last = Some((item, points));
-            if let Some(l) = self.editor.live.as_mut() {
+            if let Some(l) = self.editor.session.live.as_mut() {
                 l.params.topology_pen.offset = delta;
             }
             return false;
@@ -952,7 +954,7 @@ impl Operandi {
                 label: "Topology Pen Offset".into(),
             },
             "Topology Pen: moved by Offset",
-        ) && let Some(l) = self.editor.live.as_mut()
+        ) && let Some(l) = self.editor.session.live.as_mut()
         {
             l.params.topology_pen.offset = offset;
         }

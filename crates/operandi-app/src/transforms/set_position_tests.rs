@@ -79,12 +79,12 @@ fn parked_app() -> Operandi {
         }))
         .unwrap();
     a.editor.dispatch(Command::BeginExtrude).unwrap();
-    let mut p = a.editor.live.as_ref().unwrap().params.clone();
+    let mut p = a.editor.session.live.as_ref().unwrap().params.clone();
     p.extent = DVec3::Z * 0.5;
     a.editor.dispatch(Command::ConfigureExtrude(p)).unwrap();
     a.editor.dispatch(Command::Undo).unwrap();
     a.editor.dispatch(Command::Undo).unwrap();
-    assert!(a.editor.i2_can_redo() && a.editor.live.is_none());
+    assert!(a.editor.i2_can_redo() && a.editor.session.live.is_none());
     a
 }
 #[test]

@@ -88,7 +88,7 @@ fn rotate_about_the_shared_direction_turns_both_walls_the_same_way() {
             e.scene.selection.faces = walls.to_vec();
             let before = points(&e);
             e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
-            let mut p = e.live.as_ref().unwrap().params.clone();
+            let mut p = e.session.live.as_ref().unwrap().params.clone();
             p.delta = dvec3(25., 0., 0.);
             e.dispatch(Command::Preview(p)).unwrap();
             let during = points(&e);
@@ -205,7 +205,7 @@ fn mirror_image_slopes_turn_the_same_way_about_the_ridge() {
         );
         close(group.frame.basis.y_axis, -DVec3::Z, "Y along the ridge");
     }
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = dvec3(0., 20., 0.);
     e.dispatch(Command::Preview(p)).unwrap();
     let after = points(&e);
@@ -225,7 +225,7 @@ fn symmetry_x_still_mirrors_the_walls() {
     e.dispatch(Command::Symmetry(Symmetry::x())).unwrap();
     e.scene.selection.faces = vec![facing(&e, -DVec3::X), facing(&e, DVec3::X)];
     e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = dvec3(25., 0., 0.);
     e.dispatch(Command::Preview(p)).unwrap();
     for v in points(&e) {

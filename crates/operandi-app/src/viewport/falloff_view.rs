@@ -223,6 +223,7 @@ impl Operandi {
     pub(crate) fn falloff_hit(&self, pos: Pos2, r: Rect) -> Option<usize> {
         if self
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| !l.tool.card().layers.falloff)
@@ -255,7 +256,7 @@ impl Operandi {
         // a Size box (a small, separate target) is in reach too.
         let hit = nearest(false)?;
         if self.is_size_box(handles[hit].1)
-            || self.editor.live.is_none()
+            || self.editor.session.live.is_none()
             || self.handle_hit(pos, r).is_none()
         {
             return Some(hit);
@@ -291,6 +292,7 @@ impl Operandi {
         }
         if self
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| !l.tool.card().layers.falloff)
@@ -580,6 +582,7 @@ impl Operandi {
             )
             && self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .is_none_or(|l| l.tool.card().layers.falloff)

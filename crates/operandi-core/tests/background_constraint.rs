@@ -106,7 +106,7 @@ fn move_by(e: &mut Editor, delta: DVec3) {
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     e.dispatch(Command::Preview(Parameters {
         delta,
-        ..e.live.as_ref().unwrap().params.clone()
+        ..e.session.live.as_ref().unwrap().params.clone()
     }))
     .unwrap();
 }
@@ -186,11 +186,11 @@ fn turning_it_on_keeps_the_tool_and_reapplies() {
     move_by(&mut e, DVec3::new(0.1, 0., 0.));
     close(point(&e, fg, 0), DVec3::new(0.4, 0.2, 5.));
     on(&mut e, BackgroundConstraint::default());
-    assert_eq!(e.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+    assert_eq!(e.session.live.as_ref().map(|l| l.tool), Some(Tool::Move));
     close(point(&e, fg, 0), DVec3::new(0.4, 0.2, 0.));
     // Off again: the live tool moves the point freely.
     e.dispatch(Command::BackgroundConstraint(None)).unwrap();
-    assert_eq!(e.live.as_ref().map(|l| l.tool), Some(Tool::Move));
+    assert_eq!(e.session.live.as_ref().map(|l| l.tool), Some(Tool::Move));
     close(point(&e, fg, 0), DVec3::new(0.4, 0.2, 5.));
     // The options come back next time.
     assert_eq!(
@@ -238,7 +238,7 @@ fn element_move_slides_over_the_background() {
     });
     e.dispatch(Command::Activate(Tool::Tweak)).unwrap();
     for step in 1..=5 {
-        let mut p = e.live.as_ref().unwrap().params.clone();
+        let mut p = e.session.live.as_ref().unwrap().params.clone();
         p.tweak = Some(TweakGrab {
             item: fg,
             element: TweakElement::Vertex(0),
@@ -425,7 +425,7 @@ fn frame_cost(subd_level: Option<u8>) {
         let t = std::time::Instant::now();
         e.dispatch(Command::Preview(Parameters {
             delta: DVec3::new(0.001 * k as f64, 0., 0.),
-            ..e.live.as_ref().unwrap().params.clone()
+            ..e.session.live.as_ref().unwrap().params.clone()
         }))
         .unwrap();
         frames.push(t.elapsed().as_secs_f64() * 1e3);

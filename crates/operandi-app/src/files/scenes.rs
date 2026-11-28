@@ -187,7 +187,7 @@ impl Operandi {
     /// True while a tool, Pen draft or selection gesture holds the scene.
     pub(super) fn scene_busy(&self) -> bool {
         let e = &self.editor;
-        e.live.is_some()
+        e.session.live.is_some()
             || e.session.pen_draft.is_some()
             || e.session.solid_sketch.is_some()
             || e.session.bridge.is_some()

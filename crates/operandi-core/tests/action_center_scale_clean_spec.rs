@@ -53,7 +53,7 @@ fn run(c: &Value) -> std::result::Result<(), String> {
     .map_err(|x| format!("context refused: {x}"))?;
     e.dispatch(Command::Activate(Tool::Scale))
         .map_err(|x| format!("activate: {x}"))?;
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = DVec3::splat(0.5);
     e.dispatch(Command::Preview(p))
         .map_err(|x| format!("preview: {x}"))?;

@@ -148,7 +148,7 @@ fn without_symmetry_no_point_is_mirrored() {
             let groups = &pivots.items[0].groups;
             assert_eq!(groups.len(), clusters);
             let before = e.scene.active().unwrap().mesh.vertices.to_vec();
-            let mut p = e.live.as_ref().unwrap().params.clone();
+            let mut p = e.session.live.as_ref().unwrap().params.clone();
             p.delta = angles;
             e.dispatch(Command::Preview(p)).unwrap();
             let after = &e.scene.active().unwrap().mesh.vertices;
@@ -197,7 +197,7 @@ fn with_symmetry_x_the_minus_side_turns_the_other_way() {
     assert_eq!([role(2), role(3)], [Role::Seam; 2], "ridge");
     assert_eq!([role(4), role(5)], [Role::Primary; 2], "right eave");
     let before = e.scene.active().unwrap().mesh.vertices.to_vec();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     // The cluster's Y runs along the ridge, toward −Z.
     p.delta = dvec3(0., -30., 0.);
     e.dispatch(Command::Preview(p)).unwrap();

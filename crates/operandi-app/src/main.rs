@@ -2551,7 +2551,7 @@ impl Operandi {
                 | Command::ResetToolAttributes
         );
         let discard_draft = matches!(c, Command::Drop)
-            && self.editor.live.as_ref().is_some_and(|l| {
+            && self.editor.session.live.as_ref().is_some_and(|l| {
                 l.params
                     .radial
                     .is_some_and(|p| p.radius.min_element() == 0.)
@@ -2621,7 +2621,7 @@ impl Operandi {
                     || (completion.is_some() && self.editor.has_active_task())
                 {
                     self.clear_fields();
-                    if self.editor.live.is_none() {
+                    if self.editor.session.live.is_none() {
                         self.surface_mini_properties = false;
                     }
                 }
@@ -2653,6 +2653,7 @@ impl Operandi {
                     "Flat draft discarded; preceding geometry retained".into()
                 } else if self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     .is_some_and(|l| l.tool == Tool::Tweak)
@@ -2677,9 +2678,9 @@ impl Operandi {
         }
     }
     fn activate(&mut self, t: Tool) {
-        let before = self.editor.live.as_ref().map(|l| l.tool);
+        let before = self.editor.session.live.as_ref().map(|l| l.tool);
         self.run(Command::Activate(t));
-        if self.editor.live.as_ref().map(|l| l.tool) != before {
+        if self.editor.session.live.as_ref().map(|l| l.tool) != before {
             self.clear_fields();
         }
     }
@@ -2738,7 +2739,7 @@ impl Operandi {
                 overwrite: false,
             });
         } else if self.dirty()
-            || self.editor.live.is_some()
+            || self.editor.session.live.is_some()
             || self.editor.session.pen_draft.is_some()
             || self
                 .editor
@@ -3406,6 +3407,7 @@ impl Operandi {
         // cancels them, as its panel says ("Esc cancels").
         let create_escape_owner = self
             .editor
+            .session
             .live
             .as_ref()
             .is_some_and(|l| l.tool == Tool::VertexCreate);
@@ -3526,6 +3528,7 @@ impl Operandi {
         let smooth_shift_default_drop = (viewport_hovered
             && self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .is_some_and(|l| l.tool.is_smooth_shift()))
@@ -3562,7 +3565,7 @@ impl Operandi {
                         if (action != "Drop Cube"
                             || self
                                 .editor
-                                .live
+                                .session.live
                                 .as_ref()
                                 .is_some_and(|live| live.tool == Tool::Box))
                             && input::available(
@@ -3583,7 +3586,7 @@ impl Operandi {
                                 || (!scene_focused
                                     && self
                                         .editor
-                                        .live
+                                        .session.live
                                         .as_ref()
                                         .is_some_and(|l| l.tool.is_smooth_shift())))
                             && (!action.starts_with("Delete Item")
@@ -3764,6 +3767,7 @@ impl Operandi {
             }
             let Some(l) = self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .filter(|l| l.tool.is_smooth_shift())
@@ -3928,6 +3932,7 @@ impl Operandi {
         if self.surface_mini_properties
             && self
                 .editor
+                .session
                 .live
                 .as_ref()
                 .is_some_and(|l| l.tool.is_smooth_shift())

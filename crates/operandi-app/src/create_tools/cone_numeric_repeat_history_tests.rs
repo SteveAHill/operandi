@@ -174,7 +174,7 @@ fn state(e: &Editor) -> State {
         scene: e.scene.clone(),
         cone: e.session.cone.clone(),
         preset: e.presets.get::<operandi_core::ConePreset>().clone(),
-        live: e.live.is_some(),
+        live: e.session.live.is_some(),
         undo: labels(&e.history.undo),
         redo: labels(&e.history.redo),
     }

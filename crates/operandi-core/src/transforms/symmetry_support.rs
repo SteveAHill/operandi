@@ -48,6 +48,7 @@ impl Editor {
         }
         self.symmetry.axis?;
         let fixing = self
+            .session
             .live
             .as_ref()
             .is_none_or(|l| l.tool == crate::Tool::SymmetryTool);
@@ -73,7 +74,7 @@ impl Editor {
     /// status bar warns and the viewport marks them). The Symmetry Tool
     /// keeps its own list.
     pub(crate) fn note_unpaired_points(&mut self) {
-        let Some(live) = &self.live else {
+        let Some(live) = &self.session.live else {
             self.symmetry_unpaired.clear();
             return;
         };

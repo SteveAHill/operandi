@@ -1460,7 +1460,7 @@ fn lines_of(mesh: &Mesh) -> Mesh {
 
 impl crate::Editor {
     pub(crate) fn subdivision_ready(&self, what: &str) -> Result<()> {
-        if self.live.is_some()
+        if self.session.live.is_some()
             || self.session.bridge.is_some()
             || self.session.spike.is_some()
             || self.session.cone.is_some()

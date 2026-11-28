@@ -136,7 +136,7 @@ fn tool_drags_record_at_most_one_undo_step(part: usize) {
     let mut failures = Vec::new();
     for tool in Tool::ALL.iter().copied().skip(part).step_by(4) {
         let (mut a, ctx) = app_with(tool);
-        if a.editor.live.as_ref().map(|l| l.tool) != Some(tool) {
+        if a.editor.session.live.as_ref().map(|l| l.tool) != Some(tool) {
             // Tools that need a setup this grid doesn't give (a bevel's
             // rows, a sketch) are covered by their own tests.
             continue;

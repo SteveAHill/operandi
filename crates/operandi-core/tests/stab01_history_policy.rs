@@ -40,7 +40,7 @@ fn moved(e: &mut Editor) {
     }))
     .unwrap();
     e.dispatch(Command::BeginExtrude).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.extent = DVec3::Z * 0.5;
     e.dispatch(Command::Preview(p)).unwrap();
 }
@@ -133,11 +133,11 @@ fn armed_category_matrix_preserves_empty_cleanup_and_redo_refusal() {
             HistoryRefusal::LiveTool(HistoryAction::Redo),
         );
         e.dispatch(Command::Undo).unwrap();
-        assert!(e.live.is_none());
+        assert!(e.session.live.is_none());
         assert_eq!(e.scene, editor().scene);
         // Redo opens the tool again; leaving it keeps the older Redo.
         e.dispatch(Command::Redo).unwrap();
-        assert_eq!(e.live.as_ref().map(|l| l.tool), Some(tool));
+        assert_eq!(e.session.live.as_ref().map(|l| l.tool), Some(tool));
         e.dispatch(Command::Cancel).unwrap();
         e.dispatch(Command::Redo).unwrap();
         assert_eq!(e.scene.active().unwrap().name, "renamed");
@@ -172,7 +172,7 @@ fn armed_category_matrix_preserves_empty_cleanup_and_redo_refusal() {
             None,
         );
         e.dispatch(Command::Undo).unwrap();
-        assert!(e.live.is_none());
+        assert!(e.session.live.is_none());
         assert_eq!(e.scene, scene);
         query(
             &e,
@@ -182,7 +182,7 @@ fn armed_category_matrix_preserves_empty_cleanup_and_redo_refusal() {
             Some(tool.label()),
         );
         e.dispatch(Command::Redo).unwrap();
-        assert_eq!(e.live.as_ref().map(|l| l.tool), Some(tool));
+        assert_eq!(e.session.live.as_ref().map(|l| l.tool), Some(tool));
         assert_eq!(e.scene, scene);
     }
 }
@@ -341,7 +341,7 @@ fn i2_local_states_and_parked_completed_precedence() {
         Some("Begin Extrude"),
     );
     e.dispatch(Command::Redo).unwrap();
-    assert_eq!(e.live.as_ref().unwrap().tool, Tool::Extrude);
+    assert_eq!(e.session.live.as_ref().unwrap().tool, Tool::Extrude);
     // Only Begin was resumed: one Undo parks it without undoing the document.
     e.dispatch(Command::Undo).unwrap();
     // A cursor above a retained anchor uses ordinary history, not hidden local Redo.
@@ -383,12 +383,12 @@ fn local_redo_context_basis_and_owner_changes_revalidate_atomically() {
     e.selection_start = None;
     e.dispatch(Command::Activate(Tool::Move)).unwrap();
     assert!(e.history_eligibility(HistoryAction::Redo).is_available());
-    e.live.as_mut().unwrap().preview_error = Some("invalid incoming preview".into());
+    e.session.live.as_mut().unwrap().preview_error = Some("invalid incoming preview".into());
     refused(&mut e, HistoryAction::Redo, HistoryRefusal::ResumePreview);
     let mut e = editor();
     moved(&mut e);
     e.dispatch(Command::Undo).unwrap();
-    e.live.as_mut().unwrap().action_frame = None;
+    e.session.live.as_mut().unwrap().action_frame = None;
     let reason = match e.history_eligibility(HistoryAction::Redo).availability {
         HistoryAvailability::Refused(reason @ HistoryRefusal::ActiveExtrudeSource(_)) => reason,
         other => panic!("unexpected {other:?}"),

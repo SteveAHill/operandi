@@ -32,7 +32,7 @@ impl Operandi {
     /// The open, drawn Cone/Ellipsoid/Torus/Capsule/Text/Arc/Teapot
     /// session's shape.
     pub(crate) fn session_shape(&self) -> Option<SessionShape> {
-        if self.editor.live.is_some() || self.session_flat_base().is_some() {
+        if self.editor.session.live.is_some() || self.session_flat_base().is_some() {
             return None;
         }
         let shape = |position, radius: Option<DVec3>, from_center| {

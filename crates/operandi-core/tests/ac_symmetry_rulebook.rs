@@ -193,7 +193,7 @@ fn same_set(got: &[DVec3], want: &[DVec3], tolerance: f64) -> std::result::Resul
 
 /// The typed transform of a Move/Rotate/Scale case.
 fn transform_params(e: &Editor, tool: Tool, values: &Value) -> Parameters {
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = match tool {
         Tool::Move => dvec3(
             num(values, "Move X", 0.),
@@ -293,18 +293,18 @@ fn run_typed(case: &Value) -> std::result::Result<(), String> {
             e.dispatch(Command::Preview(p)).map_err(|x| x.to_string())?;
         }
         Tool::Bevel => {
-            let mut p = e.live.as_ref().unwrap().params.clone();
+            let mut p = e.session.live.as_ref().unwrap().params.clone();
             p.shift = num(values, "Shift", 0.);
             p.inset = num(values, "Inset", 0.);
             e.dispatch(Command::Preview(p)).map_err(|x| x.to_string())?;
         }
         Tool::Extrude => {
-            let mut p = e.live.as_ref().unwrap().params.clone();
+            let mut p = e.session.live.as_ref().unwrap().params.clone();
             p.extent = dvec3(num(values, "Shift X", 0.), num(values, "Shift Y", 0.), 0.);
             e.dispatch(Command::Preview(p)).map_err(|x| x.to_string())?;
         }
         _ => {
-            let mut p = e.live.as_ref().unwrap().params.clone();
+            let mut p = e.session.live.as_ref().unwrap().params.clone();
             p.smooth_shift.offset = num(values, "Shift", 0.);
             p.smooth_shift.scale = num(values, "Scale", 1.);
             e.dispatch(Command::Preview(p)).map_err(|x| x.to_string())?;
@@ -395,7 +395,14 @@ fn run_hands_on(case: &Value) -> std::result::Result<(), String> {
             .map_err(|x| x.to_string())?;
     }
     if let Some(want) = shown {
-        let got = e.live.as_ref().unwrap().action_frame.unwrap().center;
+        let got = e
+            .session
+            .live
+            .as_ref()
+            .unwrap()
+            .action_frame
+            .unwrap()
+            .center;
         if got.distance(want) > 1e-3 {
             return Err(format!("centre {got} want {want}"));
         }
@@ -418,7 +425,7 @@ fn run_local(case: &Value) -> std::result::Result<(), String> {
     .map_err(|x| x.to_string())?;
     e.dispatch(Command::Activate(tool))
         .map_err(|x| x.to_string())?;
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.delta = if id.ends_with("dragX") {
         dvec3(6.08, 1., 1.)
     } else if id.ends_with("typedRY30") {
@@ -571,7 +578,7 @@ fn smooth_shift_scales_each_side_about_its_own_pivot() {
     let mut e = pair_editor(Symmetry::x());
     let before = e.scene.clone();
     e.dispatch(Command::Activate(Tool::SmoothShift)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.smooth_shift.scale = 0.5;
     e.dispatch(Command::Preview(p.clone())).unwrap();
     e.dispatch(Command::Cancel).unwrap();
@@ -629,7 +636,14 @@ fn selection_border_takes_the_plus_halfs_border() {
     .unwrap();
     e.dispatch(Command::Symmetry(Symmetry::x())).unwrap();
     e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
-    let c = e.live.as_ref().unwrap().action_frame.unwrap().center;
+    let c = e
+        .session
+        .live
+        .as_ref()
+        .unwrap()
+        .action_frame
+        .unwrap()
+        .center;
     // The + half's border points: x = 1 and 2 on both rows.
     assert!(c.distance(dvec3(1.5, 1., 0.5)) < 1e-9, "{c}");
 }
@@ -645,7 +659,7 @@ fn a_placed_centre_picks_the_extrude_side() {
         e.dispatch(Command::Activate(Tool::Extrude)).unwrap();
         e.dispatch(Command::SetActionCenter(dvec3(at, 0.25, 0.5)))
             .unwrap();
-        let mut p = e.live.as_ref().unwrap().params.clone();
+        let mut p = e.session.live.as_ref().unwrap().params.clone();
         p.extent = dvec3(0.3, 0.2, 0.);
         e.dispatch(Command::Preview(p)).unwrap();
         e.dispatch(Command::Drop).unwrap();

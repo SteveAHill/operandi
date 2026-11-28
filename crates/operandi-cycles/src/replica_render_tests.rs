@@ -15,7 +15,7 @@ fn replicator_copies_render_as_shared_meshes() {
             .into();
     e.dispatch(Command::Mode(Mode::Item)).unwrap();
     e.dispatch(Command::Activate(Tool::Array)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     p.duplicate.copier = Some(operandi_core::duplicate_copier::Copier::Replica);
     p.duplicate.array.count = [3, 1, 2];
     p.duplicate.placed = true;

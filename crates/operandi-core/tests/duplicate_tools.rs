@@ -80,7 +80,7 @@ fn mesh(e: &Editor) -> &Mesh {
     &e.scene.active().unwrap().mesh
 }
 fn params(e: &Editor) -> Parameters {
-    e.live.as_ref().unwrap().params.clone()
+    e.session.live.as_ref().unwrap().params.clone()
 }
 /// Activate `tool`, change its settings with `set`, place it (the first
 /// click or Apply) and Drop.

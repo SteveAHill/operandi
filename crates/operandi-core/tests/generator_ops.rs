@@ -521,7 +521,7 @@ fn sc_the_scatter_tool_makes_its_copies_in_one_undo_step() {
     let mut e = editor(cube(0.1), Mode::Polygon);
     let steps = e.history.undo.len();
     e.dispatch(Command::Activate(Tool::ScatterClone)).unwrap();
-    let mut p = e.live.as_ref().unwrap().params.clone();
+    let mut p = e.session.live.as_ref().unwrap().params.clone();
     assert_eq!(p.duplicate.scatter.generator.count, 8);
     p.duplicate.placed = true;
     p.duplicate.scatter.generator.count = 5;

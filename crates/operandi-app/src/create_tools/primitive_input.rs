@@ -128,6 +128,7 @@ impl Operandi {
                 }
                 if self
                     .editor
+                    .session
                     .live
                     .as_ref()
                     .is_some_and(|live| live.params != params)
@@ -391,7 +392,12 @@ impl Operandi {
         }
         self.editor = staged;
         self.clear_fields();
-        let next = self.editor.live.clone().expect("Activate opened the tool");
+        let next = self
+            .editor
+            .session
+            .live
+            .clone()
+            .expect("Activate opened the tool");
         self.begin_primitive(next, pos, r, Modifiers::NONE)
     }
     pub(super) fn begin_primitive(
@@ -422,7 +428,12 @@ impl Operandi {
             }
             self.editor = staged;
             self.clear_fields();
-            let next = self.editor.live.clone().expect("Activate opened the tool");
+            let next = self
+                .editor
+                .session
+                .live
+                .clone()
+                .expect("Activate opened the tool");
             let modifiers = Modifiers {
                 shift: false,
                 ..modifiers
