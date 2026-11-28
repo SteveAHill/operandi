@@ -4256,6 +4256,14 @@ picks the spec leaves open, all provisional:
   the back. Built: a Move setting **Move Back Faces** (off by default) that
   also grabs points facing away inside the tip. Open: does the reference
   Move grab back faces, and should the default be on? Needs a hands-on check.
+- **SCQ-12 Push, Smooth and Move forms** (2026-11-27). *Answered by spec
+  BEHAVIOR-SCULPT-PUSH-SMOOTH-MOVE (SPM-01..30), built as written:* Push =
+  Inflate's rows with Normal Mode (Average) and no Paint Mode; Smooth =
+  Sculpt Mode, Offset Amount, greyed Soft Filter; Move = Sculpt Mode, Move
+  Mode, Move Back Faces, Offset Amount, Smooth Amount, greyed Rigid UVs.
+  The four list Sculpt Mode's three choices and Curve Constraint as None,
+  Background 3D, Background 2D. Lock Borders / Lock Corners sit side by
+  side on one row (SPM-01), a UIC-115 departure Jason approved 2026-11-28.
 - **PH-Q37 Handles on Cone, Ellipsoid, Torus, Capsule, Text** (#37; Q-CN-06,
   NPR-Q01 leave them open). Built (provisional): once drawn, move arrows at
   the centre and a radius square at each end of each axis; Ellipsoid and
