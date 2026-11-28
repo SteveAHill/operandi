@@ -792,8 +792,11 @@ pub mod selection_axes;
 pub mod tool_preset;
 #[path = "tools/tool_reset.rs"]
 mod tool_reset;
+#[path = "tools/tool_session.rs"]
+mod tool_session;
 pub use preset_store::{PresetKey, ToolPresets};
 pub use tool_preset::{PresetRow, PresetSession};
+pub use tool_session::ToolSession;
 #[path = "scene_items/scene_index.rs"]
 pub mod scene_index;
 #[path = "geometry/shared.rs"]

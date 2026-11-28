@@ -81,7 +81,7 @@ fn a_live_tools_tweak_history_stays_with_its_scene() {
     use operandi_core::{HistoryRequest, Parameters};
     fn drag(a: &mut Operandi, delta: DVec3) {
         let base = a.editor.live.as_ref().unwrap().params.clone();
-        a.editor.tweak_held = true;
+        a.editor.session.tweak_held = true;
         for t in [0.5, 1.] {
             a.editor
                 .dispatch(Command::Preview(Parameters {

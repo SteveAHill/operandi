@@ -82,7 +82,7 @@ fn app_with(tool: Tool) -> (Operandi, Context) {
 
 /// Steps the document history and the live tool's tweaks hold now.
 fn steps(a: &Operandi) -> usize {
-    a.editor.history.undo.len() + a.editor.tweaks.undo_steps()
+    a.editor.history.undo.len() + a.editor.session.tweaks.undo_steps()
 }
 
 /// Press at `from`, move ten times, release; the steps it recorded.

@@ -138,6 +138,7 @@ fn ctrl_constrains_move_and_steps_rotate() {
     // step's.
     let step = |a: &Operandi| {
         a.editor
+            .session
             .last_transform_step
             .as_ref()
             .unwrap()

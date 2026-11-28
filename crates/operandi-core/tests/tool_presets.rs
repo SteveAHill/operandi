@@ -47,7 +47,7 @@ fn tp10_12_soft_move_gives_back_the_users_falloff_or_none() {
         assert_ne!(e.spatial_falloff, user);
         e.dispatch(Command::Drop).unwrap();
         assert_eq!(e.spatial_falloff, user);
-        assert!(e.preset.is_none());
+        assert!(e.session.preset.is_none());
     }
 }
 
@@ -150,7 +150,7 @@ fn tp01_old_names_and_ids_start_the_same_row() {
         .unwrap();
     b.dispatch(Command::ActivateDeform(DeformPreset::SoftMove))
         .unwrap();
-    assert_eq!(a.preset, b.preset);
+    assert_eq!(a.session.preset, b.session.preset);
     assert_eq!(a.spatial_falloff, b.spatial_falloff);
     assert!(
         Editor::default()

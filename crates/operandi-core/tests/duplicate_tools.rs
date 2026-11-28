@@ -89,7 +89,7 @@ fn run(e: &mut Editor, tool: Tool, set: impl FnOnce(&mut DuplicateParameters)) {
     let mut p = params(e);
     set(&mut p.duplicate);
     p.duplicate.placed = true;
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
     e.dispatch(Command::Drop).unwrap();

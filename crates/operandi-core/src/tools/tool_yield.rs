@@ -25,7 +25,10 @@ impl Editor {
     /// gesture held, a preset row (its Drop restores remembered context),
     /// or a Pen or Solid Sketch draft (drafts finish or cancel themselves).
     pub(crate) fn restart_command(&self) -> Option<Command> {
-        if self.tweak_held || self.selection_start.is_some() || self.preset.is_some() {
+        if self.session.tweak_held
+            || self.selection_start.is_some()
+            || self.session.preset.is_some()
+        {
             return None;
         }
         Some(match self.active_task()? {

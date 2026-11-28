@@ -37,7 +37,7 @@ impl Editor {
     }
     pub(super) fn handle_activate_native(&mut self, t: Tool) -> Result<AfterCommand> {
         // RPT-08: a new tool session starts with nothing to repeat.
-        self.last_transform_step = None;
+        self.session.last_transform_step = None;
         if self.spatial_falloff.is_some() && !t.card().layers.falloff {
             return Err(crate::tool_card::falloff_refusal());
         }
@@ -481,6 +481,7 @@ impl Editor {
             // A copier comes only from the open preset row (DX-20/30), so a
             // plain button never inherits the last row's.
             duplicate.copier = self
+                .session
                 .preset
                 .as_ref()
                 .filter(|p| p.tool == t)

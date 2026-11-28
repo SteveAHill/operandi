@@ -695,7 +695,7 @@ impl crate::Editor {
         };
         // A preset's Linear / Radial falloff is fitted to the selection in
         // the space the tool now works in (UVT-132).
-        let falloff = match self.preset.as_ref() {
+        let falloff = match self.session.preset.as_ref() {
             Some(preset) if preset.previous_falloff.is_some() => {
                 preset.row().fitted_falloff(&fit_scene)?
             }

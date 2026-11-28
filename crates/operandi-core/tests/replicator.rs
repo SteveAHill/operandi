@@ -33,7 +33,7 @@ fn run(e: &mut Editor, tool: Tool, set: impl FnOnce(&mut DuplicateParameters)) -
     p.duplicate.copier = Some(operandi_core::duplicate_copier::Copier::Replica);
     set(&mut p.duplicate);
     p.duplicate.placed = true;
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     let r = e.dispatch(Command::Preview(p));
     e.end_tweak();
     e.dispatch(Command::Drop)?;

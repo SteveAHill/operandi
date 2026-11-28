@@ -71,7 +71,7 @@ fn preview(e: &mut Editor, p: Parameters) {
 }
 /// One held gesture: every preview joins one tweak.
 fn gesture(e: &mut Editor, p: Parameters) {
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
 }

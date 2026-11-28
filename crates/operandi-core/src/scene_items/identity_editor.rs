@@ -112,7 +112,7 @@ impl Editor {
     ) -> Result<()> {
         // UIC-307: a top-level command an open tool would refuse settles
         // the tool, runs, and starts the tool again (tool_yield.rs).
-        if self.dispatch_depth == 0
+        if self.session.dispatch_depth == 0
             && let Some(restart) = self.restart_command()
         {
             let retry = cmd.clone();
@@ -146,17 +146,17 @@ impl Editor {
         // would make it live or change the mesh; picking a tool flagged
         // off arms it. Only for top-level commands, so staged one-shots
         // and the tools' own inner commands run as before.
-        let top = self.dispatch_depth == 0;
+        let top = self.session.dispatch_depth == 0;
         if top && let Some(result) = self.armed_command(&cmd) {
             return result;
         }
         let arms = top && crate::click_start::may_arm(&cmd);
-        self.dispatch_depth += 1;
+        self.session.dispatch_depth += 1;
         let task_before = self.active_task();
         let unadopted = self.adopt_last_mesh_for(&cmd);
         let adopted = unadopted.as_ref().map(|_| self.scene.clone());
         let result = self.dispatch_selected(cmd, report);
-        self.dispatch_depth = self.dispatch_depth.saturating_sub(1);
+        self.session.dispatch_depth = self.session.dispatch_depth.saturating_sub(1);
         if arms && result.is_ok() {
             self.arm_if_flagged();
         }

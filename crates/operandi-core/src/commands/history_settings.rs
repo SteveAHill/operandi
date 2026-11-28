@@ -67,7 +67,7 @@ impl Editor {
             .as_ref()
             .is_some_and(|l| l.tool.is_transform() && !self.transform_change_pending())
             // Drags kept as tweaks aren't recorded until Drop.
-            && !self.tweaks.can_undo();
+            && !self.session.tweaks.can_undo();
         self.selection_start.is_none()
             && (!self.has_active_task() || (armed_transform && self.active_task_is_live()))
     }

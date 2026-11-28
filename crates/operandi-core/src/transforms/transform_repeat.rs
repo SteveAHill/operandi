@@ -32,6 +32,7 @@ impl Editor {
             return None;
         }
         let step = self
+            .session
             .last_transform_step
             .as_deref()
             .filter(|s| s.tool == live.tool && s.after == self.scene)?;

@@ -1022,7 +1022,11 @@ impl Editor {
             // Automatic centre and Auto axis are in place for the life of
             // the tool and go back on drop (TP-12).
             Command::Activate(Tool::Bend)
-                if !self.preset.as_ref().is_some_and(|p| p.tool == Tool::Bend) =>
+                if !self
+                    .session
+                    .preset
+                    .as_ref()
+                    .is_some_and(|p| p.tool == Tool::Bend) =>
             {
                 self.activate_preset(crate::tool_preset::BEND_ROW)?;
                 // BN-47: a remembered Angle shows on the mesh at once, so
@@ -1080,7 +1084,7 @@ impl Editor {
                 }
             }
             Command::EndSelection { cancel } => {
-                let partners = std::mem::take(&mut self.gesture_partners);
+                let partners = std::mem::take(&mut self.session.gesture_partners);
                 if !cancel {
                     self.scene.partners_last(&partners);
                 }
@@ -1111,7 +1115,7 @@ impl Editor {
                 {
                     self.scene.select_component(item, mirror, false, remove)?;
                     if self.selection_start.is_some() && !remove {
-                        self.gesture_partners.push((item, mirror));
+                        self.session.gesture_partners.push((item, mirror));
                     }
                 }
                 if let Some(before) = before

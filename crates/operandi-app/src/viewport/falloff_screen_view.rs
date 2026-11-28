@@ -340,7 +340,7 @@ impl Operandi {
 
     /// Whether the open tool preset is Soft Drag (Move + Screen falloff).
     pub(crate) fn soft_drag_open(&self) -> bool {
-        self.editor.preset.as_ref().is_some_and(|p| {
+        self.editor.session.preset.as_ref().is_some_and(|p| {
             p.row().falloff_kind() == Some(operandi_core::tool_preset::FalloffKind::Screen)
         })
     }

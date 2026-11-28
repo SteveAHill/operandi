@@ -6,7 +6,7 @@ impl Operandi {
     /// Axis Rotate (TC-30): the one ring it shows, the work plane's normal
     /// (plane 0 is XZ, 1 YZ, 2 XY).
     pub(crate) fn axis_rotate_axis(&self) -> Option<usize> {
-        let p = self.editor.preset.as_ref()?;
+        let p = self.editor.session.preset.as_ref()?;
         if !p.row().actor.single_ring {
             return None;
         }

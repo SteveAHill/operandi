@@ -67,7 +67,7 @@ fn params(e: &Editor) -> Parameters {
     e.live.as_ref().unwrap().params.clone()
 }
 fn gesture(e: &mut Editor, p: Parameters) {
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
 }

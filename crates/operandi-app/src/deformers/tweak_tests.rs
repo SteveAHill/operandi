@@ -173,7 +173,7 @@ fn dragging_a_point_moves_only_it_and_keeps_it_under_the_pointer() {
     assert_eq!(after.selection, before.selection);
     // TWK-24: one undo step (a tweak of the session, Jason 2026-11-04),
     // and the tool stays live.
-    assert_eq!(a.editor.tweaks.undo_steps(), 1);
+    assert_eq!(a.editor.session.tweaks.undo_steps(), 1);
     assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Tweak);
 }
 
@@ -206,7 +206,7 @@ fn edges_and_polygons_move_all_their_points_by_the_same_offset() {
             assert!((*now - expected).length() < 1e-6, "{press:?} point {i}");
         }
         assert_eq!(a.editor.history.undo.len(), steps, "{press:?}");
-        assert!(a.editor.tweaks.can_undo(), "{press:?}");
+        assert!(a.editor.session.tweaks.can_undo(), "{press:?}");
     }
 }
 
@@ -223,7 +223,7 @@ fn each_drag_is_its_own_undo_step_and_undo_keeps_the_tool() {
     drag(&mut a, &ctx, p2, p2 + vec2(0., 50.));
     // Each drag is a tweak of the Tweak session (Jason, 2026-11-04).
     assert_eq!(a.editor.history.undo.len(), steps);
-    assert_eq!(a.editor.tweaks.undo_steps(), 2);
+    assert_eq!(a.editor.session.tweaks.undo_steps(), 2);
     a.run(Command::Undo);
     assert!(a.editor.scene == first, "{}", a.status);
     assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(Tool::Tweak));
@@ -233,7 +233,7 @@ fn each_drag_is_its_own_undo_step_and_undo_keeps_the_tool() {
     assert!(a.editor.scene == first);
     // The tool still works after Undo/Redo, and Drop makes one step.
     drag(&mut a, &ctx, p2, p2 + vec2(0., 50.));
-    assert_eq!(a.editor.tweaks.undo_steps(), 2);
+    assert_eq!(a.editor.session.tweaks.undo_steps(), 2);
     a.run(Command::Drop);
     assert_eq!(a.editor.history.undo.len(), steps + 1);
 }
@@ -390,7 +390,10 @@ fn symmetry_moves_the_mirror_counterpart_too() {
             );
         }
         assert_eq!(a.editor.history.undo.len(), steps, "{press:?}");
-        assert!(a.editor.tweaks.can_undo(), "{press:?}: one undo step");
+        assert!(
+            a.editor.session.tweaks.can_undo(),
+            "{press:?}: one undo step"
+        );
     }
 }
 
@@ -481,7 +484,7 @@ fn range_spreads_a_drag_and_one_undo_restores_every_point() {
         a.editor.live.as_ref().unwrap().params.tweak_options.range,
         1.5
     );
-    assert!(a.editor.tweaks.can_undo());
+    assert!(a.editor.session.tweaks.can_undo());
     a.run(Command::Undo);
     assert_eq!(a.editor.scene.active().unwrap().mesh.vertices, start);
     assert_eq!(a.editor.scene.selection, before.selection);
@@ -811,13 +814,13 @@ fn one_right_drag_is_one_undo_step_and_the_tool_stays() {
     let (mut a, ctx) = grid_app(View::Front);
     a.activate(Tool::Tweak);
     set_options(&mut a, |o| o.range = 0.5);
-    let steps = a.editor.tweaks.undo_steps();
+    let steps = a.editor.session.tweaks.undo_steps();
     let from = screen(&a, DVec3::ZERO);
     let path: Vec<Pos2> = (1..=8).map(|k| from + vec2(10. * k as f32, 0.)).collect();
     right_drag(&mut a, &ctx, from, &path, Modifiers::NONE);
     let grown = range(&a);
     assert!(grown > 0.5);
-    assert_eq!(a.editor.tweaks.undo_steps(), steps + 1);
+    assert_eq!(a.editor.session.tweaks.undo_steps(), steps + 1);
     a.run(Command::Undo);
     assert_eq!(range(&a), 0.5);
     assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Tweak);
@@ -971,7 +974,7 @@ fn symmetry_toggled_with_move_open_applies_live() {
     assert!((left - right).length() < 1e-6, "{left:?} vs {right:?}");
     // Each drag is its own step inside the tool; dropped, the session is one.
     assert_eq!(
-        a.editor.tweaks.undo_steps(),
+        a.editor.session.tweaks.undo_steps(),
         2,
         "one tweak per drag, none per toggle"
     );

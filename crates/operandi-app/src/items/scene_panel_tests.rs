@@ -469,7 +469,7 @@ fn free_center_handle_and_click_away_center() {
     let center = live.action_frame.unwrap().center;
     let (projected, _) = a.camera.project(center, r).unwrap();
     assert!(projected.distance(away) < 1., "{projected:?} vs {away:?}");
-    assert!(a.editor.tweaks.can_undo(), "{}", a.status);
+    assert!(a.editor.session.tweaks.can_undo(), "{}", a.status);
     assert_ne!(a.editor.history.undo.last().unwrap().before, a.editor.scene);
 }
 

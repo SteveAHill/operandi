@@ -2326,7 +2326,7 @@ impl Operandi {
     /// `editor.dispatch`); no tool or button sets this on its own.
     fn hold_pointer(&mut self) {
         self.pointer_held = true;
-        self.editor.tweak_held = true;
+        self.editor.session.tweak_held = true;
     }
 
     /// The press is over: the next change starts a new step.
@@ -2574,7 +2574,7 @@ impl Operandi {
             // A held viewport drag or field scrub makes one tweak of the
             // active tool, however many previews it sends (mid-tool undo).
             let held = std::mem::replace(
-                &mut self.editor.tweak_held,
+                &mut self.editor.session.tweak_held,
                 self.pointer_held || self.scrub.is_some(),
             );
             // A colour field's drag or pick is one undo step across frames
@@ -2591,7 +2591,7 @@ impl Operandi {
             ));
             let result = self.editor.dispatch(c).map(|()| None);
             self.editor.history.undo_fold = outer;
-            self.editor.tweak_held = held;
+            self.editor.session.tweak_held = held;
             result
         };
         match completion {

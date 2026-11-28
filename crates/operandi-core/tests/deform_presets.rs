@@ -96,7 +96,7 @@ fn drop_names_the_step_after_the_preset_and_gives_back_the_users_falloff() {
     assert_eq!(e.history.undo.last().unwrap().label, "Taper");
     assert_eq!(e.spatial_falloff, Some(mine.into()));
     assert_eq!(e.linear_falloff_preset, linear_before);
-    assert!(e.preset.is_none());
+    assert!(e.session.preset.is_none());
     // One undo removes the whole action.
     let start = column();
     e.dispatch(Command::Undo).unwrap();
@@ -185,7 +185,7 @@ fn presets_refuse_item_mode_and_toggle_off_from_their_own_button() {
         e.dispatch(Command::ActivateDeform(DeformPreset::Twist))
             .is_err()
     );
-    assert!(e.live.is_none() && e.preset.is_none());
+    assert!(e.live.is_none() && e.session.preset.is_none());
     assert_eq!(e.scene, before.scene);
     let mut e = column();
     e.dispatch(Command::ActivateDeform(DeformPreset::Twist))
@@ -201,7 +201,7 @@ fn presets_refuse_item_mode_and_toggle_off_from_their_own_button() {
     assert!(e.live.is_none() && e.spatial_falloff.is_none());
     // Plain Rotate after a preset has no falloff.
     e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
-    assert!(e.spatial_falloff.is_none() && e.preset.is_none());
+    assert!(e.spatial_falloff.is_none() && e.session.preset.is_none());
     // Switching from a preset to plain Rotate drops the preset first.
     e.dispatch(Command::Drop).unwrap();
     e.dispatch(Command::ActivateDeform(DeformPreset::Twist))
@@ -218,7 +218,7 @@ fn undo_past_the_presets_start_closes_it_and_clears_its_falloff() {
         .unwrap();
     e.dispatch(Command::Undo).unwrap();
     assert!(e.live.is_none());
-    assert!(e.spatial_falloff.is_none() && e.preset.is_none());
+    assert!(e.spatial_falloff.is_none() && e.session.preset.is_none());
 }
 
 #[test]

@@ -62,7 +62,7 @@ fn script_ids_and_phrases_start_the_same_row_as_the_button() {
         let mut a = box_in(Mode::Vertex);
         a.execute(line);
         assert_eq!(
-            a.editor.preset, button.editor.preset,
+            a.editor.session.preset, button.editor.session.preset,
             "{line}: {}",
             a.status
         );
@@ -76,7 +76,7 @@ fn script_ids_and_phrases_start_the_same_row_as_the_button() {
     a.execute("tool.set Flare on");
     assert_eq!(a.editor.live_tool_label(), Some("Flare"), "{}", a.status);
     a.execute("tool.set Flare off");
-    assert!(a.editor.live.is_none() && a.editor.preset.is_none());
+    assert!(a.editor.live.is_none() && a.editor.session.preset.is_none());
 }
 
 /// Flare is built: the Bulge flyout's Flare entry starts it, and a second

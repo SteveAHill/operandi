@@ -33,7 +33,7 @@ fn can(e: &Editor, action: HistoryAction) -> bool {
 }
 /// A held drag: every preview joins one tweak until release.
 fn held(e: &mut Editor, previews: impl IntoIterator<Item = Command>) {
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     for c in previews {
         e.dispatch(c).unwrap();
     }

@@ -117,7 +117,7 @@ fn draw(e: &mut Editor, t: T) {
                     }
                 }
             }
-            e.tweak_held = true;
+            e.session.tweak_held = true;
             e.dispatch(Command::Preview(p)).unwrap();
             e.end_tweak();
         }
@@ -176,7 +176,7 @@ fn cone_drop_keeps_the_drawn_cone_and_one_undo_removes_it() {
     let steps = e.history.undo.len();
     e.dispatch(Command::ArmCone).unwrap();
     // The viewport draw sends ConfigureCone frames during a held drag.
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     for r in [0.2, 0.4, 0.6] {
         e.dispatch(Command::ConfigureCone(ConeParameters {
             size: DVec3::new(r, 1., r),

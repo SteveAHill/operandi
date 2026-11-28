@@ -18,7 +18,7 @@ fn replicator_copies_export_as_a_point_instancer() {
     p.duplicate.copier = Some(operandi_core::duplicate_copier::Copier::Replica);
     p.duplicate.array.count = [3, 1, 1];
     p.duplicate.placed = true;
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
     e.dispatch(Command::Drop).unwrap();

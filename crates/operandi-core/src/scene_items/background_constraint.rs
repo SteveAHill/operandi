@@ -907,6 +907,7 @@ impl crate::Editor {
         // TC-46: Topology Pen's moves stay free; only the points it makes
         // land on the background.
         if self
+            .session
             .preset
             .as_ref()
             .is_some_and(|p| p.row().actor.topology_pen)

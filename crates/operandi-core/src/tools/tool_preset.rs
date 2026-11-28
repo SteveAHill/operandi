@@ -619,9 +619,9 @@ impl crate::Editor {
         if let Some(action) = action {
             staged.action_context = action;
         }
-        staged.preset = Some(session);
+        staged.session.preset = Some(session);
         staged.dispatch_inner(crate::Command::Activate(tool), &mut None)?;
-        if let Some(session) = staged.preset.as_mut() {
+        if let Some(session) = staged.session.preset.as_mut() {
             session.started = true;
         }
         // Topology Pen's options stick for the session (TP-10): a new
@@ -648,6 +648,7 @@ impl crate::Editor {
             return;
         };
         if !self
+            .session
             .preset
             .as_ref()
             .is_some_and(|p| p.tool == live.tool && p.row().falloff_at_tool())
@@ -681,7 +682,8 @@ impl crate::Editor {
 
     /// Whether a Duplicate copier row (DX-20/30) for `tool` is open.
     pub(crate) fn copier_row_open(&self, tool: Tool) -> bool {
-        self.preset
+        self.session
+            .preset
             .as_ref()
             .is_some_and(|p| p.tool == tool && p.row().actor.copier.is_some())
     }
@@ -691,6 +693,7 @@ impl crate::Editor {
     /// ordinary copies.
     pub(crate) fn close_copier_row_for(&mut self, tool: Tool) {
         if self
+            .session
             .preset
             .as_ref()
             .is_some_and(|p| p.started && p.tool == tool && p.row().actor.copier.is_some())
@@ -701,7 +704,7 @@ impl crate::Editor {
 
     /// Give back every slot the open row took (TP-12) and close it.
     fn restore_preset_slots(&mut self) {
-        let Some(session) = self.preset.take() else {
+        let Some(session) = self.session.preset.take() else {
             return;
         };
         if let Some((falloff, linear, radial)) = session.previous_falloff {
@@ -721,7 +724,7 @@ impl crate::Editor {
     /// Cancel, another tool, Undo past its start), its slots go back
     /// (TP-12).
     pub(crate) fn settle_preset(&mut self) {
-        let Some(session) = &self.preset else {
+        let Some(session) = &self.session.preset else {
             return;
         };
         if let Some(live) = self.live.as_ref().filter(|l| l.tool == session.tool) {
@@ -744,7 +747,8 @@ impl crate::Editor {
     pub fn live_tool_label(&self) -> Option<&'static str> {
         let live = self.live.as_ref()?;
         Some(
-            self.preset
+            self.session
+                .preset
                 .as_ref()
                 .filter(|p| p.tool == live.tool)
                 .map_or(live.tool.label(), PresetSession::label),

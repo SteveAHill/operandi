@@ -570,7 +570,7 @@ fn hands_on_rows_start_their_presets() {
     ] {
         click(&mut a, &ctx, key);
         assert_eq!(
-            a.editor.preset.as_ref().map(|p| p.id.as_str()),
+            a.editor.session.preset.as_ref().map(|p| p.id.as_str()),
             Some(id),
             "{key}: {}",
             a.status

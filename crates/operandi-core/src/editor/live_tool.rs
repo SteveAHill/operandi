@@ -112,7 +112,7 @@ impl Editor {
             return Ok(());
         }
         self.scene.validate()?;
-        self.last_transform_step = Some(Box::new(crate::transform_repeat::TransformStep {
+        self.session.last_transform_step = Some(Box::new(crate::transform_repeat::TransformStep {
             tool: live.tool,
             base: live.base.clone(),
             params: live.params.clone(),
@@ -327,7 +327,7 @@ impl Editor {
     /// the live tool and re-targets it: a transform tool is live with no
     /// preset browser or selection drag open (UIC-306).
     pub fn selection_keeps_tool(&self) -> bool {
-        self.preset.is_none()
+        self.session.preset.is_none()
             && self.selection_start.is_none()
             && self
                 .live

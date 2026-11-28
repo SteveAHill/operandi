@@ -43,7 +43,7 @@ fn each_drag_is_one_step_and_undo_keeps_the_tool() {
     // Each drag is a tweak of the Move session, not a document step yet
     // (Jason, 2026-11-04); Drop records the session as one step.
     assert!(e.history.undo.is_empty());
-    assert!(e.tweaks.can_undo());
+    assert!(e.session.tweaks.can_undo());
     // The next drag starts from zero, with the handle on the moved point.
     let live = e.live.as_ref().unwrap();
     assert_eq!(live.params.delta, DVec3::ZERO);

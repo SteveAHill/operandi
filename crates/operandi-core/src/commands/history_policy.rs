@@ -178,8 +178,8 @@ impl Editor {
         // Inside a tool: its own tweaks come first (Jason, 2026-11-04).
         if let Some(task) = self.tweak_session()
             && match action {
-                HistoryAction::Undo => self.tweaks.can_undo(),
-                HistoryAction::Redo => self.tweaks.can_redo(),
+                HistoryAction::Undo => self.session.tweaks.can_undo(),
+                HistoryAction::Redo => self.session.tweaks.can_redo(),
             }
         {
             return HistoryEligibility {
@@ -191,7 +191,8 @@ impl Editor {
                 },
                 availability: HistoryAvailability::Available,
                 label: Some(
-                    self.tweaks
+                    self.session
+                        .tweaks
                         .top_name(action == HistoryAction::Redo)
                         .unwrap_or(task_label(task)),
                 ),
@@ -220,7 +221,7 @@ impl Editor {
         // Document Redo would replace the tool's unrecorded tweaks.
         if action == HistoryAction::Redo
             && let Some(task) = self.tweak_session()
-            && self.tweaks.can_undo()
+            && self.session.tweaks.can_undo()
             && !self.history.redo.is_empty()
         {
             return HistoryEligibility {

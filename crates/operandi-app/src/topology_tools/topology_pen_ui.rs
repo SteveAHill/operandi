@@ -152,7 +152,7 @@ impl Operandi {
     /// Drop the pen, run one edit and start the pen again; the status
     /// keeps the edit's own message.
     fn pen_commit(&mut self, edit: PenEdit, done: &str) -> bool {
-        let row = self.editor.preset.as_ref().map(|p| p.id.clone());
+        let row = self.editor.session.preset.as_ref().map(|p| p.id.clone());
         self.run(Command::Drop);
         let ok = self.run_ok(Command::TopologyPen(Box::new(edit)));
         let message = self.status.clone();
@@ -300,7 +300,7 @@ impl Operandi {
         }
         match self.tweak_pick(pos, r).map(|p| p.grab.element) {
             Some(TweakElement::Edge(a, b)) => {
-                let row = self.editor.preset.as_ref().map(|p| p.id.clone());
+                let row = self.editor.session.preset.as_ref().map(|p| p.id.clone());
                 self.run(Command::Drop);
                 self.run(Command::AddEdgeLoop { a, b, t: 0.5 });
                 if let Some(id) = row {
@@ -739,7 +739,7 @@ impl Operandi {
                 None => self.status = "Topology Pen Split: release on a point; nothing cut".into(),
             },
             PenDrag::AddLoop { a, b, t, .. } => {
-                let row = self.editor.preset.as_ref().map(|p| p.id.clone());
+                let row = self.editor.session.preset.as_ref().map(|p| p.id.clone());
                 self.run(Command::Drop);
                 let ok = self.run_ok(Command::AddEdgeLoop { a, b, t });
                 let message = self.status.clone();
@@ -781,7 +781,7 @@ impl Operandi {
                     }
                     TweakElement::Edge(a, b) => {
                         // One edge: the existing strip (TC-45).
-                        let row = self.editor.preset.as_ref().map(|p| p.id.clone());
+                        let row = self.editor.session.preset.as_ref().map(|p| p.id.clone());
                         self.run(Command::Drop);
                         let ok = self.run_ok(Command::TopologyDuplicate { item, a, b, offset });
                         let message = self.status.clone();

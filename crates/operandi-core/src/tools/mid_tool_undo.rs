@@ -142,7 +142,7 @@ impl Editor {
 
     /// Redo would open again the tool that Undo just closed.
     pub(crate) fn redo_reopens_tool(&self) -> Option<&'static str> {
-        let r = self.tool_reopen.as_ref()?;
+        let r = self.session.tool_reopen.as_ref()?;
         (self.active_task().is_none()
             && self.history.redo.len() == r.redo_len
             && self.scene == r.closed)
@@ -159,7 +159,7 @@ impl Editor {
         if history {
             return;
         }
-        self.tool_reopen = None;
+        self.session.tool_reopen = None;
         if after != before {
             if before.is_some() {
                 // Leaving drops the steps undone while the tool was active
@@ -206,8 +206,8 @@ impl Editor {
         };
         let label = session.label();
         self.history.tool_steps = None;
-        let tweaks = std::mem::take(&mut self.tweaks);
-        self.tool_reopen = Some(ToolReopen {
+        let tweaks = std::mem::take(&mut self.session.tweaks);
+        self.session.tool_reopen = Some(ToolReopen {
             session,
             shown,
             shown_identities,
@@ -223,7 +223,7 @@ impl Editor {
         if self.redo_reopens_tool().is_none() {
             return Ok(None);
         }
-        let Some(r) = self.tool_reopen.take() else {
+        let Some(r) = self.session.tool_reopen.take() else {
             return Ok(None);
         };
         let label = r.session.label();
@@ -242,7 +242,7 @@ impl Editor {
         }
         self.history.tool_steps = Some(0);
         self.history.tool_redo_floor = Some(self.history.redo.len());
-        self.tweaks = r.tweaks;
+        self.session.tweaks = r.tweaks;
         Ok(Some(label))
     }
 }
@@ -325,7 +325,7 @@ impl Editor {
 
     /// Before a command: the state to keep if it starts a new tweak.
     pub(crate) fn tweak_before(&self, cmd: &Command) -> Option<Box<TweakStart>> {
-        if !self.is_tweak(cmd) || self.tweaks.open {
+        if !self.is_tweak(cmd) || self.session.tweaks.open {
             return None;
         }
         let mut state = self.session_snapshot()?;
@@ -353,7 +353,7 @@ impl Editor {
         if task.is_none() || task != before_task || self.history.history_serial != serial_before {
             // Closed, switched, or recorded a step (Apply): the tweaks are
             // in that step now.
-            self.tweaks = ToolTweaks::default();
+            self.session.tweaks = ToolTweaks::default();
             return;
         }
         if let Some(start) = start {
@@ -367,7 +367,7 @@ impl Editor {
             // A named step whose inner commands kept the same start under
             // the tool's name (a reset re-dispatching Preview) takes the
             // name instead of becoming a second step.
-            if let Some(last) = self.tweaks.undo.last_mut()
+            if let Some(last) = self.session.tweaks.undo.last_mut()
                 && start.state.named.is_some()
                 && last.named.is_none()
                 && (TweakState {
@@ -376,21 +376,21 @@ impl Editor {
                 }) == *last
             {
                 last.named = start.state.named.clone();
-            } else if changed && self.tweaks.undo.last() != Some(&start.state) {
-                self.tweaks.undo.push(start.state);
-                self.tweaks.redo.clear();
-                self.tweaks.open = true;
+            } else if changed && self.session.tweaks.undo.last() != Some(&start.state) {
+                self.session.tweaks.undo.push(start.state);
+                self.session.tweaks.redo.clear();
+                self.session.tweaks.open = true;
             }
         }
-        if !cmd_was_tweak || !self.tweak_held {
-            self.tweaks.open = false;
+        if !cmd_was_tweak || !self.session.tweak_held {
+            self.session.tweaks.open = false;
         }
     }
 
     /// A gesture ended: the next change starts a new tweak.
     pub fn end_tweak(&mut self) {
-        self.tweak_held = false;
-        self.tweaks.open = false;
+        self.session.tweak_held = false;
+        self.session.tweaks.open = false;
     }
 
     /// Undo the active tool's last tweak; the tool stays.
@@ -398,7 +398,7 @@ impl Editor {
         if self.tweak_session().is_none() {
             return Ok(None);
         }
-        let Some(state) = self.tweaks.undo.pop() else {
+        let Some(state) = self.session.tweaks.undo.pop() else {
             return Ok(None);
         };
         let mut now = self.session_snapshot().ok_or("No active tool")?;
@@ -407,8 +407,8 @@ impl Editor {
         now.named = state.named.clone();
         let label = now.session.label();
         self.restore_snapshot(state)?;
-        self.tweaks.redo.push(now);
-        self.tweaks.open = false;
+        self.session.tweaks.redo.push(now);
+        self.session.tweaks.open = false;
         Ok(Some(label))
     }
 
@@ -417,7 +417,7 @@ impl Editor {
         if self.tweak_session().is_none() {
             return Ok(None);
         }
-        let Some(state) = self.tweaks.redo.pop() else {
+        let Some(state) = self.session.tweaks.redo.pop() else {
             return Ok(None);
         };
         let mut now = self.session_snapshot().ok_or("No active tool")?;
@@ -425,8 +425,8 @@ impl Editor {
         now.named = state.named.clone();
         let label = now.session.label();
         self.restore_snapshot(state)?;
-        self.tweaks.undo.push(now);
-        self.tweaks.open = false;
+        self.session.tweaks.undo.push(now);
+        self.session.tweaks.open = false;
         Ok(Some(label))
     }
 
@@ -442,7 +442,8 @@ impl Editor {
         }) {
             return None;
         }
-        self.tweaks
+        self.session
+            .tweaks
             .undo
             .first()
             .map(|s| (s.scene.clone(), s.identities.clone()))
@@ -462,7 +463,7 @@ impl Editor {
         base_ids: Option<IdentityScene>,
     ) {
         let mut starts = vec![(base, base_ids)];
-        for s in self.tweaks.undo.iter().filter(|s| s.bevel_start) {
+        for s in self.session.tweaks.undo.iter().filter(|s| s.bevel_start) {
             if starts.last().is_some_and(|(scene, _)| *scene != s.scene) {
                 starts.push((s.scene.clone(), Some(s.identities.clone())));
             }

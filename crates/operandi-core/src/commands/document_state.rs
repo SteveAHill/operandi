@@ -43,13 +43,16 @@ impl Editor {
         // The open tool waits in its scene for the scene's return, with its
         // own history and sessions.
         swap(&mut a.live, &mut b.live);
-        swap(&mut a.armed, &mut b.armed);
-        swap(&mut a.extend_from_click, &mut b.extend_from_click);
-        swap(&mut a.preset, &mut b.preset);
+        swap(&mut a.session.armed, &mut b.session.armed);
+        swap(
+            &mut a.session.extend_from_click,
+            &mut b.session.extend_from_click,
+        );
+        swap(&mut a.session.preset, &mut b.session.preset);
         swap(&mut a.inference, &mut b.inference);
-        swap(&mut a.tweaks, &mut b.tweaks);
+        swap(&mut a.session.tweaks, &mut b.session.tweaks);
         swap(&mut a.history.tool_steps, &mut b.history.tool_steps);
-        swap(&mut a.tool_reopen, &mut b.tool_reopen);
+        swap(&mut a.session.tool_reopen, &mut b.session.tool_reopen);
         swap(
             &mut a.history.tool_redo_floor,
             &mut b.history.tool_redo_floor,
@@ -66,7 +69,10 @@ impl Editor {
         swap(&mut a.shape, &mut b.shape);
         swap(&mut a.cone, &mut b.cone);
         // Ids and caches of this scene's items and elements.
-        swap(&mut a.gesture_partners, &mut b.gesture_partners);
+        swap(
+            &mut a.session.gesture_partners,
+            &mut b.session.gesture_partners,
+        );
         swap(&mut a.symmetry_unpaired, &mut b.symmetry_unpaired);
         swap(&mut a.falloff_element, &mut b.falloff_element);
         swap(&mut a.falloff_stamps, &mut b.falloff_stamps);
@@ -87,6 +93,9 @@ fn every_field_is_sorted(e: Editor) {
         scene: _,
         // Split field by field in `every_history_field_is_sorted`.
         history: _,
+        // Split field by field in `every_session_field_is_sorted`.
+        session: _,
+        inference: _,
         selection_start: _,
         next_item_id: _,
         identities: _,
@@ -95,12 +104,6 @@ fn every_field_is_sorted(e: Editor) {
         #[cfg(feature = "painting")]
             paint: _,
         live: _,
-        armed: _,
-        extend_from_click: _,
-        preset: _,
-        inference: _,
-        tweaks: _,
-        tool_reopen: _,
         multi_fresh: _,
         multi_extrude: _,
         extrude_moved_caps: _,
@@ -112,7 +115,6 @@ fn every_field_is_sorted(e: Editor) {
         ellipsoid: _,
         shape: _,
         cone: _,
-        gesture_partners: _,
         symmetry_unpaired: _,
         falloff_element: _,
         falloff_stamps: _,
@@ -164,11 +166,8 @@ fn every_field_is_sorted(e: Editor) {
         uv_map_clipboard: _,
         uv_clipboard: _,
         remesh_prepared: _,
-        last_transform_step: _,
         // Shared: bookkeeping of the command running now and one-off
         // status notes the app shows and clears.
-        dispatch_depth: _,
-        tweak_held: _,
         revision: _,
         symmetry_note: _,
         boolean_note: _,
@@ -199,4 +198,25 @@ fn every_history_field_is_sorted(h: crate::History) {
         undo_fold: _,
         undo_trim_paused: _,
     } = h;
+}
+
+/// The same for the running tool session's fields (`crate::ToolSession`):
+/// the open tool and what it holds belong to the scene; the bookkeeping of
+/// the command running now and the last transform drag are shared.
+#[allow(dead_code)]
+fn every_session_field_is_sorted(t: crate::ToolSession) {
+    let crate::ToolSession {
+        // Document (swapped above).
+        armed: _,
+        extend_from_click: _,
+        preset: _,
+        tweaks: _,
+        tool_reopen: _,
+        gesture_partners: _,
+        // Shared: a cache matched by content, and bookkeeping of the
+        // command and drag running now.
+        last_transform_step: _,
+        dispatch_depth: _,
+        tweak_held: _,
+    } = t;
 }

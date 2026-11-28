@@ -54,7 +54,7 @@ fn run(e: &mut Editor, row: &str, set: impl FnOnce(&mut DuplicateParameters)) {
     let mut p = e.live.as_ref().unwrap().params.clone();
     set(&mut p.duplicate);
     p.duplicate.placed = true;
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
     e.dispatch(Command::Drop).unwrap();
@@ -250,7 +250,7 @@ fn transform_pen_puts_items_on_the_path_points() {
         DVec3::new(0., 2., 0.),
         DVec3::new(0., 3., 0.),
     ];
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
     e.dispatch(Command::Drop).unwrap();

@@ -712,7 +712,7 @@ impl Editor {
             match cmd {
                 // An active tool's own tweak Redo comes first.
                 Command::Redo
-                    if !(self.tweak_session().is_some() && self.tweaks.can_redo())
+                    if !(self.tweak_session().is_some() && self.session.tweaks.can_redo())
                         && self.i2_owns_history(HistoryAction::Redo) =>
                 {
                     self.i2_redo_eligibility().map_err(|reason| {

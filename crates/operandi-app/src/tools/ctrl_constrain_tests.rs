@@ -454,7 +454,7 @@ fn hm04_middle_click_repeats_the_previous_drag_once() {
         "{} step {step} ({}) tweaks {}",
         point5(&rig),
         rig.a.status,
-        rig.a.editor.tweaks.undo_steps()
+        rig.a.editor.session.tweaks.undo_steps()
     );
 }
 

@@ -256,7 +256,7 @@ impl Operandi {
             self.scrub = Some(scrub::Scrub::new(key, kind, value, start_text));
             // The whole scrub is one undo step, like a viewport drag
             // (`hold_pointer`); `drag_stopped` below ends it.
-            self.editor.tweak_held = true;
+            self.editor.session.tweak_held = true;
         }
         let Some(scrub) = self.scrub.as_mut().filter(|s| s.key == key) else {
             return false;

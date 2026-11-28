@@ -267,8 +267,13 @@ fn answers(r: &mut Commands) {
             .unwrap_or_else(|| panic!("tool preset {id} is in the table"));
         r.answer(&row.label, |a, c| {
             CommandState::lit(
-                operandi_core::tool_preset::row(c.entry.name)
-                    .is_some_and(|row| a.editor.preset.as_ref().is_some_and(|p| p.id == row.id)),
+                operandi_core::tool_preset::row(c.entry.name).is_some_and(|row| {
+                    a.editor
+                        .session
+                        .preset
+                        .as_ref()
+                        .is_some_and(|p| p.id == row.id)
+                }),
             )
         })
         .unwrap_or_else(|e| panic!("{e}"));

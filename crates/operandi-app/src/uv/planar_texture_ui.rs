@@ -240,12 +240,12 @@ mod tests {
         // A Scale-tool drag on the locator: what its X handle publishes.
         dragged.run(Command::SelectItem(Some(locator)));
         dragged.run(Command::Activate(Tool::Scale));
-        let before = dragged.editor.tweaks.undo_steps();
+        let before = dragged.editor.session.tweaks.undo_steps();
         let mut p = dragged.editor.live.as_ref().unwrap().params.clone();
         p.delta = DVec3::new(2., 1., 1.);
         dragged.run(Command::Preview(p.clone()));
         dragged.editor.end_tweak();
-        assert_eq!(dragged.editor.tweaks.undo_steps(), before + 1);
+        assert_eq!(dragged.editor.session.tweaks.undo_steps(), before + 1);
         let want = transform(&dragged, locator);
         assert_eq!(want.scale, DVec3::new(2., 1., 1.));
         // Typed: the Shading layer's locator selected by command, then the
@@ -254,10 +254,14 @@ mod tests {
         typed.execute(&format!("select.item {locator}"));
         assert_eq!(typed.editor.scene.selection.item, Some(locator));
         typed.run(Command::Activate(Tool::Scale));
-        let before = typed.editor.tweaks.undo_steps();
+        let before = typed.editor.session.tweaks.undo_steps();
         typed.execute("transform.channel name:scl.X value:2");
         assert_eq!(transform(&typed, locator), want, "{}", typed.status);
-        assert_eq!(typed.editor.tweaks.undo_steps(), before + 1, "one tweak");
+        assert_eq!(
+            typed.editor.session.tweaks.undo_steps(),
+            before + 1,
+            "one tweak"
+        );
         assert_eq!(
             typed.editor.live.as_ref().map(|l| l.tool),
             Some(Tool::Scale),

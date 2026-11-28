@@ -72,7 +72,7 @@ impl Editor {
         // Start it outright (no Click to Start arming) from the scene the
         // tool works on, as a fresh pick would.
         probe.auto_activate_flags = false;
-        probe.armed = None;
+        probe.session.armed = None;
         probe.scene = live.base.clone();
         probe.live = None;
         probe.dispatch_inner(Command::Activate(tool), &mut None)?;

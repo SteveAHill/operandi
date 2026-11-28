@@ -117,7 +117,7 @@ impl Editor {
                 // turn each half about its own centre, the far half
                 // mirrored, instead of both about the point between them.
                 let frame = live.action_frame.ok_or("Missing action frame")?;
-                let at_zero = self.extend_from_click;
+                let at_zero = self.session.extend_from_click;
                 let symmetry = self.active_symmetry();
                 crate::symmetry_sides::two_pass(&mut scene, symmetry, |scene, mirrored| {
                     let edges = scene.selection.edges.clone();
@@ -186,7 +186,7 @@ impl Editor {
                     make_uvs: p.edge_extend.make_uvs,
                 };
                 let world = scene.world_matrix(item.id)?;
-                let (mut mesh, outer) = if self.extend_from_click {
+                let (mut mesh, outer) = if self.session.extend_from_click {
                     crate::edge_extend_at_zero(&item.mesh, &edges, world, &shape)?
                 } else {
                     crate::edge_extend_shaped(&item.mesh, &edges, world, &shape)?
@@ -1191,7 +1191,11 @@ impl Editor {
                     // TW-Q1: Twist and Swirl turn each point by weight ×
                     // Angle instead of blending positions (deform.rs).
                     let angle_weighted = live.tool == Tool::Rotate
-                        && self.preset.as_ref().is_some_and(|p| p.angle_by_weight);
+                        && self
+                            .session
+                            .preset
+                            .as_ref()
+                            .is_some_and(|p| p.angle_by_weight);
                     // #24: a scale reaching 0 flattens polygons on
                     // purpose; they are marked as deliberate degenerate
                     // polygons, as Inset 0 and Poly Haul do.

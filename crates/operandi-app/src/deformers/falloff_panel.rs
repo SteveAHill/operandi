@@ -1205,6 +1205,7 @@ fn layer_items(app: &Operandi, i: usize, f: Falloff) -> Vec<tf::Item<FalloffP>> 
     if i == 0
         && app
             .editor
+            .session
             .preset
             .as_ref()
             .and_then(|p| p.row().falloff_kind())
@@ -1215,7 +1216,7 @@ fn layer_items(app: &Operandi, i: usize, f: Falloff) -> Vec<tf::Item<FalloffP>> 
     {
         items.push(tf::Item::Wide(
             tf::Button::run("Fit to Selection", |app: &mut Operandi| {
-                let Some(row) = app.editor.preset.as_ref().map(|p| p.row()) else {
+                let Some(row) = app.editor.session.preset.as_ref().map(|p| p.row()) else {
                     return;
                 };
                 match row.fitted_falloff(&app.editor.scene) {

@@ -72,7 +72,7 @@ fn run(e: &mut Editor, tool: Tool, set: impl FnOnce(&mut DuplicateParameters)) {
     e.dispatch(Command::Activate(tool)).unwrap();
     let mut p = e.live.as_ref().unwrap().params.clone();
     set(&mut p.duplicate);
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
     e.dispatch(Command::Drop).unwrap();
@@ -484,7 +484,7 @@ fn ce9_pen_extrude_makes_one_section_per_point_turned_along_the_path() {
     assert_eq!(t.curve.kind, PathKind::Pen);
     assert!(!t.sweep.cap_start && t.sweep.cap_end);
     p.duplicate.curve_extrude.curve.points = path3();
-    e.tweak_held = true;
+    e.session.tweak_held = true;
     e.dispatch(Command::Preview(p)).unwrap();
     e.end_tweak();
     e.dispatch(Command::Drop).unwrap();

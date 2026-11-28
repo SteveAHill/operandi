@@ -102,7 +102,7 @@ fn move_offset_scrubs_live_and_each_drag_undoes_alone() {
     release(&mut a, &ctx, pos);
     // The scrub is one tweak of Move, recorded when Move drops.
     assert_eq!(a.editor.history.undo.len(), history);
-    assert!(a.editor.tweaks.can_undo());
+    assert!(a.editor.session.tweaks.can_undo());
     assert!((top_y(&a) - before_y - 0.5).abs() < 1e-9);
     assert_eq!(a.editor.live.as_ref().unwrap().tool, Tool::Move);
     assert_eq!(a.editor.live.as_ref().unwrap().params.delta, DVec3::ZERO);

@@ -152,7 +152,7 @@ fn scale_center_handle_scales_uniformly() {
         vec![pointer(end, false, Modifiers::NONE)],
     );
     // Measure the drag's change.
-    assert!(a.editor.tweaks.can_undo());
+    assert!(a.editor.session.tweaks.can_undo());
     let size = |scene: &operandi_core::Scene| {
         let mesh = &scene.active().unwrap().mesh;
         let face = &mesh.faces[1];
@@ -481,7 +481,7 @@ fn every_transform_tool_drags_freely_on_the_model_in_every_mode() {
             );
             assert_ne!(a.editor.scene, before, "{mode:?} {tool:?}: {}", a.status);
             // The drag is a tweak of the tool session (Jason, 2026-11-04).
-            assert!(a.editor.tweaks.can_undo(), "{mode:?}");
+            assert!(a.editor.session.tweaks.can_undo(), "{mode:?}");
             assert_eq!(a.editor.live.as_ref().map(|l| l.tool), Some(tool));
         }
     }

@@ -10,12 +10,12 @@ impl Editor {
         if let Some(l) = self.live.as_ref()
             && l.tool == Tool::EdgeExtend
             && !l.applied
-            && !self.extend_from_click
+            && !self.session.extend_from_click
         {
-            self.extend_from_click = true;
+            self.session.extend_from_click = true;
             let p = l.params.clone();
             if let Err(e) = self.dispatch(Command::Preview(p)) {
-                self.extend_from_click = false;
+                self.session.extend_from_click = false;
                 return Err(e);
             }
         }
@@ -228,7 +228,7 @@ impl Editor {
         if let Some(l) = self.live.take() {
             // RPT-08: dropping the tool forgets the amount a middle-click
             // repeats.
-            self.last_transform_step = None;
+            self.session.last_transform_step = None;
             if l.tool.is_smooth_shift() {
                 self.retain_surface(l.tool, l.params.smooth_shift);
             }
@@ -311,6 +311,7 @@ impl Editor {
                 self.identities.record_before = identity_base;
                 // A tool preset's session is named after the preset.
                 let label = self
+                    .session
                     .preset
                     .as_ref()
                     .filter(|p| p.tool == l.tool)
@@ -341,7 +342,7 @@ impl Editor {
         self.cone = None;
         let session_base = self.tweak_session_base();
         if let Some(l) = self.live.take() {
-            self.last_transform_step = None;
+            self.session.last_transform_step = None;
             if matches!(l.tool, Tool::Bevel | Tool::TwistBevel | Tool::EdgeExtend) {
                 // Cancel restores this stage and keeps the bevels finished
                 // before it, recorded as one step from the session start.
