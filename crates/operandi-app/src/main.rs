@@ -69,11 +69,17 @@ mod symmetry_ui;
 use crate::prefs_file::PrefsFile;
 use snaps_panel::SnapPreset;
 #[cfg(test)]
+#[path = "view/ac_local_walls_tests.rs"]
+mod ac_local_walls_tests;
+#[cfg(test)]
 #[path = "view/ac_press_tests.rs"]
 mod ac_press_tests;
 #[cfg(test)]
 #[path = "view/ac_rules_step1_tests.rs"]
 mod ac_rules_step1_tests;
+#[cfg(test)]
+#[path = "view/ac_rules_step3_tests.rs"]
+mod ac_rules_step3_tests;
 #[path = "view/action_center_click.rs"]
 mod action_center_click;
 #[path = "files/app_environment.rs"]
@@ -834,11 +840,6 @@ struct Operandi {
     twist_bevel_turn: Option<f64>,
     /// The base mesh's spanning points for `whole_mesh_drag`, once per drag.
     whole_mesh_basis_memo: viewport::BaseMemo<Option<[usize; 3]>>,
-    /// AC-75: the Local handle's axes for the drag's base and context.
-    local_handle_memo: viewport::BaseMemo<(
-        operandi_core::ActionContext,
-        Option<operandi_core::ActionFrame>,
-    )>,
     /// Take the resident path without a GPU (benchmarks and tests).
     force_resident: bool,
     environment: app_environment::AppEnvironment,
@@ -1760,7 +1761,6 @@ impl Operandi {
             twist_bevel_frame_memo: Default::default(),
             twist_bevel_turn: None,
             whole_mesh_basis_memo: Default::default(),
-            local_handle_memo: Default::default(),
             force_resident: false,
             online: online_library::OnlineLibrary::new(environment.paths().online_libraries()),
             environment,

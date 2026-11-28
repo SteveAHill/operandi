@@ -30,6 +30,9 @@ pub struct Live {
     /// service places it.
     pub placed_centre: Option<DVec3>,
     pub preview_error: Option<String>,
+    /// The pivot service's answer for this tool on `base`, kept so a drag
+    /// resolves it once (`Editor::live_pivots`). Derived; not compared.
+    pub pivots: crate::pivot_service::PivotCache,
 }
 #[derive(Clone, PartialEq)]
 pub struct Checkpoint {

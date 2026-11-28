@@ -1408,11 +1408,14 @@ fn action_center(v: Option<&Value>) -> Result<Option<operandi_core::ActionContex
             CenterMode::Parent => AxisOrientation::Parent,
             CenterMode::Pivot if mode == "pivot_center_parent_axis" => AxisOrientation::Parent,
             CenterMode::Pivot => AxisOrientation::Item,
+            // Local is each cluster's own centre and its own axes.
+            CenterMode::Local => AxisOrientation::Local,
             _ => AxisOrientation::World,
         },
         Some("world") => AxisOrientation::World,
         Some("parent") => AxisOrientation::Parent,
         Some("item") => AxisOrientation::Item,
+        Some("local") => AxisOrientation::Local,
         Some("selection") => AxisOrientation::Selection,
         Some("workplane_xz") | Some("xz") => AxisOrientation::Workplane(0),
         Some("workplane_yz") | Some("yz") => AxisOrientation::Workplane(1),
@@ -1427,7 +1430,7 @@ fn action_center(v: Option<&Value>) -> Result<Option<operandi_core::ActionContex
         ),
         Some(other) => {
             return Err(format!(
-                "Unknown action axis {other}; use world, selection, xz, yz, xy, element, parent or item"
+                "Unknown action axis {other}; use world, selection, xz, yz, xy, element, parent, item or local"
             ));
         }
     };

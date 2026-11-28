@@ -46,7 +46,12 @@ fn fixture(center: CenterMode) -> Editor {
     e.scene.selection.faces = vec![0, 1, 2];
     e.dispatch(Command::ActionContext(ActionContext {
         center,
-        axis: AxisOrientation::World,
+        // Local by name is Local's centre with Local's axes.
+        axis: if center == CenterMode::Local {
+            AxisOrientation::Local
+        } else {
+            AxisOrientation::World
+        },
     }))
     .unwrap();
     e
@@ -111,16 +116,15 @@ fn selection_centres_on_the_item_space_box() {
     );
 }
 
-/// The frame a Local piece should use: its item-space box middle, Y along
-/// its world normal and X along the item's X (ACL-02/03: both fixture
-/// islands' principal direction nearest item X, or a tie), Z = X × Y.
+/// The frame a Local piece should use (A-LOCAL): its item-space box
+/// middle, Z along its world normal and X along the item's X (both fixture
+/// islands' principal direction nearest item X, or a tie), Y = Z × X.
 fn piece_frame(w: DMat4, lo: DVec3, hi: DVec3, normal: DVec3) -> (DVec3, DMat3) {
-    let y = (DMat3::from_mat4(w) * normal).normalize();
-    let z = (DMat3::from_mat4(w) * DVec3::X).cross(y).normalize();
-    let x = y.cross(z).normalize();
+    let z = (DMat3::from_mat4(w) * normal).normalize();
+    let y = z.cross(DMat3::from_mat4(w) * DVec3::X).normalize();
     (
         w.transform_point3((lo + hi) / 2.),
-        DMat3::from_cols(x, y, x.cross(y).normalize()),
+        DMat3::from_cols(y.cross(z), y, z),
     )
 }
 
@@ -199,7 +203,7 @@ fn local_with_symmetry_mirrors_each_islands_frame() {
     e.scene.selection.faces = vec![0, 1, 2, 3];
     e.dispatch(Command::ActionContext(ActionContext {
         center: CenterMode::Local,
-        axis: AxisOrientation::World,
+        axis: AxisOrientation::Local,
     }))
     .unwrap();
     e.symmetry.axis = Some(0);

@@ -37,7 +37,7 @@ fn scene(points: &[[f64; 3]], polygons: &[&[u32]], pos: DVec3, rot_y_deg: f64) -
     e.scene.selection.faces = (0..polygons.len() as u32).collect();
     e.dispatch(Command::ActionContext(ActionContext {
         center: CenterMode::Local,
-        axis: AxisOrientation::World,
+        axis: AxisOrientation::Local,
     }))
     .unwrap();
     e
