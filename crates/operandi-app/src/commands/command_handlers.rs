@@ -887,7 +887,7 @@ fn menu_answers(r: &mut Commands) {
     // unavailable rule via `unavailable::unless`).
     r.answer("Reset Tool Attributes", |a, _| {
         CommandState::unless(crate::unavailable::unless(
-            a.editor.has_active_task(),
+            a.editor.session.has_active_task(),
             "No tool is active, so there is nothing to reset",
         ))
     })
@@ -1509,7 +1509,7 @@ fn phrases(r: &mut Commands) {
     // MN-05.3: with no tool active the key does nothing (the menu entry is
     // greyed then; `tool.reset` still says why).
     on(r, &["reset tool attributes"], |a, _| {
-        if a.editor.has_active_task() {
+        if a.editor.session.has_active_task() {
             a.run(Command::ResetToolAttributes);
         }
     });

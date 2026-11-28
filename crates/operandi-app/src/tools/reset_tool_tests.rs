@@ -170,7 +170,7 @@ fn ctrl_d_resets_while_a_tool_is_active_and_does_nothing_otherwise() {
     draw(&mut a, &ctx, size, vec![press.clone(), release]);
     assert_eq!(a.editor.scene, scene);
     assert_eq!(a.editor.history.undo.len(), undo);
-    assert!(!a.editor.has_active_task());
+    assert!(!a.editor.session.has_active_task());
     assert_eq!(a.status, status, "no tool: the key does nothing");
 
     a.activate(Tool::Move);

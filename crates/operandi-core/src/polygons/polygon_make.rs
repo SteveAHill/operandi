@@ -366,7 +366,7 @@ impl Editor {
     /// One atomic "Make" edit. Selection (mode, ordered and remembered
     /// components, item) is unchanged; the new face is not selected.
     pub(crate) fn make_polygon(&mut self, kind: crate::MakeType, close: bool) -> Result<()> {
-        if self.has_active_task()
+        if self.session.has_active_task()
             || self.selection_start.is_some()
             || self.session.pen_draft.is_some()
         {

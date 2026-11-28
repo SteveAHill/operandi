@@ -359,7 +359,7 @@ impl Editor {
         let tweak_options = live.params.tweak_options;
         let mut staged = Box::new(self.clone());
         staged.dispatch(Command::Drop)?;
-        if staged.has_active_task() || staged.i2_active() {
+        if staged.session.has_active_task() || staged.i2_active() {
             return Err("Finish the current tool before changing the selection".into());
         }
         staged.dispatch(cmd)?;

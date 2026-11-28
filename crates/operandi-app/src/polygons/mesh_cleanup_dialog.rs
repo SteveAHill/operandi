@@ -566,7 +566,7 @@ mod callback_tests {
                     // UIC-307: the command line runs it; the owner settles and
                     // arms again.
                     a.execute(CLEAN_COMMAND);
-                    assert!(a.editor.has_active_task(), "{owner}: {}", a.status);
+                    assert!(a.editor.session.has_active_task(), "{owner}: {}", a.status);
                     continue;
                 }
                 assert!(a.editor == before, "{owner} {route}: {}", a.status);

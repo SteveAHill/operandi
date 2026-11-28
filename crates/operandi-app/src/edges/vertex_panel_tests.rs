@@ -927,7 +927,7 @@ fn weld_and_edge_clicks_refuse_while_a_numeric_task_is_open() {
     // Gap closed 2026-10-31: these only refused for live tools and Pen.
     let mut a = app(grid(), vec![5]);
     a.run(Command::ArmCone);
-    assert!(a.editor.has_active_task(), "{}", a.status);
+    assert!(a.editor.session.has_active_task(), "{}", a.status);
     a.toggle_weld();
     assert!(!a.vertex_weld);
     assert!(a.status.contains("Drop or Cancel"), "{}", a.status);

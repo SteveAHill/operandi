@@ -243,12 +243,12 @@ fn every_primitive_drop_keeps_its_preview_as_one_step() {
         e.dispatch(start(t)).unwrap();
         draw(&mut e, t);
         e.dispatch(Command::Drop).unwrap();
-        assert_eq!(e.active_task(), None, "{t:?}");
+        assert_eq!(e.session.active_task(), None, "{t:?}");
         assert!(faces(&e) > faces_of(&base), "{t:?} kept nothing");
         assert_eq!(e.history.undo.len(), steps + 1, "{t:?}");
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, base, "{t:?}");
-        assert_eq!(e.active_task(), None, "{t:?} reopened on Undo");
+        assert_eq!(e.session.active_task(), None, "{t:?} reopened on Undo");
     }
 }
 fn faces_of(scene: &Scene) -> usize {
@@ -266,7 +266,7 @@ fn check_switch(a: T, b: T) {
     let draws = !matches!(a, T::Spike | T::Reduction);
     e.dispatch(start(b))
         .unwrap_or_else(|err| panic!("{a:?} -> {b:?}: {err}"));
-    assert_eq!(e.active_task(), Some(task(b)), "{a:?} -> {b:?}");
+    assert_eq!(e.session.active_task(), Some(task(b)), "{a:?} -> {b:?}");
     if draws {
         assert_eq!(e.history.undo.len(), steps + 1, "{a:?} -> {b:?}");
         let step = e.history.undo.last().unwrap();
@@ -279,11 +279,11 @@ fn check_switch(a: T, b: T) {
         // Undo closes b (a shape armed with its preview shown discards
         // that preview first), then removes a's work in one go.
         for _ in 0..2 {
-            if e.active_task().is_some() {
+            if e.session.active_task().is_some() {
                 e.dispatch(Command::Undo).unwrap();
             }
         }
-        assert_eq!(e.active_task(), None, "{a:?} -> {b:?}");
+        assert_eq!(e.session.active_task(), None, "{a:?} -> {b:?}");
         assert_eq!(e.history.undo.len(), steps + 1, "{a:?} -> {b:?}");
         e.dispatch(Command::Undo).unwrap();
         assert_eq!(e.scene, base, "{a:?} -> {b:?}");
@@ -328,7 +328,7 @@ fn the_open_tools_own_button_drops_it() {
         e.dispatch(start(t)).unwrap();
         draw(&mut e, t);
         e.dispatch(start(t)).unwrap();
-        assert_eq!(e.active_task(), None, "{t:?}");
+        assert_eq!(e.session.active_task(), None, "{t:?}");
         let expected = steps + usize::from(t != T::Spike);
         assert_eq!(e.history.undo.len(), expected, "{t:?}");
     }
@@ -422,7 +422,11 @@ fn unit_insertion_drops_the_open_tool_first() {
                 let cmd = unit(destination);
                 e.dispatch(cmd.clone())
                     .unwrap_or_else(|err| panic!("{a:?} unit {u} {destination:?}: {err}"));
-                assert_eq!(e.active_task(), None, "{a:?} unit {u} {destination:?}");
+                assert_eq!(
+                    e.session.active_task(),
+                    None,
+                    "{a:?} unit {u} {destination:?}"
+                );
                 // The tool's work, then the unit: two steps.
                 assert_eq!(
                     e.history.undo.len(),
@@ -527,7 +531,7 @@ fn changing_mode_drops_the_open_tool_first() {
             draw(&mut e, t);
             e.dispatch(Command::Mode(mode))
                 .unwrap_or_else(|err| panic!("{t:?} -> {mode:?}: {err}"));
-            assert_eq!(e.active_task(), None, "{t:?} -> {mode:?}");
+            assert_eq!(e.session.active_task(), None, "{t:?} -> {mode:?}");
             assert!(!e.i2_active(), "{t:?} -> {mode:?}");
             assert_eq!(e.scene.selection.mode, mode, "{t:?} -> {mode:?}");
             if matches!(t, T::Spike | T::Reduction) {

@@ -1508,7 +1508,7 @@ mod mode_availability_tests {
             );
             // Every open tool is dropped first (Jason, 2026-11-05).
             assert_eq!(a.editor.scene.selection.mode, Mode::Edge, "{tool}");
-            assert!(!a.editor.has_active_task(), "{tool}");
+            assert!(!a.editor.session.has_active_task(), "{tool}");
             assert_eq!(a.status, "Ready", "{tool}");
         }
     }

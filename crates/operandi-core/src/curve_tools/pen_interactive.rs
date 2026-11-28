@@ -516,7 +516,7 @@ impl Editor {
                     return Err("Finish selection before Pen".into());
                 }
                 // Another open tool was dropped first by `tool_switch`.
-                if self.has_active_task() || self.i2_active() {
+                if self.session.has_active_task() || self.i2_active() {
                     return Err("Finish the current task before Pen".into());
                 }
                 self.scene.validate()?;

@@ -1046,9 +1046,9 @@ impl Operandi {
         self.utility = None;
         self.edge_click = None;
         self.vertex_weld = false;
-        if self.editor.has_active_task() {
+        if self.editor.session.has_active_task() {
             self.run(Command::Drop);
-            if self.editor.has_active_task() {
+            if self.editor.session.has_active_task() {
                 return;
             }
         }
@@ -1075,7 +1075,7 @@ impl Operandi {
     pub(super) fn keep_sculpt_exclusive(&mut self) {
         if self.sculpt.brush.is_some()
             && self.navigation.is_none()
-            && (self.editor.has_active_task()
+            && (self.editor.session.has_active_task()
                 || self.utility.is_some()
                 || self.draw.is_some()
                 || self.edge_click.is_some()

@@ -1044,7 +1044,7 @@ fn ellipsoid_cone_torus_capsule_cells_make_units() {
                 true,
                 vec![pointer(p, true, mods), pointer(p, false, mods)],
             );
-            assert!(!a.editor.has_active_task(), "{label}: {}", a.status);
+            assert!(!a.editor.session.has_active_task(), "{label}: {}", a.status);
             assert_eq!(
                 a.editor.history.undo.len(),
                 before.history.undo.len() + 1,

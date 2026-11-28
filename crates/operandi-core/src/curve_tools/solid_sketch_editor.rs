@@ -239,7 +239,7 @@ impl Editor {
         if self.selection_start.is_some() {
             return Err("Finish selection before Solid Sketch".into());
         }
-        if self.has_active_task() || self.i2_active() {
+        if self.session.has_active_task() || self.i2_active() {
             return Err("Finish the current task before Solid Sketch".into());
         }
         self.scene.validate()?;

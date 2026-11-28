@@ -582,7 +582,7 @@ impl Operandi {
                 // MN-05.1: every tool resets through one command
                 // (`tool_reset.rs` keeps each tool's own reset where it
                 // had one).
-                if self.editor.has_active_task() {
+                if self.editor.session.has_active_task() {
                     self.run(Command::ResetToolAttributes);
                 } else {
                     fail(self, "No tool is active, so there is nothing to reset");
@@ -1098,7 +1098,7 @@ impl Operandi {
             if let Some(phrase) = operandi_core::command_registry::tool_phrase(preset) {
                 match mode.to_ascii_lowercase().as_str() {
                     "on" | "1" => self.execute(phrase),
-                    "off" | "0" if self.editor.has_active_task() => self.run(Command::Drop),
+                    "off" | "0" if self.editor.session.has_active_task() => self.run(Command::Drop),
                     "off" | "0" => self.status = "Ready".into(),
                     _ => fail(
                         self,

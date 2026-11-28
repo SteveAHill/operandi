@@ -2316,7 +2316,7 @@ impl Operandi {
     /// Whether an editor tool session (live tool, primitive, Bridge, Spike,
     /// Pen or Reduction) is open.
     fn editor_tool_active(&self) -> bool {
-        self.editor.has_active_task()
+        self.editor.session.has_active_task()
     }
 
     /// A viewport press began a gesture: everything it changes until the
@@ -2529,7 +2529,7 @@ impl Operandi {
             _ => None,
         };
         let continuing = matches!(c, Command::Continue);
-        let was_live = self.editor.has_active_task();
+        let was_live = self.editor.session.has_active_task();
         // A tree click re-targets a live transform tool (editor.rs): its
         // fields restart at zero like after Undo/Redo.
         let item_select = matches!(
@@ -2606,7 +2606,7 @@ impl Operandi {
                     self.i2_gesture_ticket = None;
                 }
                 let foreground_closed = completion.as_ref().map_or_else(
-                    || was_live && !self.editor.has_active_task(),
+                    || was_live && !self.editor.session.has_active_task(),
                     |completion| completion.foreground_closed,
                 );
                 if completion.as_ref().is_some_and(|c| {
@@ -2618,7 +2618,7 @@ impl Operandi {
                     // Undo/Redo restart a live transform tool at zero, and
                     // the fields of a tool that keeps running through
                     // history (the primitives) show its current values.
-                    || (completion.is_some() && self.editor.has_active_task())
+                    || (completion.is_some() && self.editor.session.has_active_task())
                 {
                     self.clear_fields();
                     if self.editor.session.live.is_none() {
@@ -3674,7 +3674,7 @@ impl Operandi {
             if pointer_over_view && viewport_buttons::hovered_view_action(&c) {
                 self.activate_view(hovered_view);
             }
-            let before = self.editor.active_task();
+            let before = self.editor.session.active_task();
             self.execute_from(operandi_core::Source::Key, &c);
             if let Some(&(_, key)) = command_keys.iter().find(|(a, _)| *a == c) {
                 self.note_key_hold(key, before);

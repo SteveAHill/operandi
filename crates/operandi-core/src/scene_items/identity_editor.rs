@@ -156,7 +156,7 @@ impl Editor {
         }
         let arms = top && crate::click_start::may_arm(&cmd);
         self.session.dispatch_depth += 1;
-        let task_before = self.active_task();
+        let task_before = self.session.active_task();
         let unadopted = self.adopt_last_mesh_for(&cmd);
         let adopted = unadopted.as_ref().map(|_| self.scene.clone());
         let result = self.dispatch_selected(cmd, report);

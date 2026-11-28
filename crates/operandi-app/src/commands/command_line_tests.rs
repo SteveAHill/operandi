@@ -515,7 +515,11 @@ fn acceptance_reset_and_lifecycle_shared_routes() {
         // MN-05.4: tool.reset is its own named step, so compare what it
         // did rather than the tool's undo history.
         assert!(a.editor.scene == b.editor.scene, "reset {id}");
-        assert_eq!(a.editor.active_task(), b.editor.active_task(), "{id}");
+        assert_eq!(
+            a.editor.session.active_task(),
+            b.editor.session.active_task(),
+            "{id}"
+        );
         assert_eq!(
             a.editor.session.live.as_ref().map(|l| &l.params),
             b.editor.session.live.as_ref().map(|l| &l.params),

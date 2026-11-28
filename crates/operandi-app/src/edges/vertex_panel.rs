@@ -392,7 +392,7 @@ impl Operandi {
             self.status = "Weld off".into();
             return;
         }
-        if self.editor.has_active_task() {
+        if self.editor.session.has_active_task() {
             self.status = "Drop or Cancel the active tool before Weld".into();
             return;
         }

@@ -55,7 +55,7 @@ impl Editor {
         if !fixing && !self.symmetry_unpaired.is_empty() {
             return Some(unpaired_message(self.symmetry_unpaired.len()));
         }
-        let (support, name) = task_support(self.active_task()?);
+        let (support, name) = task_support(self.session.active_task()?);
         (support == SymmetrySupport::Ignores).then(|| crate::symmetry::ignores_message(name))
     }
 }

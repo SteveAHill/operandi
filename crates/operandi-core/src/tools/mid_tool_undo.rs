@@ -23,7 +23,7 @@
 //! tweak and keeps the tool, Redo puts it back. Once the tool is dropped the
 //! whole session is one undo step. Applies to Move/Rotate/Scale/Transform,
 //! the drawn primitives and the numeric primitive sessions; Tweak keeps one
-//! document step per drag (TWK-24). `Editor::tweaks`.
+//! document step per drag (TWK-24). `ToolSession::tweaks`.
 use crate::{ActiveTask, Command, Editor, IdentityScene, Live, NumericCone, NumericEllipsoid};
 use crate::{NumericBridge, NumericShape, NumericSpike, Result, Scene, Tool};
 
@@ -126,7 +126,7 @@ impl Editor {
     pub(crate) fn mid_undo_task(&self) -> Option<ActiveTask> {
         // Every tool except Pen (its own point undo) and Polygon Reduction
         // (refused on purpose, RED-004/D1).
-        self.active_task().filter(|task| {
+        self.session.active_task().filter(|task| {
             !matches!(
                 task,
                 ActiveTask::Pen | ActiveTask::Reduction | ActiveTask::SolidSketch
@@ -143,7 +143,7 @@ impl Editor {
     /// Redo would open again the tool that Undo just closed.
     pub(crate) fn redo_reopens_tool(&self) -> Option<&'static str> {
         let r = self.session.tool_reopen.as_ref()?;
-        (self.active_task().is_none()
+        (self.session.active_task().is_none()
             && self.history.redo.len() == r.redo_len
             && self.scene == r.closed)
             .then(|| r.session.label())

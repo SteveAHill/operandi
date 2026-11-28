@@ -69,7 +69,7 @@ impl Editor {
             // Drags kept as tweaks aren't recorded until Drop.
             && !self.session.tweaks.can_undo();
         self.selection_start.is_none()
-            && (!self.has_active_task() || (armed_transform && self.active_task_is_live()))
+            && (!self.session.has_active_task() || (armed_transform && self.active_task_is_live()))
     }
     fn active_task_is_live(&self) -> bool {
         self.session.cone.is_none()

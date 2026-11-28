@@ -146,7 +146,7 @@ impl Editor {
     /// The meshes a one-shot command runs on, or `None` for the ordinary
     /// single-mesh path.
     pub(crate) fn command_mesh_targets(&self, cmd: &Command) -> Option<Vec<u64>> {
-        if self.has_active_task() || self.selection_start.is_some() {
+        if self.session.has_active_task() || self.selection_start.is_some() {
             return None;
         }
         let component_mode = self.scene.selection.mode != Mode::Item;

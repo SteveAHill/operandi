@@ -244,7 +244,7 @@ fn zero_scale_mesh_is_refused_and_left_alone() {
             "{err}"
         );
     }
-    assert!(!e.has_active_task());
+    assert!(!e.session.has_active_task());
     assert_eq!(e.scene, base);
     assert_eq!(e.history.undo.len(), history);
 }

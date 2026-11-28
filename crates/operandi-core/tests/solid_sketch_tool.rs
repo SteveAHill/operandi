@@ -64,7 +64,7 @@ fn clicks_build_a_chain_live_and_drop_is_one_step() {
     let before = e.scene.clone();
     let steps = e.history.undo.len();
     start(&mut e);
-    assert_eq!(e.active_task(), Some(ActiveTask::SolidSketch));
+    assert_eq!(e.session.active_task(), Some(ActiveTask::SolidSketch));
     assert_eq!(session(&e).options().subdiv, SubdivMode::Level1);
     for x in [0., 1., 2.] {
         add(&mut e, x);

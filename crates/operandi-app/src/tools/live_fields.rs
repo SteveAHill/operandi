@@ -1,4 +1,4 @@
-//! Tool Properties of the Editor's live tools (everything `Editor::live`
+//! Tool Properties of the Editor's live tools (everything `ToolSession::live`
 //! runs except the primitives and Smooth Shift / Thicken, which have their
 //! own forms), declared as field lists for the shared form
 //! (`tool_form.rs`).

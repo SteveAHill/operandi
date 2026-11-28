@@ -8,7 +8,7 @@ impl Editor {
     /// if in its own mode, and the mode you're in stays.
     pub(crate) fn handle_activate(&mut self, t: Tool) -> Result<AfterCommand> {
         // An open tool keeps its own inference; the native start refuses.
-        if self.has_active_task() {
+        if self.session.has_active_task() {
             return self.handle_activate_native(t);
         }
         let saved = self.scene.selection.clone();
@@ -42,7 +42,7 @@ impl Editor {
             return Err(crate::tool_card::falloff_refusal());
         }
         // Another open tool was dropped first by `tool_switch`.
-        if self.has_active_task() {
+        if self.session.has_active_task() {
             return Err("Drop or Cancel the active tool first".into());
         }
         self.multi_extrude = None;

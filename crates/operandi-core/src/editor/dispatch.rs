@@ -380,14 +380,14 @@ impl Editor {
             Command::InsertUnit { .. }
                 | Command::InsertEllipsoidUnit(_)
                 | Command::InsertShapeUnit(..)
-        ) && (self.has_active_task() || self.i2_active())
+        ) && (self.session.has_active_task() || self.i2_active())
         {
             if self.selection_start.is_some() {
                 return Err("Finish the selection gesture before unit insertion".into());
             }
             let mut staged = self.clone();
             staged.dispatch(Command::Drop)?;
-            if staged.has_active_task() || staged.i2_active() {
+            if staged.session.has_active_task() || staged.i2_active() {
                 return Err("Finish the current tool before unit insertion".into());
             }
             staged.dispatch(cmd)?;
@@ -400,7 +400,7 @@ impl Editor {
                 crate::active_task::ToolSwitch::Replace => {
                     let mut staged = self.clone();
                     staged.dispatch(Command::Drop)?;
-                    if staged.has_active_task() || staged.i2_active() {
+                    if staged.session.has_active_task() || staged.i2_active() {
                         return Err("Finish the current tool before starting another".into());
                     }
                     staged.dispatch(cmd)?;

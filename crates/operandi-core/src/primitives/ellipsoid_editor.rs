@@ -135,7 +135,7 @@ impl Editor {
         Ok(())
     }
     pub(crate) fn insert_ellipsoid_unit(&mut self, destination: UnitDestination) -> Result<()> {
-        if self.has_active_task() || self.selection_start.is_some() {
+        if self.session.has_active_task() || self.selection_start.is_some() {
             return Err(
                 "Finish the current tool and the selection gesture before Ellipsoid unit insertion"
                     .into(),

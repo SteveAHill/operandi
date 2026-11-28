@@ -2,7 +2,7 @@
 //! starting it (button, menu, `tool.set`), the pick-up question, viewport
 //! clicks and drags, the node handles, the overlay and Tool Properties.
 //!
-//! The tool's state lives in the core session (`Editor::solid_sketch`);
+//! The tool's state lives in the core session (`ToolSession::solid_sketch`);
 //! every gesture ends in `Command::SolidSketch` edits. A drag's first edit
 //! is a step of its own inside the tool and its later frames join it
 //! (`continuing`), so Undo takes back one drag (spec 7).

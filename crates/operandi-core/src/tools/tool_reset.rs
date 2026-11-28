@@ -19,13 +19,15 @@ use crate::{ActiveTask, Command, Editor, Result, Tool};
 impl Editor {
     /// The undo-step name a reset of the active tool gets (MN-05.4).
     pub(crate) fn reset_step_label(&self) -> Option<String> {
-        self.active_task()
+        self.session
+            .active_task()
             .map(|task| format!("Reset {}", crate::history_policy::task_label(task)))
     }
 
     /// MN-05.1: the active tool's values back to the factory.
     pub(crate) fn reset_tool_attributes(&mut self) -> Result<()> {
         let task = self
+            .session
             .active_task()
             .ok_or("No tool is active, so there is nothing to reset")?;
         let own = match task {

@@ -1,5 +1,5 @@
-//! Which modeling task is open. The editor keeps each kind of task in its own
-//! slot (`live`, `cone`, `ellipsoid`, `spike`, `bridge`, `reduction`,
+//! Which modeling task is open. The tool session keeps each kind of task in
+//! its own slot (`live`, `cone`, `ellipsoid`, `spike`, `bridge`, `reduction`,
 //! `pen_draft`); at most one is open at a time. Ask here instead of checking
 //! the slots one by one, so every caller agrees on what "a tool is active"
 //! means.
@@ -21,26 +21,26 @@ pub enum ActiveTask {
     SolidSketch,
 }
 
-impl Editor {
+impl crate::ToolSession {
     /// The open task, if any.
     pub fn active_task(&self) -> Option<ActiveTask> {
-        if let Some(live) = &self.session.live {
+        if let Some(live) = &self.live {
             Some(ActiveTask::Live(live.tool))
-        } else if self.session.cone.is_some() {
+        } else if self.cone.is_some() {
             Some(ActiveTask::Cone)
-        } else if self.session.ellipsoid.is_some() {
+        } else if self.ellipsoid.is_some() {
             Some(ActiveTask::Ellipsoid)
-        } else if let Some(s) = &self.session.shape {
+        } else if let Some(s) = &self.shape {
             Some(ActiveTask::Shape(s.kind()))
-        } else if self.session.spike.is_some() {
+        } else if self.spike.is_some() {
             Some(ActiveTask::Spike)
-        } else if self.session.bridge.is_some() {
+        } else if self.bridge.is_some() {
             Some(ActiveTask::Bridge)
-        } else if self.session.reduction.is_some() {
+        } else if self.reduction.is_some() {
             Some(ActiveTask::Reduction)
-        } else if self.session.pen_draft.is_some() {
+        } else if self.pen_draft.is_some() {
             Some(ActiveTask::Pen)
-        } else if self.session.solid_sketch.is_some() {
+        } else if self.solid_sketch.is_some() {
             Some(ActiveTask::SolidSketch)
         } else {
             None
@@ -56,15 +56,15 @@ impl Editor {
     /// tasks are exclusive; tests check it stays at most one.
     pub fn open_task_slots(&self) -> usize {
         [
-            self.session.live.is_some(),
-            self.session.cone.is_some(),
-            self.session.ellipsoid.is_some(),
-            self.session.shape.is_some(),
-            self.session.spike.is_some(),
-            self.session.bridge.is_some(),
-            self.session.reduction.is_some(),
-            self.session.pen_draft.is_some(),
-            self.session.solid_sketch.is_some(),
+            self.live.is_some(),
+            self.cone.is_some(),
+            self.ellipsoid.is_some(),
+            self.shape.is_some(),
+            self.spike.is_some(),
+            self.bridge.is_some(),
+            self.reduction.is_some(),
+            self.pen_draft.is_some(),
+            self.solid_sketch.is_some(),
         ]
         .into_iter()
         .filter(|&open| open)
@@ -104,6 +104,7 @@ impl Editor {
             return None;
         }
         let open = self
+            .session
             .active_task()
             .or_else(|| self.i2_active().then_some(ActiveTask::Live(Tool::Extrude)))?;
         let same = match (cmd, open) {

@@ -1137,10 +1137,10 @@ fn symmetry_toggles_with_every_session_open() {
         a.run(Command::Mode(Mode::Polygon));
         a.run(Command::Selection(SelectionOperation::All));
         a.execute(word);
-        let task = a.editor.active_task();
+        let task = a.editor.session.active_task();
         assert!(task.is_some(), "{word}: {}", a.status);
         a.execute("toggle symmetry");
         assert_eq!(a.editor.symmetry.axis, Some(0), "{word}: {}", a.status);
-        assert_eq!(a.editor.active_task(), task, "{word}");
+        assert_eq!(a.editor.session.active_task(), task, "{word}");
     }
 }

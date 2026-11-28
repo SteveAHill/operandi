@@ -27,7 +27,10 @@ fn arming_previews_and_drop_appends_one_undo_step() {
     let mut e = editor();
     let base = e.scene.clone();
     e.dispatch(Command::ArmShape(ShapeKind::Torus)).unwrap();
-    assert_eq!(e.active_task(), Some(ActiveTask::Shape(ShapeKind::Torus)));
+    assert_eq!(
+        e.session.active_task(),
+        Some(ActiveTask::Shape(ShapeKind::Torus))
+    );
     assert!(
         e.shape_preview_scene().unwrap().is_none(),
         "nothing until drawn"
@@ -59,7 +62,7 @@ fn cancel_leaves_the_scene_as_it_was() {
     e.dispatch(Command::Cancel).unwrap();
     assert_eq!(e.scene, base);
     assert_eq!(e.history.undo.len(), history);
-    assert!(!e.has_active_task());
+    assert!(!e.session.has_active_task());
 }
 
 #[test]
@@ -176,8 +179,11 @@ fn another_tool_drops_the_shown_shape_first() {
     e.dispatch(Command::ArmShape(ShapeKind::Capsule)).unwrap();
     assert_eq!(counts(&e), (288, 288));
     place(&mut e);
-    assert_eq!(e.active_task(), Some(ActiveTask::Shape(ShapeKind::Capsule)));
-    assert_eq!(e.open_task_slots(), 1);
+    assert_eq!(
+        e.session.active_task(),
+        Some(ActiveTask::Shape(ShapeKind::Capsule))
+    );
+    assert_eq!(e.session.open_task_slots(), 1);
     // The same tool's button drops it.
     e.dispatch(Command::ArmShape(ShapeKind::Capsule)).unwrap();
     assert!(e.session.shape.is_none());
