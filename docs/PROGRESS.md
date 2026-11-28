@@ -1,5 +1,6 @@
 # Milestone progress ledger
 
+- **Local's axes as the rule sheet has them (2026-11-28, branch ac-rewrite-3b, on step 3):** Jason's report: a cube's opposite X walls under Local leaned opposite ways about the direction they share. A-LOCAL now: Z the cluster's normal at any tilt, X along the surface nearest the item's X and pointed to +X, Y = Z × X (`piece_axes`; AC-Q5's "normal on the nearest item axis" is gone). Opposite walls share their X, so the red ring turns them the same way; typed and dragged tests on X walls, Z walls and top+bottom (`ac_local_opposite_walls.rs`, `ac_local_walls_tests.rs`). Visible change: under Local blue is now the normal everywhere (a floor polygon had Y up). Rulebook: the Local Scale case recorded with Z on the normal passes; the typed Local Rotate Y 30 case is a known gap (ACR-Q29). Provisional: ACR-Q29, ACR-Q30.
 - **Action Center rule sheet v6, step 3: one pivot service (2026-11-27, branch ac-rewrite-3):**
   `PivotRequest::resolve` answers once per drag base with the handle and,
   per mesh, groups (stable identity, frame, twin frame, targets with

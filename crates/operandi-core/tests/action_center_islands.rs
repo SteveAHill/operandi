@@ -116,16 +116,15 @@ fn selection_centres_on_the_item_space_box() {
     );
 }
 
-/// The frame a Local piece should use: its item-space box middle, Y along
-/// its world normal and X along the item's X (ACL-02/03: both fixture
-/// islands' principal direction nearest item X, or a tie), Z = X × Y.
+/// The frame a Local piece should use (A-LOCAL): its item-space box
+/// middle, Z along its world normal and X along the item's X (both fixture
+/// islands' principal direction nearest item X, or a tie), Y = Z × X.
 fn piece_frame(w: DMat4, lo: DVec3, hi: DVec3, normal: DVec3) -> (DVec3, DMat3) {
-    let y = (DMat3::from_mat4(w) * normal).normalize();
-    let z = (DMat3::from_mat4(w) * DVec3::X).cross(y).normalize();
-    let x = y.cross(z).normalize();
+    let z = (DMat3::from_mat4(w) * normal).normalize();
+    let y = z.cross(DMat3::from_mat4(w) * DVec3::X).normalize();
     (
         w.transform_point3((lo + hi) / 2.),
-        DMat3::from_cols(x, y, x.cross(y).normalize()),
+        DMat3::from_cols(y.cross(z), y, z),
     )
 }
 

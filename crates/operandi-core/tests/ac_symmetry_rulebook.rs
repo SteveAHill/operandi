@@ -37,9 +37,9 @@ fn cases() -> Vec<Value> {
     doc["cases"].as_array().unwrap().clone()
 }
 
-const Q3: &str = "ACS-Q3: the custom axis frame (reference: tool Z along the axis, tool X world X made perpendicular; Operandi: Local ACS-12)";
 const Q4: &str = "ACS-Q4: moved item, the reference picked the primary side from the centre's world X; Operandi tests it against the item's plane (ACS-08)";
 const Q5: &str = "ACR-Q09: AC-RULES v6 has every tool's typed values in the one A-SEL frame (the + side's, S-02), which the nine Selection / Selection Border Scale cases now match; this Rotate case was recorded turning about world Y instead";
+const Q7: &str = "ACR-Q29: AC-RULES v6 A-LOCAL puts Z on the cluster's normal for every tool (the Local Scale case ACS-H-local-x-pair-scale was recorded that way); this typed Rotate Y 30 was recorded turning each island about its normal, which is Rotate Z under the sheet";
 const Q6: &str = "ACR-Q10: A-SEL under Symmetry with a selected polygon lying across the plane: which of its points and whether its normal count (AC-RULES v6 S-02 doesn't say)";
 /// Cases that depend on an open question (case id, question). A listed
 /// case that passes still counts as a pass.
@@ -48,8 +48,12 @@ const Q6: &str = "ACR-Q10: A-SEL under Symmetry with a selected polygon lying ac
 /// cases off this list: A-SEL from the + side's points gives the frame
 /// they were recorded with. Step 2 took the two Element Scale cases off:
 /// A-ELEM's frame (Z the normal, X world X laid square) is theirs.
+///
+/// A-LOCAL (2026-11-28, Z the normal) took the Local Scale case off (it
+/// was recorded with Z along the normal) and put the typed Local Rotate
+/// case on (recorded with Y along it).
 const KNOWN_GAPS: &[(&str, &str)] = &[
-    ("ACS-H-local-x-pair-scale", Q3),
+    ("ACS-HL-rotate-local-typedRY30", Q7),
     ("ACS-H-select-x-pair-rotate", Q5),
     ("ACS-H-select-x-PC-scale", Q6),
     ("ACS-H-select-x-pairstraddle-scale", Q6),
@@ -421,10 +425,10 @@ fn run_local(case: &Value) -> std::result::Result<(), String> {
         dvec3(0., 30., 0.)
     } else {
         // "About 113.8 degrees in all": a free turn whose axis the case
-        // doesn't record. Island A (flat, square, local frame = world:
-        // Y its normal, X the item's X laid into it) shows the turn; it is
-        // taken from A's points and every other island must take the same
-        // turn in its own frame (ACS-11).
+        // doesn't record. Island A (flat, square; its A-LOCAL frame is Z
+        // up its normal, X the item's X laid into it, Y = Z × X) shows the
+        // turn; it is taken from A's points, read in A's frame, and every
+        // other island must take the same turn in its own frame (ACS-11).
         let before = list(&case["input"]["points"]);
         let after = list(&case["expected_points"]);
         let frame = |p: &[DVec3]| {
@@ -433,6 +437,8 @@ fn run_local(case: &Value) -> std::result::Result<(), String> {
             glam::DMat3::from_cols(u, w, u.cross(w))
         };
         let turn = frame(&after[0..4]) * frame(&before[0..4]).transpose();
+        let a_axes = glam::DMat3::from_cols(DVec3::X, -DVec3::Z, DVec3::Y);
+        let turn = a_axes.transpose() * turn * a_axes;
         let (x, y, z) = glam::DQuat::from_mat3(&turn).to_euler(glam::EulerRot::XYZ);
         let angle = glam::DQuat::from_mat3(&turn).to_axis_angle().1.to_degrees();
         let angle = angle.min(360. - angle);

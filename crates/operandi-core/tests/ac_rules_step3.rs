@@ -46,19 +46,20 @@ const B_NORMAL: DVec3 = dvec3(0., 0.8, -0.6);
 const A_CENTRE: DVec3 = dvec3(1., 0., 0.5);
 const B_CENTRE: DVec3 = dvec3(5.5, 0.45, 0.6);
 
-/// Local's own frame for cluster A: flat on the ground, so the World axes.
+/// Local's own frame for cluster A (A-LOCAL): flat on the ground, so Z is
+/// up (its normal), X the item's X (its longer side) and Y = Z × X.
 fn a_frame() -> ActionFrame {
     ActionFrame {
         center: A_CENTRE,
-        basis: DMat3::IDENTITY,
+        basis: DMat3::from_cols(DVec3::X, -DVec3::Z, DVec3::Y),
     }
 }
-/// Local's own frame for cluster B: Y on its normal, X the in-plane
-/// direction nearest item X (its width), Z = X × Y (up its slope).
+/// Local's own frame for cluster B: Z on its normal, X the in-plane
+/// direction nearest item X (its width), Y = Z × X (down its slope).
 fn b_frame() -> ActionFrame {
     ActionFrame {
         center: B_CENTRE,
-        basis: DMat3::from_cols(DVec3::X, B_NORMAL, SLOPE),
+        basis: DMat3::from_cols(DVec3::X, -SLOPE, B_NORMAL),
     }
 }
 
@@ -412,7 +413,7 @@ fn local_axes_without_a_pick_order_are_repeatable() {
     e.dispatch(Command::Activate(Tool::Rotate)).unwrap();
     let pivots = e.live_pivots().unwrap().unwrap();
     close(
-        pivots.handle.basis.y_axis,
+        pivots.handle.basis.z_axis,
         DVec3::Y,
         "polygon 0 listed last",
     );

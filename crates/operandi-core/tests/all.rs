@@ -25,6 +25,8 @@ mod a37_combined;
 #[cfg(operandi_specs)]
 #[path = "absolute_scaling_spec.rs"]
 mod absolute_scaling_spec;
+#[path = "ac_local_opposite_walls.rs"]
+mod ac_local_opposite_walls;
 #[path = "ac_local_touching_faces.rs"]
 mod ac_local_touching_faces;
 #[path = "ac_rules_step1.rs"]

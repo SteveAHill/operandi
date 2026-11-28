@@ -69,6 +69,9 @@ mod symmetry_ui;
 use crate::prefs_file::PrefsFile;
 use snaps_panel::SnapPreset;
 #[cfg(test)]
+#[path = "view/ac_local_walls_tests.rs"]
+mod ac_local_walls_tests;
+#[cfg(test)]
 #[path = "view/ac_press_tests.rs"]
 mod ac_press_tests;
 #[cfg(test)]

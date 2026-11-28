@@ -291,19 +291,19 @@ fn ac_t75_local_handle_follows_the_last_selected_polygon() {
             .unwrap()
             .handle
     };
-    let handle_y = |e: &Editor| handle(e).basis.y_axis;
+    let handle_z = |e: &Editor| handle(e).basis.z_axis;
     let handle_at = |e: &Editor| handle(e).center;
     e.scene.selection.faces = vec![0, 1];
-    close(handle_y(&e), DVec3::Y, "F last: level handle");
+    close(handle_z(&e), DVec3::Y, "F last: level handle");
     // The handle sits on F's centre, not between the two (Jason 11-21).
     close(handle_at(&e), DVec3::new(5.5, 0., 0.5), "F last: on F");
     e.scene.selection.faces = vec![1, 0];
     close(handle_at(&e), DVec3::splat(0.5), "P last: on P");
-    let tilted = handle_y(&e);
+    let tilted = handle_z(&e);
     let normal = DVec3::new(0., 1., -1.).normalize();
     assert!(
         (tilted.dot(normal).abs() - 1.).abs() < 1e-9,
-        "P last: handle Y along P's normal, got {tilted:?}"
+        "P last: handle Z along P's normal, got {tilted:?}"
     );
     // Not Local: no special handle frame.
     e.dispatch(Command::ActionContext(ActionContext {

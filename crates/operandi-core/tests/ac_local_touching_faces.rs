@@ -100,7 +100,7 @@ fn touching_faces_are_one_cluster_whatever_the_pick_order() {
     );
     let mesh = wedge();
     let (left, right) = (mesh.normal(0), mesh.normal(1));
-    let up = left_then_right.basis.y_axis;
+    let up = left_then_right.basis.z_axis;
     assert!(
         up.dot(left) > up.dot(right) + 0.1,
         "the frame leans to the left face: {up}"
@@ -198,7 +198,8 @@ fn with_symmetry_x_the_minus_side_turns_the_other_way() {
     assert_eq!([role(4), role(5)], [Role::Primary; 2], "right eave");
     let before = e.scene.active().unwrap().mesh.vertices.to_vec();
     let mut p = e.live.as_ref().unwrap().params.clone();
-    p.delta = dvec3(0., 0., 30.);
+    // The cluster's Y runs along the ridge, toward −Z.
+    p.delta = dvec3(0., -30., 0.);
     e.dispatch(Command::Preview(p)).unwrap();
     let after = &e.scene.active().unwrap().mesh.vertices;
     // Seen along Z, the right eave goes up and so does the left one: a

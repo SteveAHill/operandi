@@ -65,7 +65,7 @@ fn close(a: DVec3, b: DVec3, what: &str) {
 /// Local's axes.
 #[test]
 fn the_view_draws_the_services_handle() {
-    let local_b = glam::DMat3::from_cols(DVec3::X, B_NORMAL, SLOPE);
+    let local_b = glam::DMat3::from_cols(DVec3::X, -SLOPE, B_NORMAL);
     for (context, center, basis) in [
         (ActionContext::LOCAL, B_CENTRE, local_b),
         (
@@ -100,7 +100,7 @@ fn the_view_draws_the_services_handle() {
     }
 }
 
-/// A drag on the handle's Y arrow under the Origin with Local's axes moves
+/// A drag on the handle's Z arrow under the Origin with Local's axes moves
 /// every selected point along that arrow, the last-selected cluster's
 /// normal: the drag, the arrow and the preview use the one frame.
 #[test]
@@ -119,10 +119,10 @@ fn an_arrow_drag_moves_along_the_services_axis() {
     let (_, origin, end, label) = a
         .handles(r)
         .into_iter()
-        .find(|h| h.0 == 1)
-        .expect("the Y arrow");
+        .find(|h| h.0 == 2)
+        .expect("the Z arrow");
     let at = origin + (end - origin) * 0.7;
-    assert_eq!(a.handle_hit(at, r), Some(1), "{label}");
+    assert_eq!(a.handle_hit(at, r), Some(2), "{label}");
     let before = a.editor.scene.active().unwrap().mesh.vertices.clone();
     let along = (end - origin).normalized() * 60.;
     draw(&mut a, &ctx, SIZE, vec![Event::PointerMoved(at)]);
